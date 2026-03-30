@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StudySync - Digital Sanctuary</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-error": "#490006",
+                        "on-primary": "#274451",
+                        "tertiary-dim": "#b3c0ec",
+                        "surface-container": "#171a1e",
+                        "surface-container-highest": "#22262c",
+                        "primary-container": "#395664",
+                        "on-primary-fixed": "#264350",
+                        "on-tertiary-fixed-variant": "#414d73",
+                        "secondary-fixed": "#d1e6f2",
+                        "surface-bright": "#282c33",
+                        "background": "#0c0e11",
+                        "primary-fixed": "#c8e7f7",
+                        "secondary": "#b5cad5",
+                        "surface-dim": "#0c0e11",
+                        "inverse-surface": "#f9f9fd",
+                        "on-error-container": "#ff9993",
+                        "tertiary-container": "#c1cdfb",
+                        "secondary-dim": "#a8bcc7",
+                        "on-primary-container": "#c9e8f8",
+                        "on-tertiary": "#414d73",
+                        "on-primary-fixed-variant": "#425f6d",
+                        "on-secondary": "#30434c",
+                        "surface-container-low": "#111417",
+                        "surface-container-high": "#1c2025",
+                        "surface": "#0c0e11",
+                        "surface-variant": "#22262c",
+                        "tertiary-fixed-dim": "#b3c0ec",
+                        "on-secondary-fixed": "#2f424b",
+                        "primary-fixed-dim": "#bad9e9",
+                        "surface-tint": "#adcbdb",
+                        "primary": "#adcbdb",
+                        "on-tertiary-fixed": "#243155",
+                        "error-dim": "#c54d4a",
+                        "tertiary-fixed": "#c1cdfb",
+                        "on-secondary-container": "#aec2ce",
+                        "on-surface": "#e2e5ee",
+                        "tertiary": "#d3dcff",
+                        "on-secondary-fixed-variant": "#4b5e68",
+                        "primary-dim": "#9fbdcd",
+                        "on-background": "#e2e5ee",
+                        "secondary-container": "#2b3e47",
+                        "inverse-on-surface": "#535559",
+                        "on-tertiary-container": "#38446a",
+                        "outline-variant": "#44484f",
+                        "surface-container-lowest": "#000000",
+                        "secondary-fixed-dim": "#c3d7e3",
+                        "outline": "#72767d",
+                        "error": "#fa746f",
+                        "inverse-primary": "#466371",
+                        "on-surface-variant": "#a7abb3",
+                        "error-container": "#871f21"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(23, 26, 30, 0.7);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body selection:bg-primary/30">
+    <!-- TopAppBar -->
+    <header class="fixed top-0 z-50 flex justify-between items-center w-full px-8 h-16 bg-[#0C0E11] text-[#ADCBDB]">
+        <div class="flex items-center gap-8">
+            <span class="text-xl font-bold font-headline text-[#ADCBDB]">StudySync</span>
+            <div class="hidden md:flex items-center gap-6">
+                <span class="text-on-surface-variant font-label text-sm tracking-wide">Quiet Library</span>
+                <div
+                    class="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/30 border border-outline-variant/10">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-xs font-medium text-primary">12 Studiers</span>
+                </div>
+            </div>
+        </div>
+        <nav class="hidden md:flex items-center gap-8">
+            <a class="font-label text-sm tracking-wide text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Profile</a>
+            <a class="font-label text-sm tracking-wide text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Leaderboard</a>
+            <a class="font-label text-sm tracking-wide text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Settings</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <button class="material-symbols-outlined text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors duration-300"
+                data-icon="group">group</button>
+            <button class="material-symbols-outlined text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors duration-300"
+                data-icon="notifications">notifications</button>
+            <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+                <img alt="User profile" class="w-full h-full object-cover"
+                    data-alt="minimalist close-up portrait of a professional woman with soft lighting and blurred background"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRFeUgomZ8g8-q4X9NIcXjiE9AIWdqPqtnZkNdfFzt6gwE3LRGw_oet2w-3qDyhCTCxB1_Y8b3Pifaqs-dBybBY8_dhv7EjaNkxrrXNdjT9pw0an8EH1eOXdoqNZi4rhlKnYq2VFwKjSQm9XAijbcDxh7ZB8sPuF7xSx35oCVgVP8ECUyKo91BXNHNLTRVA1f7oiUxoyPwNhz-YYF3QudyB6YbRNu0UfSwzmA9uA8UxysE9oRO57WV_YUJWgykGekes-dMM9qLKS4" />
+            </div>
+        </div>
+    </header>
+    <!-- SideNavBar -->
+    <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col p-4 bg-[#111417] text-[#ADCBDB] z-40">
+        <div class="flex items-center gap-3 px-2 mb-8">
+            <div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary" data-icon="menu_book">menu_book</span>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold font-headline">Study Controls</h3>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Deep Work Phase</p>
+            </div>
+        </div>
+        <div class="space-y-2 flex-grow">
+            <button
+                class="w-full flex items-center gap-3 px-4 py-3 text-[#ADCBDB] bg-[#171A1E] rounded-lg translate-x-1 duration-300">
+                <span class="material-symbols-outlined" data-icon="play_circle">play_circle</span>
+                <span class="font-inter text-sm font-medium">Start Session</span>
+            </button>
+            <button
+                class="w-full flex items-center gap-3 px-4 py-3 text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300">
+                <span class="material-symbols-outlined" data-icon="timer">timer</span>
+                <span class="font-inter text-sm font-medium">Timer</span>
+            </button>
+            <button
+                class="w-full flex items-center gap-3 px-4 py-3 text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300">
+                <span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
+                <span class="font-inter text-sm font-medium">Check-in</span>
+            </button>
+            <button
+                class="w-full flex items-center gap-3 px-4 py-3 text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300">
+                <span class="material-symbols-outlined" data-icon="info">info</span>
+                <span class="font-inter text-sm font-medium">Session Info</span>
+            </button>
+        </div>
+        <div class="mt-auto pt-6 space-y-4">
+            <div class="p-4 rounded-xl bg-surface-container-low/50">
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Current Subject</p>
+                <p class="text-sm font-medium text-on-surface">Machine Learning</p>
+                <p class="text-xs text-on-surface-variant mt-1">Neural Networks</p>
+            </div>
+            <button
+                class="w-full py-3 px-4 rounded-lg bg-error-container/20 text-error-dim font-medium text-sm hover:bg-error-container/30 transition-colors">
+                End Session
+            </button>
+        </div>
+    </aside>
+    <!-- Main Canvas -->
+    <main class="ml-64 mr-80 pt-16 min-h-screen relative flex items-center justify-center overflow-hidden">
+        <!-- Ambient background glow -->
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none">
+        </div>
+        <!-- The Study Table -->
+        <div class="relative flex items-center justify-center w-[500px] h-[500px]">
+            <!-- Minimalist Round Table -->
+            <div
+                class="absolute w-[380px] h-[380px] rounded-full bg-surface-container-low border border-outline-variant/10 shadow-[0_0_80px_rgba(0,0,0,0.4)] flex items-center justify-center">
+                <div
+                    class="w-[300px] h-[300px] rounded-full border border-outline-variant/5 bg-gradient-to-br from-surface-container to-surface-container-low flex flex-col items-center justify-center">
+                    <span class="text-6xl font-headline font-extrabold text-on-surface tracking-tighter">25:10</span>
+                    <span
+                        class="text-xs text-on-surface-variant font-medium tracking-[0.2em] mt-2 uppercase">Remaining</span>
+                </div>
+            </div>
+            <!-- Avatars Around Table (Calculated positions) -->
+            <!-- User 1: Alex -->
+            <div class="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 group">
+                <div
+                    class="relative w-16 h-16 rounded-full border-2 border-primary/20 p-1 group-hover:border-primary transition-colors duration-500">
+                    <img alt="Alex"
+                        class="w-full h-full rounded-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        data-alt="portrait of a young man with glasses studying in a dimly lit library atmosphere"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTVSkAFLZkHwNnpvNDxRqpP9wuI5QdWBonHRSGFcO0hkkngvzT4xZwi5IHxayGmn9Jq-v-0HjuUvTotiwyRl56Fh4yKM7lzZWVZ-XwhmWeK08kXZl5hNoyQttoKIIfi8rakSuqwHbiFgdRnIcRC4YkUaevu3pjMS3HiLaclvwSpeFUZCeN6ng27rRKFl-685EsM0yLkcS49hTzyxq1wnUaqO1hutRyZBBZzJRhjY8beSSJFAzMV0pBiNwglImRH2y7lrLa4Jb9ESk" />
+                    <span
+                        class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#4CAF50] border-4 border-background"></span>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs font-semibold text-on-surface">Alex</p>
+                    <p class="text-[10px] text-primary/80 font-mono">18:45</p>
+                </div>
+            </div>
+            <!-- User 2: Mia -->
+            <div class="absolute top-16 -right-12 flex flex-col items-center gap-2 group">
+                <div
+                    class="relative w-16 h-16 rounded-full border-2 border-primary/20 p-1 group-hover:border-primary transition-colors duration-500">
+                    <img alt="Mia"
+                        class="w-full h-full rounded-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        data-alt="portrait of a woman in a high-neck sweater with focused expression and soft warm lighting"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAF56_5QXVygE-5pwecpsRZuO2vvxbt_ccuAtM6z6yb51G_pQ2Gc2ILB0uAZMT8PtNcH9AGqsxrbspVMwoNKaOzOMsDYolHJ6PW-mszSUn4_ctMdVLrGvF5YW6hn4M6IywnHeZA5NLbTgo3JZe8T7XWdRPWqgBpgX7i2Eqn8NXNM7Rh1ECYcfQ2Cvg-J8RK_lP3oCk6OwykiTKse4VPYjBmQxksNkwkfz2lo2Q_yvQYU5khjM8kfXMXEeWAS7kgVH_epWqC_IsY8HQ" />
+                    <span
+                        class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#4CAF50] border-4 border-background"></span>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs font-semibold text-on-surface">Mia</p>
+                    <p class="text-[10px] text-primary/80 font-mono">22:10</p>
+                </div>
+            </div>
+            <!-- User 3: Jordan -->
+            <div class="absolute -bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 group">
+                <div
+                    class="relative w-16 h-16 rounded-full border-2 border-primary/20 p-1 group-hover:border-primary transition-colors duration-500">
+                    <img alt="Jordan"
+                        class="w-full h-full rounded-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        data-alt="portrait of a creative person with headphones on, working in a calm blue-toned studio"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCk_Xp9gbWbqA_273Kkozf6OsMBSgXJhu9h5bOtDUesJRk3ahDTVYLb00iVD_5Mfn3OwgWKLgLO7i3QEFlQWIWOrj79_ZUzq1AIKzDW5RNaYCZGofNcGG6xBNaM42QcdMATwDiu4dQajPslGwKXcOT7lVqEED6Kk0nR3NxPXYtbZGBaODZ80k7jVDj-KVPqlozq6SwsizmvmRQP2pbJs6btQLjmT3ZXugYaxcpYOyFby-T2KO7rXZPHbixXs_ll0DAJbr2lKabDEE8" />
+                    <span
+                        class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-outline-variant border-4 border-background"></span>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs font-semibold text-on-surface">Jordan</p>
+                    <p class="text-[10px] text-on-surface-variant font-mono">Away</p>
+                </div>
+            </div>
+            <!-- User 4: Sarah -->
+            <div class="absolute top-16 -left-12 flex flex-col items-center gap-2 group">
+                <div
+                    class="relative w-16 h-16 rounded-full border-2 border-primary/20 p-1 group-hover:border-primary transition-colors duration-500">
+                    <img alt="Sarah"
+                        class="w-full h-full rounded-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                        data-alt="focused face of a university student with soft natural light from a window"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvryxWLRhcGVTmK4-FarEkKYhVYhFFdiduhvYIU-prennPjP6wMaHO-AX2efBhTYdKHIDuK0SnC4Hk2i15SFPTRUZGNkbxnVDVnJFjaylUvToDFZqNEAPawLX1rLunGaJaD4uHsqsp7oHNjhfKVrpI3_8SN2jDij4SBqbRUFP-mtoLAjztWuKte2HBP00-B8oo1fw2UByBIqxVHNw9ZxfNgBpZyIQm-nEm---XbA_4V_9aqaZOz970i2rPccGm4BxMIXL17KrxTks" />
+                    <span
+                        class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#4CAF50] border-4 border-background"></span>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs font-semibold text-on-surface">Sarah</p>
+                    <p class="text-[10px] text-primary/80 font-mono">05:12</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- NavigationDrawer -->
+    <aside
+        class="fixed right-0 top-16 h-[calc(100vh-64px)] w-80 flex flex-col border-l border-[#A7ABB3]/15 bg-[#111417]/70 backdrop-blur-xl z-40">
+        <div class="p-6">
+            <h2 class="font-inter text-xs uppercase tracking-[0.02em] text-[#ADCBDB] font-bold mb-1">Collaboration</h2>
+            <p class="text-[10px] text-on-surface-variant">Active Peers &amp; Stats</p>
+        </div>
+        <div class="px-6 flex gap-4 mb-4">
+            <button class="text-xs font-bold text-[#ADCBDB] border-b border-[#ADCBDB] pb-2">Leaderboard</button>
+            <button class="text-xs font-medium text-[#A7ABB3] hover:text-[#D3DCFF] transition-colors pb-2">Minimal
+                Chat</button>
+        </div>
+        <!-- Leaderboard Section -->
+        <div class="flex-grow overflow-y-auto px-6 space-y-4">
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container/40">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-primary w-4">1</span>
+                        <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+                            <img alt="User" class="w-full h-full object-cover"
+                                data-alt="minimal circle avatar of a person"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwyHtKDnf8VyU4xYg3TxzOmv-tGHvaHk3LO6G1KWy0zGsgiaQ4iMtxCc62caVyZiGoqPhRFsSDOxl47HaVh_psV1yxN_qJDQQQxb0MPecOKDcqxdRaJncoVDjGormOPhEvP2_a35zR9dsphcY26vkUqZQfhgEXSF39D9PnwqHvqtGfVlFpSyLP1wXijS-vHrHucZ3IRUqW3AhwYKW5dLtYOwRIRcn4Z9U0PxKbilpbR2Z_ZNY12wnRIDyDbybE6mDUZXqqIDevDaM" />
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">Elena R.</span>
+                    </div>
+                    <span class="text-xs text-on-surface-variant">8.2h</span>
+                </div>
+                <div
+                    class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container/20 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-on-surface-variant w-4">2</span>
+                        <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+                            <img alt="User" class="w-full h-full object-cover"
+                                data-alt="minimal circle avatar of a person"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-GeVPSY0hyrnvfcE10zEMjXBCGHC_j-qK2mghft5XMMP5D16acF9TnyfIeMUXcVWIeSqJJFTGPtsy_TgWxCloOstQilzi9FzwKLNenK2Xjpf1mkKHN4XkcLN-2m-6N-soN5gI1o9eVzjTF-ocp9B_YkahePPKplzVkPMkFHZk9X67KNbwNV2qL3E0tjMvEHeuvwVqRMdYtJAGCPmD0xDsjuTf1hMmqLzwV0HtMhRg-QNHspJMn8WVuyPA_qM663904CJCTnDPgQg" />
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">Marcus T.</span>
+                    </div>
+                    <span class="text-xs text-on-surface-variant">7.9h</span>
+                </div>
+                <div
+                    class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container/20 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-on-surface-variant w-4">3</span>
+                        <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+                            <img alt="User" class="w-full h-full object-cover"
+                                data-alt="minimal circle avatar of a person"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDetCJ_YCDOkP4LbEnCj9g4Ud4of8nEauNaqx4hsoiAIEVtzs3lnyi0gXFrl0iyODSqjm1O0ii2HrNAO0os-4eIWZ3uGUoyz69AfDYVie_dliIyts49pWhJ1fjlv-8CUYmqSsFFn8oV2Heb8ollYrzYkUGP_wkT-o8CoG9Y4r7Vdwdj00bhYA66aHOw2ImAx3iil2dAv2V6bSlRMW8EXxrXwoEBnpvYF8FqslAHfBLl4_lWSUjdlia3pdT06FaqGaQjRzDazoHCqDM" />
+                        </div>
+                        <span class="text-sm font-medium text-on-surface">Sofia L.</span>
+                    </div>
+                    <span class="text-xs text-on-surface-variant">6.5h</span>
+                </div>
+            </div>
+            <!-- Minimal Chat Preview -->
+            <div class="pt-8">
+                <h3 class="font-inter text-[10px] uppercase tracking-widest text-on-surface-variant mb-4">Live Activity
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-secondary">Alex</span>
+                            <span class="text-[9px] text-on-surface-variant/50">2m ago</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant leading-relaxed">Anyone found good datasets for LSTM
+                            models?</p>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-secondary">Mia</span>
+                            <span class="text-[9px] text-on-surface-variant/50">Just now</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant leading-relaxed">Check UCI Machine Learning
+                            Repository, very clean.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-outline-variant/10">
+            <div class="relative">
+                <input
+                    class="w-full bg-surface-container-low border-none rounded-lg text-xs py-3 px-4 focus:ring-1 focus:ring-primary/30 placeholder:text-on-surface-variant/40"
+                    placeholder="Type a message..." type="text" />
+                <button
+                    class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary-dim text-lg"
+                    data-icon="send">send</button>
+            </div>
+        </div>
+    </aside>
+</body>
+
+</html>

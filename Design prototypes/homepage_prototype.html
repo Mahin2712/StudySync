@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StudySync - Empty Study Room</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-error": "#490006",
+                        "on-primary": "#274451",
+                        "tertiary-dim": "#b3c0ec",
+                        "surface-container": "#171a1e",
+                        "surface-container-highest": "#22262c",
+                        "primary-container": "#395664",
+                        "on-primary-fixed": "#264350",
+                        "on-tertiary-fixed-variant": "#414d73",
+                        "secondary-fixed": "#d1e6f2",
+                        "surface-bright": "#282c33",
+                        "background": "#0c0e11",
+                        "primary-fixed": "#c8e7f7",
+                        "secondary": "#b5cad5",
+                        "surface-dim": "#0c0e11",
+                        "inverse-surface": "#f9f9fd",
+                        "on-error-container": "#ff9993",
+                        "tertiary-container": "#c1cdfb",
+                        "secondary-dim": "#a8bcc7",
+                        "on-primary-container": "#c9e8f8",
+                        "on-tertiary": "#414d73",
+                        "on-primary-fixed-variant": "#425f6d",
+                        "on-secondary": "#30434c",
+                        "surface-container-low": "#111417",
+                        "surface-container-high": "#1c2025",
+                        "surface": "#0c0e11",
+                        "surface-variant": "#22262c",
+                        "tertiary-fixed-dim": "#b3c0ec",
+                        "on-secondary-fixed": "#2f424b",
+                        "primary-fixed-dim": "#bad9e9",
+                        "surface-tint": "#adcbdb",
+                        "primary": "#adcbdb",
+                        "on-tertiary-fixed": "#243155",
+                        "error-dim": "#c54d4a",
+                        "tertiary-fixed": "#c1cdfb",
+                        "on-secondary-container": "#aec2ce",
+                        "on-surface": "#e2e5ee",
+                        "tertiary": "#d3dcff",
+                        "on-secondary-fixed-variant": "#4b5e68",
+                        "primary-dim": "#9fbdcd",
+                        "on-background": "#e2e5ee",
+                        "secondary-container": "#2b3e47",
+                        "inverse-on-surface": "#535559",
+                        "on-tertiary-container": "#38446a",
+                        "outline-variant": "#44484f",
+                        "surface-container-lowest": "#000000",
+                        "secondary-fixed-dim": "#c3d7e3",
+                        "outline": "#72767d",
+                        "error": "#fa746f",
+                        "inverse-primary": "#466371",
+                        "on-surface-variant": "#a7abb3",
+                        "error-container": "#871f21"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            background-color: #0c0e11;
+            color: #e2e5ee;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body class="font-body">
+    <!-- TopAppBar -->
+    <header class="bg-[#0C0E11] flex justify-between items-center w-full px-8 h-16 fixed top-0 z-50">
+        <div class="flex items-center gap-6">
+            <span class="text-xl font-bold font-manrope text-[#ADCBDB]">StudySync</span>
+            <div class="hidden md:flex items-center gap-2 bg-[#171A1E] px-3 py-1 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-outline"></span>
+                <span class="font-inter text-sm tracking-wide text-[#A7ABB3]">Quantum Physics Room • 0 Studiers</span>
+            </div>
+        </div>
+        <nav class="hidden md:flex items-center gap-8">
+            <a class="text-[#A7ABB3] font-inter text-sm tracking-wide hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Profile</a>
+            <a class="text-[#A7ABB3] font-inter text-sm tracking-wide hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Leaderboard</a>
+            <a class="text-[#A7ABB3] font-inter text-sm tracking-wide hover:text-[#D3DCFF] transition-colors duration-300"
+                href="#">Settings</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <button class="text-[#ADCBDB] hover:text-[#D3DCFF] transition-colors duration-300 active:scale-95">
+                <span class="material-symbols-outlined">group</span>
+            </button>
+            <button class="text-[#ADCBDB] hover:text-[#D3DCFF] transition-colors duration-300 active:scale-95">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <div
+                class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-highest border border-outline-variant/15">
+                <img alt="User profile" class="w-full h-full object-cover"
+                    data-alt="close-up portrait of a user profile avatar with neutral background and soft studio lighting"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDepl3a6KMMSRC3QWwaYyHyk8gTMnN3PvwSgXzoLsO7Zgp9mjTCLXPZB0h8U_Vz4kPJriojRbCzbIx84iQ8quhs0jG_ttn7qSKgFtWg_7ozP2knjqYip87FR3L5daEjqHQ_MpvYqcTdJPrrgYiY0ihv2Kk4PLe_1tJ5gTNdb0bmhoI-GI3Ew1Do5ND1ygn7Bntprr82aGpDREgMRvNLyE3_5j0dDO5e7IMjAiArTu9IflEWS-lxEmw0nNbIzpchBGpJ7hxNTwxC4co" />
+            </div>
+        </div>
+    </header>
+    <div class="flex h-screen pt-16">
+        <!-- SideNavBar -->
+        <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-[#111417] flex flex-col p-4 z-40">
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="w-10 h-10 rounded-lg bg-[#171A1E] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#ADCBDB]">meeting_room</span>
+                </div>
+                <div>
+                    <h3 class="font-inter text-sm font-medium text-[#ADCBDB]">Study Controls</h3>
+                    <p class="text-[10px] text-[#A7ABB3] uppercase tracking-wider">Deep Work Phase</p>
+                </div>
+            </div>
+            <nav class="flex flex-col gap-1 mb-auto">
+                <button
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#ADCBDB] bg-[#171A1E] transition-all duration-300 translate-x-1">
+                    <span class="material-symbols-outlined">play_circle</span>
+                    <span class="font-inter text-sm font-medium">Start Session</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300 opacity-50 cursor-not-allowed">
+                    <span class="material-symbols-outlined">timer</span>
+                    <span class="font-inter text-sm font-medium">Timer</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300 opacity-50 cursor-not-allowed">
+                    <span class="material-symbols-outlined">how_to_reg</span>
+                    <span class="font-inter text-sm font-medium">Check-in</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#A7ABB3] hover:bg-[#22262C] hover:text-[#D3DCFF] transition-all duration-300 opacity-50 cursor-not-allowed">
+                    <span class="material-symbols-outlined">info</span>
+                    <span class="font-inter text-sm font-medium">Session Info</span>
+                </button>
+            </nav>
+            <button
+                class="w-full py-3 px-4 rounded-xl bg-primary-container text-on-primary-container font-medium text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]">
+                <span class="material-symbols-outlined text-sm">login</span>
+                Join Table
+            </button>
+        </aside>
+        <!-- Main Content Canvas -->
+        <main class="flex-1 ml-64 mr-80 relative flex items-center justify-center">
+            <!-- Background Atmospheric Glow -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full">
+                </div>
+            </div>
+            <div class="relative z-10 flex flex-col items-center">
+                <!-- Minimalist Round Table -->
+                <div class="relative">
+                    <!-- The Table Shadow/Depth -->
+                    <div class="absolute inset-0 translate-y-4 blur-2xl bg-black/40 rounded-full scale-95"></div>
+                    <!-- The Table Top -->
+                    <div
+                        class="w-[480px] h-[480px] rounded-full bg-gradient-to-br from-surface-container-high to-surface-container-low border border-outline-variant/10 flex items-center justify-center relative overflow-hidden">
+                        <!-- Glass texture -->
+                        <div class="absolute inset-0 opacity-20"
+                            style="background-image: radial-gradient(circle at 2px 2px, rgba(173,203,219,0.1) 1px, transparent 0); background-size: 24px 24px;">
+                        </div>
+                        <!-- Inner Table Ring -->
+                        <div
+                            class="w-[420px] h-[420px] rounded-full border border-primary/5 flex flex-col items-center justify-center p-12 text-center">
+                            <div
+                                class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center mb-6 border border-outline-variant/20">
+                                <span class="material-symbols-outlined text-primary text-3xl">chair_alt</span>
+                            </div>
+                            <h2 class="font-headline text-2xl font-bold text-on-surface mb-2 tracking-tight">The room is
+                                quiet.</h2>
+                            <p class="font-body text-on-surface-variant max-w-[240px] leading-relaxed">Ready to start
+                                your focused study session? Be the first to take a seat.</p>
+                            <button
+                                class="mt-8 px-8 py-3 rounded-full bg-primary-container text-on-primary-container font-semibold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/20">
+                                Start Studying
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Placeholder for where avatars would sit (empty indicators) -->
+                    <div
+                        class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <div
+                        class="absolute top-1/4 -right-6 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <div
+                        class="absolute bottom-1/4 -right-6 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <div
+                        class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <div
+                        class="absolute bottom-1/4 -left-6 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <div
+                        class="absolute top-1/4 -left-6 w-12 h-12 rounded-full border-2 border-dashed border-outline-variant/30 flex items-center justify-center text-outline-variant/40">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- NavigationDrawer -->
+        <aside
+            class="fixed right-0 top-16 h-[calc(100vh-64px)] w-80 bg-[#111417]/70 backdrop-blur-xl flex flex-col border-l border-[#A7ABB3]/15 z-40">
+            <div class="p-6">
+                <div class="mb-8">
+                    <h4 class="font-inter text-xs uppercase tracking-[0.02em] text-[#A7ABB3] mb-4">Collaboration</h4>
+                    <h3 class="font-headline text-lg font-bold text-[#ADCBDB]">Active Peers</h3>
+                    <p class="text-xs text-[#A7ABB3] mt-1">Join the table to see who is studying.</p>
+                </div>
+                <!-- Empty Leaderboard Section -->
+                <section class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5
+                            class="font-inter text-xs uppercase tracking-[0.02em] text-[#A7ABB3] flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">leaderboard</span>
+                            Leaderboard
+                        </h5>
+                    </div>
+                    <div
+                        class="bg-surface-container-low/50 rounded-xl p-6 border border-outline-variant/10 text-center">
+                        <span class="material-symbols-outlined text-outline-variant mb-2 text-2xl">trophy</span>
+                        <p class="text-sm text-on-surface-variant italic">No active leaderboard yet.</p>
+                    </div>
+                </section>
+                <!-- Empty Chat Section -->
+                <section class="flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5
+                            class="font-inter text-xs uppercase tracking-[0.02em] text-[#A7ABB3] flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">chat_bubble_outline</span>
+                            Minimal Chat
+                        </h5>
+                    </div>
+                    <div
+                        class="flex-1 bg-surface-container-low/50 rounded-xl p-6 border border-outline-variant/10 flex flex-col items-center justify-center text-center">
+                        <div
+                            class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined text-primary/50">forum</span>
+                        </div>
+                        <p class="text-sm text-on-surface-variant">Be the first to join the chat.</p>
+                        <p class="text-[10px] text-outline mt-2 leading-relaxed">Share resources, ask questions, or just
+                            send a focused hello.</p>
+                    </div>
+                </section>
+            </div>
+            <!-- Disabled Chat Input -->
+            <div class="p-4 mt-auto">
+                <div class="relative opacity-40 cursor-not-allowed">
+                    <input
+                        class="w-full bg-surface-container-highest border-none rounded-full px-4 py-3 text-xs text-on-surface focus:ring-0"
+                        disabled="" placeholder="Join the room to chat..." type="text" />
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary p-1" disabled="">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <!-- Background Decoration Overlay -->
+    <div class="fixed inset-0 pointer-events-none z-[-1] bg-[#0c0e11]"
+        style="background-image: radial-gradient(circle at 50% 50%, #171a1e 0%, #0c0e11 100%);"></div>
+</body>
+
+</html>
