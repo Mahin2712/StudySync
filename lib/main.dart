@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/profile_setup_screen.dart';
+import 'services/profile_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +22,6 @@ class StudySyncApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check if user is already logged in → go straight to Home
-    final session = Supabase.instance.client.auth.currentSession;
-
     return MaterialApp(
       title: 'StudySync',
       debugShowCheckedModeBanner: false,
@@ -33,7 +32,43 @@ class StudySyncApp extends StatelessWidget {
           surface: Color(0xFF111417),
         ),
       ),
-      home: session != null ? const HomeScreen() : const LoginScreen(),
+      home: const _AppRouter(),
+    );
+  }
+}
+
+/// Async routing widget that checks auth state and profile completeness.
+class _AppRouter extends StatefulWidget {
+  const _AppRouter();
+
+  @override
+  State<_AppRouter> createState() => _AppRouterState();
+}
+
+class _AppRouterState extends State<_AppRouter> {
+  @override
+  Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
+    // Not logged in → go to login
+    if (session == null) return const LoginScreen();
+
+    // Logged in → check if profile is complete before allowing home
+    return FutureBuilder<bool>(
+      future: ProfileService.isProfileComplete(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF0C0E11),
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFFADCBDB)),
+            ),
+          );
+        }
+        final isComplete = snap.data ?? false;
+        if (!isComplete) return const ProfileSetupScreen();
+        return const HomeScreen();
+      },
     );
   }
 }

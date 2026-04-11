@@ -1093,6 +1093,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   // ─── Right Members Panel ──────────────────────────────────────────────────
 
   Widget _buildMembersPanel() {
+    // Sort active sessions by elapsed time DESC (longest = 1st place)
+    final liveRanked = [..._activeSessions]
+      ..sort((a, b) => b.elapsed.compareTo(a.elapsed));
+
     return Container(
       width: 288,
       decoration: const BoxDecoration(
@@ -1102,59 +1106,117 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header ───────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Text(
-                  'ACTIVE STUDIERS',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    color: _onSurfaceVariant,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'LIVE NOW',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          color: _onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            '${liveRanked.length} Studying',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: _primary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 600),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: liveRanked.isNotEmpty
+                                  ? _green
+                                  : _onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      '${_activeSessions.length} Studying',
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: _primary,
-                      ),
+                // 🔥 LIVE badge
+                if (liveRanked.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _green.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                          color: _green.withValues(alpha: 0.4)),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _activeSessions.isNotEmpty
-                            ? _green
-                            : _onSurfaceVariant,
-                      ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🔥', style: TextStyle(fontSize: 10)),
+                        SizedBox(width: 3),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: _green,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_memberIds.length} in room · ${widget.roomName}',
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: _onSurfaceVariant,
                   ),
-                ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          const Divider(color: Color(0x1AA7ABB3), height: 1),
+
+          const SizedBox(height: 12),
+
+          // ── Live leaderboard rows ─────────────────────────────────────
+          if (liveRanked.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: liveRanked.asMap().entries.map((e) {
+                  return _buildLiveRow(e.value, e.key + 1);
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Divider(color: Color(0x1AA7ABB3), height: 1),
+          ],
+
+          // ── All members label ─────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+            child: Text(
+              'ALL MEMBERS  •  ${_memberIds.length} in room',
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 9,
+                letterSpacing: 1.5,
+                color: _onSurfaceVariant,
+              ),
+            ),
+          ),
+
+          // ── Member tiles ──────────────────────────────────────────────
           Expanded(
             child: _isLoading
                 ? const Center(
@@ -1163,10 +1225,104 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     ? _buildEmptyState()
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                            horizontal: 16, vertical: 4),
                         itemCount: _memberIds.length,
                         itemBuilder: (_, i) => _buildMemberTile(i),
                       ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A compact ranked row in the live leaderboard.
+  Widget _buildLiveRow(StudySessionModel session, int rank) {
+    final isMe = session.userId == _myUserId;
+    final isWarn = session.checkinStatus == CheckinStatus.warning;
+    final accentColor = isWarn ? _amber : _green;
+    final shortId = session.userId.substring(0, 6).toUpperCase();
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isMe
+                ? _primary.withValues(alpha: 0.4)
+                : accentColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          // Rank
+          SizedBox(
+            width: 20,
+            child: Text(
+              '#$rank',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isMe ? _primary : _onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Avatar dot
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accentColor.withValues(alpha: 0.15),
+              border: Border.all(
+                  color: accentColor.withValues(alpha: 0.4), width: 1),
+            ),
+            child: Center(
+              child: Text(
+                '$rank',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: accentColor,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Name
+          Expanded(
+            child: Text(
+              isMe ? 'You' : shortId,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight:
+                    isMe ? FontWeight.w700 : FontWeight.w500,
+                color: isMe ? _primary : _onSurface,
+              ),
+            ),
+          ),
+          // Live timer
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.timer_outlined, color: accentColor, size: 11),
+              const SizedBox(width: 3),
+              Text(
+                StudySessionModel.formatDuration(session.elapsed),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: accentColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
         ],
       ),

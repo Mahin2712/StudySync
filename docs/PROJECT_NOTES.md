@@ -76,23 +76,46 @@ lib/
 
 ---
 
-## ✅ Features Completed
-- [x] Flutter + Supabase connected
-- [x] Email/password login & signup
-- [x] Session persistence (auto-navigate on re-open)
-- [x] Homepage matching prototype (dark theme, round table, sidebar, right panel)
-- [x] Room create / join / list system
-- [x] **Study Session System (Timer + State)**
-- [x] Live HH:MM:SS timer center-piece in RoomDetailScreen
-- [x] Multi-user visibility (see others' live timers and subjects)
-- [x] Duplicate session prevention (app-level guard)
-- [x] Check-in System (Anti-Fake Study)
+## 📈 Project Roadmap & Progress
 
-## 🔜 Upcoming Features
+### ✅ Phase 1: Core System (Completed)
 
-- [ ] Leaderboard (real-time study time tracking)
-- [ ] Chat inside room
-- [ ] User profiles
+#### Milestone 1: Foundation & Authentication
+- [x] Flutter project initialization (Web & Desktop).
+- [x] Supabase integration & backend configuration.
+- [x] Email/Password Sign-in & Sign-up systems.
+- [x] Database schema design for `rooms` and `room_members`.
+
+#### Milestone 2: Room & Presence System
+- [x] "Create Room" and "Join Room" logic.
+- [x] Secure RLS (Row Level Security) policies for shared room data.
+- [x] Real-time member listing and presence visibility.
+
+#### Milestone 3: The Study Loop (The Heart of StudySync)
+- [x] `study_sessions` tracking system.
+- [x] Live HH:MM:SS study timer centerpiece in `RoomDetailScreen`.
+- [x] Multi-user visibility (seeing friends' live subjects and progress).
+- [x] Duplicate session prevention (backend/app-level guards).
+
+#### Milestone 4: Accountability (Anti-Cheat)
+- [x] **Anti-Fake Study Check-in System**.
+- [x] 20-minute periodic check-in popups.
+- [x] 60-second grace window with auto-stop on timeout.
+- [x] Live session status indicators (🟢 Active / 🟡 Warning / 🔴 Inactive).
+
+#### Milestone 5: Optimization & Polish
+- [x] Mobile-responsive layout updates for all screens.
+- [x] Premium "Dark Mode" aesthetic with Glassmorphism.
+- [x] Transition animations and real-time state sync.
+
+---
+
+### 🔜 Phase 2: Social & Analytics (Next Up)
+
+- [ ] **Leaderboards:** Daily, Weekly, and Monthly study time rankings.
+- [ ] **Live Chat:** Minimalist, low-noise text chat within study rooms.
+- [ ] **Personal Stats Dashboard:** Subject-wise breakdowns and calendar views.
+- [ ] **Friend System:** Following friends and getting notified when they start studying.
 
 ---
 
