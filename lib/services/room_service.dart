@@ -32,11 +32,16 @@ class RoomService {
   }
 
   /// Create a new room and return its id
-  static Future<String> createRoom(String name) async {
+  static Future<String> createRoom(String name, {String subject = 'Others'}) async {
     final userId = _client.auth.currentUser!.id;
     final data = await _client
         .from('rooms')
-        .insert({'name': name, 'created_by': userId})
+        .insert({
+          'name': name,
+          'created_by': userId,
+          'subject': subject,
+          'is_custom': true,
+        })
         .select('id')
         .single();
     return data['id'] as String;

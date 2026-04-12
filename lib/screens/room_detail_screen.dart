@@ -4,16 +4,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/study_session_model.dart';
 import '../services/room_service.dart';
 import '../services/session_service.dart';
+import '../models/room_model.dart';
+
+/// Combined connectivity state for the room's Realtime channel.
+/// Derived from BOTH the socket subscription status AND how recently
+/// we received a Postgres‑change event (to avoid false 🟡 in quiet rooms).
+enum _ConnStatus { live, idle, disconnected }
 
 /// Screen shown once a user has joined/created a room.
 class RoomDetailScreen extends StatefulWidget {
   final String roomId;
   final String roomName;
+  final RoomModel? room;
 
   const RoomDetailScreen({
     super.key,
     required this.roomId,
     required this.roomName,
+    this.room,
   });
 
   @override
@@ -21,7 +29,7 @@ class RoomDetailScreen extends StatefulWidget {
 }
 
 class _RoomDetailScreenState extends State<RoomDetailScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // ─── State ───────────────────────────────────────────────────────────────
   List<String> _memberIds = [];
   bool _isLoading = true;
@@ -30,9 +38,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   StudySessionModel? _mySession; // null = not studying
   List<StudySessionModel> _activeSessions = [];
 
-  Timer? _uiTicker;          // ticks every second
-  Timer? _pollTimer;         // polls DB every 5 s
-  Timer? _checkinGraceTimer; // fires auto-stop if check-in ignored
+  Timer? _uiTicker;          // ticks every second for UI + check-in logic
+  Timer? _watchdogTimer;     // fallback: manual refresh if no realtime in 15 s
+  Timer? _checkinGraceTimer; // fires auto-stop if check-in popup is ignored
+  RealtimeChannel? _realtimeSub; // filtered by room_id
+  DateTime _lastRealtimeEvent = DateTime.now();
+  /// The raw socket status string from Supabase ('SUBSCRIBED', 'CLOSED', etc.)
+  String _socketStatus = '';
   bool _checkinPopupShowing = false;
   // uid → time they disappeared (shows 🔴 for 5 s)
   final Map<String, DateTime> _recentlyMissedUserIds = {};
@@ -73,16 +85,32 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
     _initialLoad();
     _startUiTicker();
-    _startPollTimer();
+    _subscribeRealtime();
+    _startWatchdog();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _glowCtrl.dispose();
     _uiTicker?.cancel();
-    _pollTimer?.cancel();
+    _watchdogTimer?.cancel();
     _checkinGraceTimer?.cancel();
+    if (_realtimeSub != null) {
+      Supabase.instance.client.removeChannel(_realtimeSub!);
+    }
     super.dispose();
+  }
+
+  // ─── App lifecycle (background → foreground) ─────────────────────────────
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Immediately sync state when user comes back to the tab/app.
+      _loadSessionState().then((_) => _evaluateCheckin());
+    }
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────
@@ -126,18 +154,15 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   void _startUiTicker() {
     _uiTicker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      // ── Check-in trigger (only MY session) ───────────────────────────────
+      // Evaluate check-in only for MY session, and only once per popup cycle.
       if (_mySession != null && !_checkinPopupShowing) {
-        final next = _mySession!.nextCheckinAt;
-        if (next != null && DateTime.now().toUtc().isAfter(next)) {
-          _showCheckinPopup();
-        }
+        _evaluateCheckin();
       }
-      // ── Expire recently-missed linger after 5 s ──────────────────────────
+      // Expire recently-missed linger after 5 s.
       final now = DateTime.now();
       _recentlyMissedUserIds
           .removeWhere((_, t) => now.difference(t).inSeconds >= 5);
-      // ── Rebuild UI ────────────────────────────────────────────────────────
+      // Rebuild UI if there is anything time-sensitive on screen.
       if (_activeSessions.isNotEmpty ||
           _recentlyMissedUserIds.isNotEmpty ||
           _mySession != null) {
@@ -146,21 +171,82 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     });
   }
 
-  void _startPollTimer() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
-      await _loadSessionState();
+  /// Evaluates whether a check-in popup should show or auto-stop should fire.
+  /// Uses ONLY `timeSinceActivity` from the model — no nextCheckinAt.
+  void _evaluateCheckin() {
+    final session = _mySession;
+    if (session == null || _checkinPopupShowing) return;
+    if (session.isAutoStopDue) {
+      // Grace expired — auto-stop immediately.
+      _autoStop();
+    } else if (session.isCheckinDue) {
+      // Interval elapsed — show the popup.
+      _showCheckinPopup();
+    }
+  }
+
+  // ─── Supabase Realtime (filtered to this room) ────────────────────────────
+
+  void _subscribeRealtime() {
+    _realtimeSub = Supabase.instance.client
+        .channel('room_sessions_${widget.roomId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'study_sessions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'room_id',
+            value: widget.roomId,
+          ),
+          callback: (payload) {
+            _lastRealtimeEvent = DateTime.now();
+            if (mounted) _loadSessionState();
+          },
+        )
+        .subscribe((status, [error]) {
+          // Capture the raw socket status so _connectionStatus can use it.
+          if (mounted) setState(() => _socketStatus = status.toString());
+        });
+  }
+
+  /// Derive combined connectivity colour:
+  /// 🟢 = socket subscribed AND currently studying (session is active)
+  /// 🟡 = socket subscribed but not studying (idle)
+  /// 🔴 = socket closed / errored
+  _ConnStatus get _connectionStatus {
+    final socketError =
+        _socketStatus.contains('CLOSED') || _socketStatus.contains('CHANNEL_ERROR');
+
+    if (socketError) return _ConnStatus.disconnected;
+    if (_isStudying && _mySession?.isActive == true) return _ConnStatus.live;
+    return _ConnStatus.idle; // connected but idle
+  }
+
+  // ─── Watchdog fallback (if no realtime event in 15 s → manual refresh) ───
+
+  void _startWatchdog() {
+    _watchdogTimer =
+        Timer.periodic(const Duration(seconds: 15), (_) async {
+      if (!mounted) return;
+      final elapsed = DateTime.now().difference(_lastRealtimeEvent).inSeconds;
+      if (elapsed >= 15) {
+        // No realtime update received — fall back to a manual poll.
+        await _loadSessionState();
+      }
     });
   }
 
   // ─── Session actions ──────────────────────────────────────────────────────
 
-  Future<void> _startStudying({String? subject}) async {
+  Future<void> _startStudying({String? subject, String? chapter}) async {
     if (_isStarting) return;
     setState(() => _isStarting = true);
     try {
       final session = await SessionService.startSession(
         widget.roomId,
         subject: subject,
+        chapter: chapter,
       );
       if (mounted) {
         setState(() => _mySession = session);
@@ -201,14 +287,18 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   void _showStartDialog() {
     final controller = TextEditingController();
+    final bool isCustom = widget.room?.isCustom ?? true;
+    final String title = isCustom ? 'Start Custom Session' : 'Start ${widget.room!.subject} Session';
+    final String prompt = isCustom ? 'What are you studying?' : 'What chapter or topic? (optional)';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF171A1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Start Studying',
-          style: TextStyle(
+        title: Text(
+          title,
+          style: const TextStyle(
             fontFamily: 'Inter',
             fontWeight: FontWeight.w700,
             color: _primary,
@@ -218,9 +308,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "What are you studying? (optional)",
-              style: TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant, fontSize: 13),
+            Text(
+              prompt,
+              style: const TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -228,7 +318,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               autofocus: true,
               style: const TextStyle(fontFamily: 'Inter', color: _onSurface),
               decoration: InputDecoration(
-                hintText: 'e.g. Physics Chapter 5…',
+                hintText: isCustom ? 'e.g. My Personal Project' : 'e.g. Thermodynamics, Chapter 4...',
                 hintStyle: const TextStyle(color: _onSurfaceVariant, fontFamily: 'Inter'),
                 filled: true,
                 fillColor: _surfaceHigh,
@@ -236,8 +326,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ],
@@ -246,24 +335,23 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant)),
+            child: const Text('Cancel', style: TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () {
-              final subject =
-                  controller.text.trim().isEmpty ? null : controller.text.trim();
+              final input = controller.text.trim();
+              final chapter = input.isEmpty ? null : input;
+              final subjectStr = isCustom ? 'Others' : widget.room!.subject;
+              
               Navigator.pop(ctx);
-              _startStudying(subject: subject);
+              _startStudying(subject: subjectStr, chapter: chapter);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryContainer,
               foregroundColor: _onPrimaryContainer,
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              textStyle:
-                  const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
             ),
             child: const Text('Start'),
           ),
@@ -414,10 +502,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   Future<void> _autoStop() async {
     if (!mounted) return;
-    // ── Race condition guard: re-fetch before stopping ───────────────────────
+    // ── Race condition guard: re-fetch before stopping ──────────────────────
     final updated = await SessionService.getActiveSessionForUser();
-    if (updated != null && updated.checkinStatus == CheckinStatus.active) {
-      // User confirmed at the last second — abort auto-stop
+    if (updated != null && !updated.isCheckinDue) {
+      // User confirmed at the last second — abort auto-stop.
       if (mounted) {
         Navigator.of(context, rootNavigator: true).maybePop();
         setState(() {
@@ -560,6 +648,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               ],
             ),
           ),
+          const SizedBox(width: 10),
+          // ── Hybrid Heartbeat Indicator ───────────────────────────────
+          _buildConnectionDot(),
           const Spacer(),
           IconButton(
             onPressed: _initialLoad,
@@ -585,6 +676,76 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Hybrid heartbeat indicator.
+  /// Combines _socketStatus (from the Supabase channel callback) with
+  /// _lastRealtimeEvent timestamp so quiet rooms don't show false 🔴.
+  Widget _buildConnectionDot() {
+    final status = _connectionStatus;
+    final Color dotColor;
+    final String label;
+    const String liveLabel = 'Live';
+    const String idleLabel = 'Idle';
+    const String disconnectedLabel = 'Disconnected';
+
+    switch (status) {
+      case _ConnStatus.live:
+        dotColor = _green;
+        label = liveLabel;
+      case _ConnStatus.idle:
+        dotColor = _amber;
+        label = idleLabel;
+      case _ConnStatus.disconnected:
+        dotColor = _red;
+        label = disconnectedLabel;
+    }
+
+    return Tooltip(
+      message: '$label · last event ${
+        DateTime.now().difference(_lastRealtimeEvent).inSeconds
+      }s ago',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: dotColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: dotColor.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: dotColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: dotColor.withValues(alpha: 0.5),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: dotColor,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

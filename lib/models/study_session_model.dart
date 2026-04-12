@@ -12,8 +12,11 @@ class StudySessionModel {
   final DateTime? lastActivityAt;
   final int missedCheckins;
 
-  /// How long between check-ins (single source of truth).
+  /// How long between check-ins — single source of truth.
   static const checkinInterval = Duration(minutes: 20);
+
+  /// Grace window after the check-in interval before auto-stop fires.
+  static const checkinGrace = Duration(seconds: 60);
 
   const StudySessionModel({
     required this.id,
@@ -32,15 +35,27 @@ class StudySessionModel {
   Duration get elapsed =>
       DateTime.now().toUtc().difference(startTime.toUtc());
 
-  /// Computed — NOT stored in DB. Always UTC.
+  /// How long ago the user last confirmed activity.
+  /// This is the SINGLE SOURCE OF TRUTH for check-in decisions.
+  Duration get timeSinceActivity {
+    final ref = lastActivityAt ?? startTime;
+    return DateTime.now().toUtc().difference(ref.toUtc());
+  }
+
+  /// True if the check-in popup should be shown.
+  bool get isCheckinDue => timeSinceActivity >= checkinInterval;
+
+  /// True if the session should be auto-stopped (interval + full grace elapsed).
+  bool get isAutoStopDue => timeSinceActivity >= checkinInterval + checkinGrace;
+
+  /// Derived convenience — NOT stored in DB.
   DateTime? get nextCheckinAt =>
       lastActivityAt?.toUtc().add(checkinInterval);
 
-  /// Active = check-in not yet due. Warning = overdue (popup should show).
+  /// Active = check-in not yet due. Warning = check-in overdue.
   CheckinStatus get checkinStatus {
-    final next = nextCheckinAt;
-    if (next == null) return CheckinStatus.active;
-    return DateTime.now().toUtc().isAfter(next)
+    if (lastActivityAt == null) return CheckinStatus.active;
+    return timeSinceActivity >= checkinInterval
         ? CheckinStatus.warning
         : CheckinStatus.active;
   }

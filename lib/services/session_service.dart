@@ -13,6 +13,7 @@ class SessionService {
   static Future<StudySessionModel?> startSession(
     String roomId, {
     String? subject,
+    String? chapter,
   }) async {
     // Duplicate guard
     final existing = await getActiveSessionForUser();
@@ -25,6 +26,7 @@ class SessionService {
           'user_id': _uid,
           'room_id': roomId,
           'subject': subject,
+          'chapter': chapter,
           'start_time': now,
           'is_active': true,
           'last_activity_at': now,
@@ -53,10 +55,12 @@ class SessionService {
 
   /// Stops session and increments missed_checkins by 1.
   static Future<void> autoStopSession() async {
-    // Fetch current count first (Supabase REST doesn't support column expressions)
+    // Fetch both missed_checkins and last_activity_at.
+    // We use last_activity_at as end_time so the user is only credited for
+    // the time they were *confirmed present* — not the unconfirmed tail segment.
     final existing = await _client
         .from('study_sessions')
-        .select('missed_checkins')
+        .select('missed_checkins, last_activity_at')
         .eq('user_id', _uid)
         .eq('is_active', true)
         .maybeSingle();
@@ -65,11 +69,17 @@ class SessionService {
 
     final currentMissed = (existing['missed_checkins'] as int?) ?? 0;
 
+    // Prefer last_activity_at as the honest end_time; fall back to now() only
+    // if the column is somehow null (e.g. very old rows).
+    final endTime = existing['last_activity_at'] != null
+        ? existing['last_activity_at'] as String
+        : DateTime.now().toUtc().toIso8601String();
+
     await _client
         .from('study_sessions')
         .update({
           'is_active': false,
-          'end_time': DateTime.now().toUtc().toIso8601String(),
+          'end_time': endTime,
           'missed_checkins': currentMissed + 1,
         })
         .eq('user_id', _uid)

@@ -3,6 +3,8 @@ class RoomModel {
   final String name;
   final String createdBy;
   final DateTime createdAt;
+  final String subject;
+  final bool isCustom;
   int memberCount;
 
   RoomModel({
@@ -10,6 +12,8 @@ class RoomModel {
     required this.name,
     required this.createdBy,
     required this.createdAt,
+    required this.subject,
+    required this.isCustom,
     this.memberCount = 0,
   });
 
@@ -19,6 +23,8 @@ class RoomModel {
       name: json['name'] as String? ?? 'Unnamed Room',
       createdBy: json['created_by'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
+      subject: json['subject'] as String? ?? 'Others',
+      isCustom: json['is_custom'] as bool? ?? true,
     );
   }
 }

@@ -47,11 +47,16 @@ class UserStats {
   final double monthly;
   final double total;
 
+  /// Hours per subject (Dashboard view).
+  /// Non-standard subjects are bucketed under the key 'others'.
+  final Map<String, double> subjectBreakdown;
+
   const UserStats({
     required this.daily,
     required this.weekly,
     required this.monthly,
     required this.total,
+    this.subjectBreakdown = const {},
   });
 
   static const zero = UserStats(daily: 0, weekly: 0, monthly: 0, total: 0);

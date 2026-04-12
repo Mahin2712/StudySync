@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
 import 'room_sheet.dart';
 import 'leaderboard_screen.dart';
+import 'stats_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -184,6 +185,28 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             child: const Text(
               'Leaderboard',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: _primary,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 24),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => const StatsDashboardScreen(),
+                transitionsBuilder: (_, anim, __, child) =>
+                    FadeTransition(opacity: anim, child: child),
+                transitionDuration: const Duration(milliseconds: 300),
+              ),
+            ),
+            child: const Text(
+              'My Stats',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontSize: 13,

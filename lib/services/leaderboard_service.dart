@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/leaderboard_entry_model.dart';
+import 'subject_service.dart';
 
 class LeaderboardService {
   static final _client = Supabase.instance.client;
@@ -37,7 +38,7 @@ class LeaderboardService {
 
     final data = await _client
         .from('study_sessions')
-        .select('start_time, end_time')
+        .select('start_time, end_time, subject') // fetch subject too
         .eq('user_id', userId)
         .eq('is_active', false)
         .not('end_time', 'is', null);
@@ -49,6 +50,13 @@ class LeaderboardService {
     double monthlySeconds = 0;
     double totalSeconds = 0;
 
+    // Aggregation for the subject breakdown.
+    // Keys are normalised lowercase; bucketed as 'others' if non-standard.
+    final Map<String, double> subjectSecs = {};
+    
+    final standardSubjects = await SubjectService.getSubjects();
+    final standardKeys = standardSubjects.map((e) => e.key).toSet();
+
     for (final row in rows) {
       final start = DateTime.parse(row['start_time'] as String).toUtc();
       final end = DateTime.parse(row['end_time'] as String).toUtc();
@@ -59,13 +67,25 @@ class LeaderboardService {
       if (start.isAfter(startOfMonth)) monthlySeconds += secs;
       if (start.isAfter(sevenDaysAgo)) weeklySeconds += secs;
       if (start.isAfter(startOfDay)) dailySeconds += secs;
+
+      // --- Subject aggregation (Store Truth, Filter for View) ---
+      final rawSubject = (row['subject'] as String?)?.trim().toLowerCase();
+      final key = (rawSubject != null && standardKeys.contains(rawSubject))
+          ? rawSubject
+          : 'others';
+      subjectSecs[key] = (subjectSecs[key] ?? 0) + secs;
     }
+
+    // Convert seconds → hours for all subject buckets.
+    final subjectHours = subjectSecs
+        .map((k, v) => MapEntry(k, double.parse((v / 3600).toStringAsFixed(2))));
 
     return UserStats(
       daily: dailySeconds / 3600,
       weekly: weeklySeconds / 3600,
       monthly: monthlySeconds / 3600,
       total: totalSeconds / 3600,
+      subjectBreakdown: subjectHours,
     );
   }
 
