@@ -273,3 +273,133 @@ lib/
 ?? Notes / Issues
 - N/A. lutter analyze maintained. Hot reloaded live.
 
+
+[2026-04-12 14:28] � Room Performance Optimization ((N^2) \to O(N)$)
+? Completed
+- Resolved a critical UI performance bottleneck in RoomDetailScreen caused by (N \times M)$ linear searches inside build loops.
+- Integrated Jules MCP server and verified API connectivity.
+
+?? Changes
+- **lib/screens/room_detail_screen.dart**:
+  - Pre-calculates sessionMap (userId -> StudySessionModel) in the root uild method.
+  - Updated _buildTableArea, _buildSeats, _buildMembersPanel, and _buildMemberTile to use (1)$ map lookups.
+  - Eliminated .where(...).firstOrNull calls from nested iteration logic.
+- **mcp_config.json**: (Previous Turn) Linked Jules MCP server with API Key.
+
+?? Status
+- Phase 2 (Stats & UX): **100% complete**
+- Phase 3 (Privacy & Polish): **0%** � starting soon
+
+?? Next Steps
+1. Apply Jules suggestions once location is clarified by the user.
+2. Implement public_profiles view for privacy.
+3. Finalize Phase 3 deployment prep.
+
+?? Notes / Issues
+- Jules MCP connectivity is verified, but suggestions haven't been located yet.
+- Room performance is now significantly smoother for large groups.
+
+
+[2026-04-12 16:39] � Phase Synchronization: Main & Secondary Branches Match
+? Completed
+- Merged Jules' security (ix-hardcoded-supabase-key) and application config (specify-unique-app-id) fixes into the local \main\ branch.
+- Maintained local performance optimization for \RoomDetailScreen\ during the merge.
+- Verified \dart analyze\ and resolved widget test dependency faults resulting from the new \lutter_dotenv\ requirement.
+
+?? Changes
+- **.env / .env.example / .gitignore:** Extracted Supabase credentials securely.
+- **android/app/build.gradle:** Swapped default application ID to \com.studysync.app\.
+- **pubspec.yaml:** Registered flutter_dotenv.
+- **test/widget_test.dart:** Initialized dotenv mock bindings for test stability.
+
+?? Status
+- Both Agents' fixes (Performance + Security + Config) are now united on the \main\ branch.
+
+?? Next Steps
+Proceed with any user-prompted Phase 2.5/3 features or leaderboard refinements.
+
+?? Notes / Issues
+N/A
+
+
+[2026-04-12 16:47] � Git Repository Maintenance
+? Completed
+- Pruned stale remote-tracking branches using \git fetch --prune\.
+
+?? Changes
+- Refreshed local git history by removing references to deleted remote branches.
+
+?? Status
+- Phase 3 (Privacy & Polish): **0%**
+
+?? Next Steps
+1. Verify if the user's IDE branch list is now correctly updated.
+2. Proceed with \public_profiles\ view for privacy.
+
+?? Notes / Issues
+- Multiple stale \origin/*\ branches were identified and removed.
+
+[2026-04-12 17:15] � Room UX & Lint Optimization
+? Completed
+- Resolved remaining flutter lint issues (0 issues)
+- Dynamic Subject Category rendering
+- Ghost-filtered active studier counts
+
+?? Changes
+- Created `room_member_counts` PostgreSQL View via schema altering
+- Augmented `public.subjects` to have a data-driven `category` column
+- Replaced flutter 3.41+ deprecated `.withOpacity()` occurrences
+- Injected `if (!context.mounted)` guard mechanisms for async gap protection
+- Preserved `.env` mapping while provisioning local dev clone to calm down the analyzer
+
+?? Status
+- Phase 3 Privacy & Polish (ongoing)
+
+?? Next Steps
+- Verify UI interactions live
+- Implement further public_profiles integrations
+
+?? Notes / Issues
+- Make sure to restore personal credentials to `.env` as the `.env` provided locally is cloned from `.env.example`.
+
+
+[2026-04-12 19:19] � Phase 2.5: UI & Database Adjustments
+? Completed
+- Paused work on the stale session/check-in ghost-pop bug. To be fixed later.
+
+?? Next Steps
+- Implement smart navigation guard in RoomDetailScreen._autoStop() to prevent maybePop() from closing the screen.
+- Add session reset on joining a new room.
+
+
+[2026-04-12 19:22] — Subject Hierarchy & Categorization Update
+✅ Completed
+- Cleaned up the subjects table in Supabase by removing the duplicative \'history\' row.
+- Renamed \'history/bgs\' to \'History\' and updated the icon to \'🌍\'.
+- Standardized taxonomy structure mapping items to categorical buckets: Mathematics, Science, Literacy, General, Religion.
+- Explicitly re-ordered the sorting positions to reflect priority UI flow.
+
+🔧 Changes
+- Executed direct PostgreSQL UPDATE statements to assign custom category and sort_order values.
+- **lib/services/subject_service.dart**: Synced _fallbackSubjects mapping to protect against offline regressions and enforce new display sorting parameters.
+
+📊 Status
+- Phase 2.5 (UX Refinements): **In Progress** 
+
+🚀 Next Steps
+- Implement smart navigation guard in RoomDetailScreen._autoStop() to prevent maybePop() from closing the screen.
+- Address session ghosting and auto-kill behavior on cross-room hopping.
+
+⚠️ Notes / Issues
+- Work on the stale session/check-in ghost-pop bug is officially paused as per user request.
+
+[2026-04-12 19:40] — UI Update: Compact Subject Gallery
+✅ Completed
+- Made the subject tiles significantly shorter (wider aspect ratio) to reduce vertical scrolling.
+- Increased subject icon and text font size for better legibility.
+
+🔧 Changes
+- **lib/screens/room_sheet.dart**: Tweaked childAspectRatio from 2.2 to 3.2, decreased padding, increased emoji ontSize from 16 to 20, and subject title from 13 to 15.
+
+📊 Status
+- Phase 2.5 (UX Refinements): **In Progress**

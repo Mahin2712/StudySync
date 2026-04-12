@@ -4,29 +4,18 @@ import '../models/room_model.dart';
 class RoomService {
   static final _client = Supabase.instance.client;
 
-  /// Fetch all rooms (with member counts)
+  /// Fetch all rooms (with active studier counts)
   static Future<List<RoomModel>> fetchRooms() async {
     final data = await _client
-        .from('rooms')
+        .from('room_member_counts')
         .select('*')
         .order('created_at', ascending: false);
 
-    final rooms = (data as List)
-        .map((json) => RoomModel.fromJson(json as Map<String, dynamic>))
-        .toList();
-
-    // Fetch member counts for all rooms
-    final members = await _client.from('room_members').select('room_id');
-
-    final countMap = <String, int>{};
-    for (final m in members as List) {
-      final rid = m['room_id'] as String;
-      countMap[rid] = (countMap[rid] ?? 0) + 1;
-    }
-
-    for (final room in rooms) {
-      room.memberCount = countMap[room.id] ?? 0;
-    }
+    final rooms = (data as List).map((json) {
+      final room = RoomModel.fromJson(json as Map<String, dynamic>);
+      room.memberCount = (json['active_studiers'] as num?)?.toInt() ?? 0;
+      return room;
+    }).toList();
 
     return rooms;
   }

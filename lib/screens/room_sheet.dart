@@ -3,29 +3,8 @@ import '../models/room_model.dart';
 import '../services/room_service.dart';
 import 'room_detail_screen.dart';
 
-final Map<String, Map<String, dynamic>> subjectMeta = {
-  'Physics': {'icon': Icons.public, 'color': Colors.blue},
-  'Chemistry': {'icon': Icons.science, 'color': Colors.teal},
-  'Biology': {'icon': Icons.biotech, 'color': Colors.green},
-  'Higher Math': {'icon': Icons.functions, 'color': Colors.deepPurple},
-  'General Math': {'icon': Icons.calculate, 'color': Colors.indigo},
-  'Bangla 1st': {'icon': Icons.menu_book, 'color': Colors.redAccent},
-  'Bangla 2nd': {'icon': Icons.import_contacts, 'color': Colors.deepOrangeAccent},
-  'English 1st': {'icon': Icons.language, 'color': Colors.purpleAccent},
-  'English 2nd': {'icon': Icons.translate, 'color': Colors.pinkAccent},
-  'ICT': {'icon': Icons.computer, 'color': Colors.cyan},
-  'Islam': {'icon': Icons.mosque, 'color': Colors.greenAccent},
-  'Hinduism': {'icon': Icons.temple_hindu, 'color': Colors.orange},
-  'History': {'icon': Icons.history_edu, 'color': Colors.brown},
-};
-
-final Map<String, List<String>> categories = {
-  'Science': ['Physics', 'Chemistry', 'Biology'],
-  'Mathematics': ['General Math', 'Higher Math'],
-  'Literacy': ['Bangla 1st', 'Bangla 2nd', 'English 1st', 'English 2nd'],
-  'Religion': ['Islam', 'Hinduism'],
-  'General': ['History', 'ICT'],
-};
+import '../services/subject_service.dart';
+import '../models/subject_model.dart';
 
 /// Bottom sheet shown when the user taps "Join Table"
 class RoomSheet extends StatefulWidget {
@@ -47,6 +26,7 @@ class RoomSheet extends StatefulWidget {
 class _RoomSheetState extends State<RoomSheet> {
   bool _isLoadingRooms = false;
   List<RoomModel> _rooms = [];
+  Map<String, List<SubjectModel>> _categorizedSubjects = {};
 
   // ─── Colors ───────────────────────────────────────────────────────────────
   static const _bg = Color(0xFF111417);
@@ -66,7 +46,19 @@ class _RoomSheetState extends State<RoomSheet> {
     setState(() => _isLoadingRooms = true);
     try {
       final rooms = await RoomService.fetchRooms();
-      if (mounted) setState(() => _rooms = rooms);
+      final subjects = await SubjectService.getSubjects();
+      
+      final categorized = <String, List<SubjectModel>>{};
+      for (final s in subjects) {
+        categorized.putIfAbsent(s.category, () => []).add(s);
+      }
+
+      if (mounted) {
+        setState(() {
+          _rooms = rooms;
+          _categorizedSubjects = categorized;
+        });
+      }
     } catch (e) {
       _snack('Failed to load rooms: $e', isError: true);
     } finally {
@@ -170,8 +162,8 @@ class _RoomSheetState extends State<RoomSheet> {
   }
 
   PageRouteBuilder _fadeRoute(Widget page) => PageRouteBuilder(
-        pageBuilder: (_, __, ___) => page,
-        transitionsBuilder: (_, anim, __, child) =>
+        pageBuilder: (_, _, _) => page,
+        transitionsBuilder: (_, anim, _, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 300),
       );
@@ -222,7 +214,7 @@ class _RoomSheetState extends State<RoomSheet> {
                   controller: scrollCtrl,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   children: [
-                    ...categories.entries.map((e) => _buildCategorySection(e.key, e.value)),
+                    ..._categorizedSubjects.entries.map((e) => _buildCategorySection(e.key, e.value)),
                     const SizedBox(height: 16),
                     _buildCustomRoomButton(),
                     const SizedBox(height: 32),
@@ -236,7 +228,7 @@ class _RoomSheetState extends State<RoomSheet> {
     );
   }
 
-  Widget _buildCategorySection(String title, List<String> subjects) {
+  Widget _buildCategorySection(String title, List<SubjectModel> subjects) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,9 +249,9 @@ class _RoomSheetState extends State<RoomSheet> {
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
+          mainAxisSpacing: 8,
           crossAxisSpacing: 12,
-          childAspectRatio: 2.2,
+          childAspectRatio: 3.2,
           children: subjects.map((subj) => _buildSubjectTile(subj)).toList(),
         ),
         const SizedBox(height: 8),
@@ -267,32 +259,30 @@ class _RoomSheetState extends State<RoomSheet> {
     );
   }
 
-  Widget _buildSubjectTile(String subject) {
-    final meta = subjectMeta[subject] ?? {'icon': Icons.book, 'color': Colors.grey};
-    final Color color = meta['color'] as Color;
-    final IconData icon = meta['icon'] as IconData;
-    final count = _getMemberCountForSubject(subject);
+  Widget _buildSubjectTile(SubjectModel subject) {
+    final Color color = Colors.blueAccent; // Dynamic coloring if needed in future
+    final count = _getMemberCountForSubject(subject.displayName);
     final isActive = count > 0;
     
     return InkWell(
-      onTap: () => _joinStandardRoom(subject),
-      borderRadius: BorderRadius.circular(16),
+      onTap: () => _joinStandardRoom(subject.displayName),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: _surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: isActive ? color.withValues(alpha: 0.5) : _outline.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Text(subject.emoji, style: const TextStyle(fontSize: 20)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -301,16 +291,16 @@ class _RoomSheetState extends State<RoomSheet> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    subject,
+                    subject.displayName,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: _onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
                       Container(

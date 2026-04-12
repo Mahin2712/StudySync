@@ -59,7 +59,7 @@ class ProfileService {
       'student_name': studentName.trim(),
       'school_name': schoolName.trim(),
       'phone_number': phoneNumber?.trim(),
-      if (avatarUrl != null) 'avatar_url': avatarUrl,
+      'avatar_url': ?avatarUrl,
       'profile_complete': isComplete,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });

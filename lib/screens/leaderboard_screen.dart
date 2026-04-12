@@ -97,19 +97,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     }
   }
 
-  double get _myStatForTab {
-    switch (_tabController.index) {
-      case 0:
-        return _myStats.daily;
-      case 1:
-        return _myStats.weekly;
-      case 2:
-        return _myStats.monthly;
-      default:
-        return _myStats.total;
-    }
-  }
-
   int get _myRank {
     for (int i = 0; i < _entries.length; i++) {
       if (_entries[i].userId == _myUserId) return i + 1;
@@ -577,9 +564,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
 
   Widget _buildMyStatsBar() {
     final rank = _myRank;
-    final statHours = _myStatForTab;
-    final dummy = LeaderboardEntry(
-        userId: '', username: '', totalHours: statHours);
 
     return Container(
       decoration: BoxDecoration(
