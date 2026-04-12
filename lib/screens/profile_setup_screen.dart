@@ -164,7 +164,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     child: TextButton(
                       onPressed: () async {
                         await Supabase.instance.client.auth.signOut();
-                        if (mounted) Navigator.of(context).pop();
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
                       },
                       child: const Text(
                         'Sign out and use a different account',

@@ -63,8 +63,8 @@ class _LoginScreenState extends State<LoginScreen>
           Navigator.pushReplacement(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HomeScreen(),
-              transitionsBuilder: (_, anim, __, child) =>
+              pageBuilder: (_, _, _) => const HomeScreen(),
+              transitionsBuilder: (_, anim, _, child) =>
                   FadeTransition(opacity: anim, child: child),
               transitionDuration: const Duration(milliseconds: 400),
             ),
@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFADCBDB).withOpacity(0.06),
+                    const Color(0xFFADCBDB).withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFD3DCFF).withOpacity(0.05),
+                    const Color(0xFFD3DCFF).withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -235,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen>
                           color: const Color(0xFF111417),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFF44484F).withOpacity(0.5),
+                            color: const Color(0xFF44484F).withValues(alpha: 0.5),
                             width: 1,
                           ),
                         ),
@@ -340,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   child: Container(
                                     height: 1,
                                     color: const Color(0xFF44484F)
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                   ),
                                 ),
                                 const Padding(
@@ -358,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   child: Container(
                                     height: 1,
                                     color: const Color(0xFF44484F)
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                   ),
                                 ),
                               ],
@@ -464,7 +464,7 @@ class _LoginScreenState extends State<LoginScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              BorderSide(color: const Color(0xFF44484F).withOpacity(0.6)),
+              BorderSide(color: const Color(0xFF44484F).withValues(alpha: 0.6)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

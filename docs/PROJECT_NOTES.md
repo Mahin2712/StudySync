@@ -338,3 +338,68 @@ N/A
 
 ?? Notes / Issues
 - Multiple stale \origin/*\ branches were identified and removed.
+
+[2026-04-12 17:15] � Room UX & Lint Optimization
+? Completed
+- Resolved remaining flutter lint issues (0 issues)
+- Dynamic Subject Category rendering
+- Ghost-filtered active studier counts
+
+?? Changes
+- Created `room_member_counts` PostgreSQL View via schema altering
+- Augmented `public.subjects` to have a data-driven `category` column
+- Replaced flutter 3.41+ deprecated `.withOpacity()` occurrences
+- Injected `if (!context.mounted)` guard mechanisms for async gap protection
+- Preserved `.env` mapping while provisioning local dev clone to calm down the analyzer
+
+?? Status
+- Phase 3 Privacy & Polish (ongoing)
+
+?? Next Steps
+- Verify UI interactions live
+- Implement further public_profiles integrations
+
+?? Notes / Issues
+- Make sure to restore personal credentials to `.env` as the `.env` provided locally is cloned from `.env.example`.
+
+
+[2026-04-12 19:19] � Phase 2.5: UI & Database Adjustments
+? Completed
+- Paused work on the stale session/check-in ghost-pop bug. To be fixed later.
+
+?? Next Steps
+- Implement smart navigation guard in RoomDetailScreen._autoStop() to prevent maybePop() from closing the screen.
+- Add session reset on joining a new room.
+
+
+[2026-04-12 19:22] — Subject Hierarchy & Categorization Update
+✅ Completed
+- Cleaned up the subjects table in Supabase by removing the duplicative \'history\' row.
+- Renamed \'history/bgs\' to \'History\' and updated the icon to \'🌍\'.
+- Standardized taxonomy structure mapping items to categorical buckets: Mathematics, Science, Literacy, General, Religion.
+- Explicitly re-ordered the sorting positions to reflect priority UI flow.
+
+🔧 Changes
+- Executed direct PostgreSQL UPDATE statements to assign custom category and sort_order values.
+- **lib/services/subject_service.dart**: Synced _fallbackSubjects mapping to protect against offline regressions and enforce new display sorting parameters.
+
+📊 Status
+- Phase 2.5 (UX Refinements): **In Progress** 
+
+🚀 Next Steps
+- Implement smart navigation guard in RoomDetailScreen._autoStop() to prevent maybePop() from closing the screen.
+- Address session ghosting and auto-kill behavior on cross-room hopping.
+
+⚠️ Notes / Issues
+- Work on the stale session/check-in ghost-pop bug is officially paused as per user request.
+
+[2026-04-12 19:40] — UI Update: Compact Subject Gallery
+✅ Completed
+- Made the subject tiles significantly shorter (wider aspect ratio) to reduce vertical scrolling.
+- Increased subject icon and text font size for better legibility.
+
+🔧 Changes
+- **lib/screens/room_sheet.dart**: Tweaked childAspectRatio from 2.2 to 3.2, decreased padding, increased emoji ontSize from 16 to 20, and subject title from 13 to 15.
+
+📊 Status
+- Phase 2.5 (UX Refinements): **In Progress**

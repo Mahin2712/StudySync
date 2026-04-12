@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _glowController;
   late Animation<double> _glowAnim;
-  bool _isSidebarExpanded = true;
+  final bool _isSidebarExpanded = true;
 
   String get _userEmail =>
       Supabase.instance.client.auth.currentUser?.email ?? 'Studier';
@@ -45,8 +45,8 @@ class _HomeScreenState extends State<HomeScreen>
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const LoginScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
+          pageBuilder: (_, _, _) => const LoginScreen(),
+          transitionsBuilder: (_, anim, _, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 400),
         ),
@@ -177,8 +177,8 @@ class _HomeScreenState extends State<HomeScreen>
             onTap: () => Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const LeaderboardScreen(),
-                transitionsBuilder: (_, anim, __, child) =>
+                pageBuilder: (_, _, _) => const LeaderboardScreen(),
+                transitionsBuilder: (_, anim, _, child) =>
                     FadeTransition(opacity: anim, child: child),
                 transitionDuration: const Duration(milliseconds: 300),
               ),
@@ -199,8 +199,8 @@ class _HomeScreenState extends State<HomeScreen>
             onTap: () => Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const StatsDashboardScreen(),
-                transitionsBuilder: (_, anim, __, child) =>
+                pageBuilder: (_, _, _) => const StatsDashboardScreen(),
+                transitionsBuilder: (_, anim, _, child) =>
                     FadeTransition(opacity: anim, child: child),
                 transitionDuration: const Duration(milliseconds: 300),
               ),
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen>
           GestureDetector(
             onTap: () => _showSignOutDialog(),
             child: Tooltip(
-              message: 'Sign out (${_userEmail})',
+              message: 'Sign out ($_userEmail)',
               child: Container(
                 width: 36,
                 height: 36,
@@ -238,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen>
                   shape: BoxShape.circle,
                   color: _surfaceHighest,
                   border: Border.all(
-                    color: _outlineVariant.withOpacity(0.3),
+                    color: _outlineVariant.withValues(alpha: 0.3),
                   ),
                 ),
                 child: const Icon(
@@ -424,14 +424,14 @@ class _HomeScreenState extends State<HomeScreen>
         Center(
           child: AnimatedBuilder(
             animation: _glowAnim,
-            builder: (_, __) => Container(
+            builder: (_, _) => Container(
               width: 500 * _glowAnim.value,
               height: 500 * _glowAnim.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    _primary.withOpacity(0.04),
+                    _primary.withValues(alpha: 0.04),
                     Colors.transparent,
                   ],
                 ),
@@ -457,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 40,
                           spreadRadius: 10,
                         ),
@@ -481,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ],
                     ),
                     border: Border.all(
-                      color: _outlineVariant.withOpacity(0.12),
+                      color: _outlineVariant.withValues(alpha: 0.12),
                       width: 1,
                     ),
                   ),
@@ -502,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen>
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: _primary.withOpacity(0.05),
+                                color: _primary.withValues(alpha: 0.05),
                                 width: 1,
                               ),
                             ),
@@ -516,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     shape: BoxShape.circle,
                                     color: _surfaceHighest,
                                     border: Border.all(
-                                      color: _outlineVariant.withOpacity(0.2),
+                                      color: _outlineVariant.withValues(alpha: 0.2),
                                     ),
                                   ),
                                   child: const Icon(
@@ -607,7 +607,7 @@ class _HomeScreenState extends State<HomeScreen>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: _outlineVariant.withOpacity(0.35),
+              color: _outlineVariant.withValues(alpha: 0.35),
               width: 1.5,
               style: BorderStyle.solid,
             ),
@@ -694,10 +694,10 @@ class _HomeScreenState extends State<HomeScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: _surfaceHigh.withOpacity(0.5),
+                      color: _surfaceHigh.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: _outlineVariant.withOpacity(0.12),
+                        color: _outlineVariant.withValues(alpha: 0.12),
                       ),
                     ),
                     child: const Column(
@@ -742,10 +742,10 @@ class _HomeScreenState extends State<HomeScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: _surfaceHigh.withOpacity(0.5),
+                      color: _surfaceHigh.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: _outlineVariant.withOpacity(0.12),
+                        color: _outlineVariant.withValues(alpha: 0.12),
                       ),
                     ),
                     child: Column(
@@ -882,7 +882,7 @@ class _DotGridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const spacing = 24.0;
     final paint = Paint()
-      ..color = const Color(0xFFADCBDB).withOpacity(0.06)
+      ..color = const Color(0xFFADCBDB).withValues(alpha: 0.06)
       ..strokeWidth = 1;
 
     for (double x = 0; x < size.width; x += spacing) {
