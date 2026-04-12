@@ -560,6 +560,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    // ── Pre-calculate session map for O(1) lookup performance ─────────────────
+    final sessionMap = {for (var s in _activeSessions) s.userId: s};
+
     return Scaffold(
       backgroundColor: _bg,
       body: Stack(
@@ -582,8 +585,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 child: Row(
                   children: [
                     _buildSidebar(),
-                    Expanded(child: _buildTableArea()),
-                    _buildMembersPanel(),
+                    Expanded(child: _buildTableArea(sessionMap)),
+                    _buildMembersPanel(sessionMap),
                   ],
                 ),
               ),
@@ -923,7 +926,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   // ─── Study Table Area ──────────────────────────────────────────────────────
 
-  Widget _buildTableArea() {
+  Widget _buildTableArea(Map<String, StudySessionModel> sessionMap) {
     return Stack(
       children: [
         Center(
@@ -1014,7 +1017,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   ),
                 ),
                 // Seat avatars
-                ..._buildSeats(),
+                ..._buildSeats(sessionMap),
               ],
             ),
           ),
@@ -1169,7 +1172,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     );
   }
 
-  List<Widget> _buildSeats() {
+  List<Widget> _buildSeats(Map<String, StudySessionModel> sessionMap) {
     const positions = [
       Alignment(0, -1.1),
       Alignment(1.1, -0.5),
@@ -1183,9 +1186,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       final hasUser = i < _memberIds.length;
       final userId = hasUser ? _memberIds[i] : null;
       final isMe = userId == _myUserId;
-      final session = userId != null
-          ? _activeSessions.where((s) => s.userId == userId).firstOrNull
-          : null;
+      final session = userId != null ? sessionMap[userId] : null;
       final isActiveStudier = session != null;
       final isRecentlyMissed = !isActiveStudier &&
           userId != null &&
@@ -1253,7 +1254,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   // ─── Right Members Panel ──────────────────────────────────────────────────
 
-  Widget _buildMembersPanel() {
+  Widget _buildMembersPanel(Map<String, StudySessionModel> sessionMap) {
     // Sort active sessions by elapsed time DESC (longest = 1st place)
     final liveRanked = [..._activeSessions]
       ..sort((a, b) => b.elapsed.compareTo(a.elapsed));
@@ -1388,7 +1389,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 4),
                         itemCount: _memberIds.length,
-                        itemBuilder: (_, i) => _buildMemberTile(i),
+                        itemBuilder: (_, i) => _buildMemberTile(i, sessionMap),
                       ),
           ),
         ],
@@ -1490,14 +1491,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     );
   }
 
-  Widget _buildMemberTile(int index) {
+  Widget _buildMemberTile(int index, Map<String, StudySessionModel> sessionMap) {
     final userId = _memberIds[index];
     final isMe = userId == _myUserId;
     final shortId = userId.substring(0, 8).toUpperCase();
 
     // Live session for this member (null = not studying)
-    final session =
-        _activeSessions.where((s) => s.userId == userId).firstOrNull;
+    final session = sessionMap[userId];
     final isStudying = session != null;
     final isRecentlyMissed =
         !isStudying && _recentlyMissedUserIds.containsKey(userId);

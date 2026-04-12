@@ -273,3 +273,29 @@ lib/
 ?? Notes / Issues
 - N/A. lutter analyze maintained. Hot reloaded live.
 
+
+[2026-04-12 14:28] — Room Performance Optimization ((N^2) \to O(N)$)
+? Completed
+- Resolved a critical UI performance bottleneck in RoomDetailScreen caused by (N \times M)$ linear searches inside build loops.
+- Integrated Jules MCP server and verified API connectivity.
+
+?? Changes
+- **lib/screens/room_detail_screen.dart**:
+  - Pre-calculates sessionMap (userId -> StudySessionModel) in the root uild method.
+  - Updated _buildTableArea, _buildSeats, _buildMembersPanel, and _buildMemberTile to use (1)$ map lookups.
+  - Eliminated .where(...).firstOrNull calls from nested iteration logic.
+- **mcp_config.json**: (Previous Turn) Linked Jules MCP server with API Key.
+
+?? Status
+- Phase 2 (Stats & UX): **100% complete**
+- Phase 3 (Privacy & Polish): **0%** — starting soon
+
+?? Next Steps
+1. Apply Jules suggestions once location is clarified by the user.
+2. Implement public_profiles view for privacy.
+3. Finalize Phase 3 deployment prep.
+
+?? Notes / Issues
+- Jules MCP connectivity is verified, but suggestions haven't been located yet.
+- Room performance is now significantly smoother for large groups.
+
