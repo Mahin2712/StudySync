@@ -1179,13 +1179,15 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       Alignment(-1.1, -0.5),
     ];
 
+    final sessionMap = {
+      for (final s in _activeSessions) s.userId: s
+    };
+
     return List.generate(positions.length, (i) {
       final hasUser = i < _memberIds.length;
       final userId = hasUser ? _memberIds[i] : null;
       final isMe = userId == _myUserId;
-      final session = userId != null
-          ? _activeSessions.where((s) => s.userId == userId).firstOrNull
-          : null;
+      final session = userId != null ? sessionMap[userId] : null;
       final isActiveStudier = session != null;
       final isRecentlyMissed = !isActiveStudier &&
           userId != null &&
@@ -1257,6 +1259,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     // Sort active sessions by elapsed time DESC (longest = 1st place)
     final liveRanked = [..._activeSessions]
       ..sort((a, b) => b.elapsed.compareTo(a.elapsed));
+
+    final sessionMap = {
+      for (final s in _activeSessions) s.userId: s
+    };
 
     return Container(
       width: 288,
@@ -1388,7 +1394,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 4),
                         itemCount: _memberIds.length,
-                        itemBuilder: (_, i) => _buildMemberTile(i),
+                        itemBuilder: (_, i) => _buildMemberTile(i, sessionMap),
                       ),
           ),
         ],
@@ -1490,14 +1496,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     );
   }
 
-  Widget _buildMemberTile(int index) {
+  Widget _buildMemberTile(int index, Map<String, StudySessionModel> sessionMap) {
     final userId = _memberIds[index];
     final isMe = userId == _myUserId;
     final shortId = userId.substring(0, 8).toUpperCase();
 
     // Live session for this member (null = not studying)
-    final session =
-        _activeSessions.where((s) => s.userId == userId).firstOrNull;
+    final session = sessionMap[userId];
     final isStudying = session != null;
     final isRecentlyMissed =
         !isStudying && _recentlyMissedUserIds.containsKey(userId);
