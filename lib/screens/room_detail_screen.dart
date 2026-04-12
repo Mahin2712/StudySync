@@ -37,6 +37,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   StudySessionModel? _mySession; // null = not studying
   List<StudySessionModel> _activeSessions = [];
+  Map<String, StudySessionModel> _sessionMap = {};
+  Set<String> _activeUserIds = {};
 
   Timer? _uiTicker;          // ticks every second for UI + check-in logic
   Timer? _watchdogTimer;     // fallback: manual refresh if no realtime in 15 s
@@ -137,15 +139,16 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       final all = await SessionService.getActiveSessions(widget.roomId);
       if (mounted) {
         // Detect users who just went offline → show 🔴 for 5 s
-        final oldIds = _activeSessions.map((s) => s.userId).toSet();
         final newIds = all.map((s) => s.userId).toSet();
         final now = DateTime.now();
-        for (final uid in oldIds.difference(newIds)) {
+        for (final uid in _activeUserIds.difference(newIds)) {
           if (uid != _myUserId) _recentlyMissedUserIds[uid] = now;
         }
         setState(() {
           _mySession = my;
           _activeSessions = all;
+          _activeUserIds = newIds;
+          _sessionMap = {for (final s in all) s.userId: s};
         });
       }
     } catch (_) {}
@@ -1183,9 +1186,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       final hasUser = i < _memberIds.length;
       final userId = hasUser ? _memberIds[i] : null;
       final isMe = userId == _myUserId;
-      final session = userId != null
-          ? _activeSessions.where((s) => s.userId == userId).firstOrNull
-          : null;
+      final session = userId != null ? _sessionMap[userId] : null;
       final isActiveStudier = session != null;
       final isRecentlyMissed = !isActiveStudier &&
           userId != null &&
@@ -1496,8 +1497,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     final shortId = userId.substring(0, 8).toUpperCase();
 
     // Live session for this member (null = not studying)
-    final session =
-        _activeSessions.where((s) => s.userId == userId).firstOrNull;
+    final session = _sessionMap[userId];
     final isStudying = session != null;
     final isRecentlyMissed =
         !isStudying && _recentlyMissedUserIds.containsKey(userId);
