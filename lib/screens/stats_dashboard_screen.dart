@@ -339,11 +339,12 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
         .fold(0.0, (sum, h) => sum + h);
         
     final subjects = SubjectService.getCachedSubjects();
+    final subjectMap = {for (var s in subjects) s.key: s};
 
     return Column(
       children: entries.map((e) {
         final isOthers = e.key == 'others';
-        final subjectInfo = subjects.where((s) => s.key == e.key).firstOrNull;
+        final subjectInfo = subjectMap[e.key];
         
         final displayName = isOthers ? 'Others' : (subjectInfo?.displayName ?? _titleCase(e.key));
         final emoji = isOthers ? '📝' : (subjectInfo?.emoji ?? '📚');
