@@ -5,11 +5,14 @@ class RoomService {
   static final _client = Supabase.instance.client;
 
   /// Fetch all rooms (with active studier counts)
-  static Future<List<RoomModel>> fetchRooms() async {
-    final data = await _client
-        .from('room_member_counts')
-        .select('*')
-        .order('created_at', ascending: false);
+  static Future<List<RoomModel>> fetchRooms({bool? isCustom}) async {
+    var query = _client.from('room_member_counts').select('*');
+
+    if (isCustom != null) {
+      query = query.eq('is_custom', isCustom);
+    }
+
+    final data = await query.order('created_at', ascending: false);
 
     final rooms = (data as List).map((json) {
       final room = RoomModel.fromJson(json as Map<String, dynamic>);

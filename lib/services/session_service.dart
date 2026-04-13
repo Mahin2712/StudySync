@@ -71,19 +71,23 @@ class SessionService {
 
     // Prefer last_activity_at as the honest end_time; fall back to now() only
     // if the column is somehow null (e.g. very old rows).
-    final endTime = existing['last_activity_at'] != null
-        ? existing['last_activity_at'] as String
-        : DateTime.now().toUtc().toIso8601String();
+    final lastActivityAt = existing['last_activity_at'] as String?;
+    final endTime =
+        lastActivityAt ?? DateTime.now().toUtc().toIso8601String();
 
-    await _client
-        .from('study_sessions')
-        .update({
-          'is_active': false,
-          'end_time': endTime,
-          'missed_checkins': currentMissed + 1,
-        })
-        .eq('user_id', _uid)
-        .eq('is_active', true);
+    var query = _client.from('study_sessions').update({
+      'is_active': false,
+      'end_time': endTime,
+      'missed_checkins': currentMissed + 1,
+    }).eq('user_id', _uid).eq('is_active', true);
+
+    if (lastActivityAt != null) {
+      query = query.eq('last_activity_at', lastActivityAt);
+    } else {
+      query = query.isFilter('last_activity_at', null);
+    }
+
+    await query;
   }
 
   // ─── Confirm check-in ─────────────────────────────────────────────────────
@@ -135,11 +139,17 @@ class SessionService {
 
   static Future<List<StudySessionModel>> getActiveSessions(
       String roomId) async {
+    final threshold = DateTime.now()
+        .toUtc()
+        .subtract(const Duration(minutes: 21))
+        .toIso8601String();
+
     final data = await _client
         .from('study_sessions')
         .select()
         .eq('room_id', roomId)
         .eq('is_active', true)
+        .gt('last_activity_at', threshold)
         .order('start_time', ascending: true);
 
     return (data as List<dynamic>)
