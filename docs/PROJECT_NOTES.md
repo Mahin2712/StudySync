@@ -403,3 +403,20 @@ N/A
 
 ðŸ“Š Status
 - Phase 2.5 (UX Refinements): **In Progress**
+
+[2026-04-12 21:16] — Build Fix: Restored .env Asset
+? Completed
+- Restored missing .env file with Supabase credentials to unblock Flutter build.
+- Verified compilation and package dependencies.
+
+?? Changes
+- **.env**: Created file and populated with SUPABASE_URL and SUPABASE_ANON_KEY.
+
+?? Status
+- Phase 2.5 (UX Refinements): **In Progress**
+
+?? Next Steps
+- Continue with UX refinements (smart navigation guards and session management).
+
+?? Notes / Issues
+- Building for Web requires assets listed in pubspec.yaml to physically exist.
