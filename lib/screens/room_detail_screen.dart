@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/study_session_model.dart';
 import '../services/room_service.dart';
 import '../services/session_service.dart';
+import '../services/chapter_service.dart';
 import '../models/room_model.dart';
 
 /// Combined connectivity state for the room's Realtime channel.
@@ -48,6 +49,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   bool _checkinPopupShowing = false;
   // uid → time they disappeared (shows 🔴 for 5 s)
   final Map<String, DateTime> _recentlyMissedUserIds = {};
+  /// True when the session was ended automatically (missed check-in).
+  /// Shows a banner instead of popping the screen.
+  bool _sessionEndedByTimeout = false;
 
   late AnimationController _glowCtrl;
   late Animation<double> _glowAnim;
@@ -223,14 +227,19 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     return _ConnStatus.idle; // connected but idle
   }
 
-  // ─── Watchdog fallback (if no realtime event in 15 s → manual refresh) ───
+  // ─── Watchdog fallback (30 s heartbeat + manual refresh) ──────────────────
 
   void _startWatchdog() {
     _watchdogTimer =
-        Timer.periodic(const Duration(seconds: 15), (_) async {
+        Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted) return;
+      // Presence heartbeat — only ping DB if there’s an active session.
+      // Prevents unnecessary writes when the user is idle.
+      if (_mySession != null) {
+        await SessionService.recordActivity();
+      }
       final elapsed = DateTime.now().difference(_lastRealtimeEvent).inSeconds;
-      if (elapsed >= 15) {
+      if (elapsed >= 30) {
         // No realtime update received — fall back to a manual poll.
         await _loadSessionState();
       }
@@ -241,7 +250,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
   Future<void> _startStudying({String? subject, String? chapter}) async {
     if (_isStarting) return;
-    setState(() => _isStarting = true);
+    setState(() {
+      _isStarting = true;
+      _sessionEndedByTimeout = false; // Dismiss timeout banner on new start
+    });
     try {
       final session = await SessionService.startSession(
         widget.roomId,
@@ -286,76 +298,161 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   }
 
   void _showStartDialog() {
-    final controller = TextEditingController();
     final bool isCustom = widget.room?.isCustom ?? true;
-    final String title = isCustom ? 'Start Custom Session' : 'Start ${widget.room!.subject} Session';
-    final String prompt = isCustom ? 'What are you studying?' : 'What chapter or topic? (optional)';
+    final String subjectKey = (widget.room?.subject ?? '').toLowerCase().trim();
+    final List<String> chapters = isCustom ? [] : ChapterService.getChapters(subjectKey);
+    final String title = isCustom
+        ? 'Start Custom Session'
+        : 'Start ${widget.room!.subject} Session';
+
+    String? selectedChapter;
+    final customController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171A1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w700,
-            color: _primary,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              prompt,
-              style: const TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant, fontSize: 13),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          backgroundColor: const Color(0xFF171A1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w700,
+              color: _primary,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: const TextStyle(fontFamily: 'Inter', color: _onSurface),
-              decoration: InputDecoration(
-                hintText: isCustom ? 'e.g. My Personal Project' : 'e.g. Thermodynamics, Chapter 4...',
-                hintStyle: const TextStyle(color: _onSurfaceVariant, fontFamily: 'Inter'),
-                filled: true,
-                fillColor: _surfaceHigh,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
+          ),
+          content: SizedBox(
+            width: 340,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Dropdown (subject rooms only) ──────────────────────────
+                if (!isCustom && chapters.isNotEmpty) ...[
+                  const Text(
+                    'Select chapter',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: _onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String?>(
+                    initialValue: selectedChapter,
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF1C2025),
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: _onSurface,
+                      fontSize: 13,
+                    ),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: _surfaceHigh,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      hintText: '-- Quick-select chapter --',
+                      hintStyle: const TextStyle(
+                          color: _onSurfaceVariant, fontFamily: 'Inter'),
+                    ),
+                    items: [
+                      ...chapters.map(
+                        (c) => DropdownMenuItem(value: c, child: Text(c)),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      setDlgState(() => selectedChapter = val);
+                      if (val != null) {
+                        customController.text = val;
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Or type a custom chapter / topic',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: _onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ] else ...[
+                  const Text(
+                    'What are you studying?',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: _onSurfaceVariant,
+                        fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // ── Free-text override (always visible) ───────────────────
+                TextField(
+                  controller: customController,
+                  autofocus: isCustom || chapters.isEmpty,
+                  style: const TextStyle(fontFamily: 'Inter', color: _onSurface),
+                  decoration: InputDecoration(
+                    hintText: isCustom
+                        ? 'e.g. My Personal Project'
+                        : 'e.g. Chapter 3, Thermodynamics...',
+                    hintStyle: const TextStyle(
+                        color: _onSurfaceVariant, fontFamily: 'Inter'),
+                    filled: true,
+                    fillColor: _surfaceHigh,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: (_) {
+                    // If user types manually — clear dropdown selection highlight
+                    if (customController.text.trim() != selectedChapter) {
+                      setDlgState(() => selectedChapter = null);
+                    }
+                  },
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ],
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel',
+                  style: TextStyle(
+                      fontFamily: 'Inter', color: _onSurfaceVariant)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final input = customController.text.trim();
+                final chapter = input.isEmpty ? null : input;
+                final subjectStr =
+                    isCustom ? 'Others' : widget.room!.subject;
+                Navigator.pop(ctx);
+                _startStudying(subject: subjectStr, chapter: chapter);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryContainer,
+                foregroundColor: _onPrimaryContainer,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                textStyle: const TextStyle(
+                    fontFamily: 'Inter', fontWeight: FontWeight.w600),
               ),
+              child: const Text('Start'),
             ),
           ],
         ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(fontFamily: 'Inter', color: _onSurfaceVariant)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final input = controller.text.trim();
-              final chapter = input.isEmpty ? null : input;
-              final subjectStr = isCustom ? 'Others' : widget.room!.subject;
-              
-              Navigator.pop(ctx);
-              _startStudying(subject: subjectStr, chapter: chapter);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryContainer,
-              foregroundColor: _onPrimaryContainer,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
-            ),
-            child: const Text('Start'),
-          ),
-        ],
       ),
     );
   }
@@ -507,7 +604,6 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     if (updated != null && !updated.isCheckinDue) {
       // User confirmed at the last second — abort auto-stop.
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).maybePop();
         setState(() {
           _checkinPopupShowing = false;
           _mySession = updated;
@@ -515,41 +611,21 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       }
       return;
     }
-    // Proceed with auto-stop
+    // Proceed with auto-stop — stop DB but KEEP user on screen.
     await SessionService.autoStopSession();
     if (mounted) {
-      Navigator.of(context, rootNavigator: true).maybePop();
       setState(() {
         _checkinPopupShowing = false;
         _mySession = null;
+        _sessionEndedByTimeout = true; // Show in-screen banner instead of popping
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Text('⏸️', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Session paused — check-in missed',
-                  style: TextStyle(
-                      fontFamily: 'Inter', fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF7A1F1F),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
-        ),
-      );
       await _loadSessionState();
     }
   }
 
   Future<void> _leaveRoom() async {
-    if (_isStudying) await SessionService.stopSession();
+    // Force-close any active session (ghost-session prevention for leaving).
+    await SessionService.forceCloseActiveSession();
     try {
       await RoomService.leaveRoom(widget.roomId);
     } catch (_) {}
@@ -563,36 +639,77 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     // ── Pre-calculate session map for O(1) lookup performance ─────────────────
     final sessionMap = {for (var s in _activeSessions) s.userId: s};
 
-    return Scaffold(
-      backgroundColor: _bg,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.2,
-                  colors: [Color(0xFF171A1E), _bg],
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop && _mySession != null) {
+          // User navigated back while a session was active — force-close it.
+          await SessionService.forceCloseActiveSession();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: _bg,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.2,
+                    colors: [Color(0xFF171A1E), _bg],
+                  ),
                 ),
               ),
             ),
-          ),
-          Column(
-            children: [
-              _buildAppBar(),
-              Expanded(
-                child: Row(
-                  children: [
-                    _buildSidebar(),
-                    Expanded(child: _buildTableArea(sessionMap)),
-                    _buildMembersPanel(sessionMap),
-                  ],
+            Column(
+              children: [
+                _buildAppBar(),
+                // ── Session-ended timeout banner ─────────────────────────────
+                if (_sessionEndedByTimeout)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    color: const Color(0xFF3D2800),
+                    child: Row(
+                      children: [
+                        const Text('⏸',
+                            style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Session paused — check-in missed. Tap Start to resume.',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFFFB74D),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () =>
+                              setState(() => _sessionEndedByTimeout = false),
+                          child: const Icon(Icons.close,
+                              color: Color(0xFFFFB74D), size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      _buildSidebar(),
+                      Expanded(child: _buildTableArea(sessionMap)),
+                      _buildMembersPanel(sessionMap),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

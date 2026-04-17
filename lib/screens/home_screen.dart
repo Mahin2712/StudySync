@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import 'room_sheet.dart';
 import 'leaderboard_screen.dart';
 import 'stats_dashboard_screen.dart';
+import 'profile_setup_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -226,11 +227,60 @@ class _HomeScreenState extends State<HomeScreen>
           _iconBtn(Icons.notifications_outlined),
           const SizedBox(width: 12),
 
-          // Avatar + sign out
-          GestureDetector(
-            onTap: () => _showSignOutDialog(),
+          // Avatar — tap for account menu (Edit Profile / Sign Out)
+          PopupMenuButton<String>(
+            tooltip: 'Account',
+            offset: const Offset(0, 42),
+            color: const Color(0xFF1C2025),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            onSelected: (value) {
+              if (value == 'edit_profile') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ProfileSetupScreen(isEditing: true),
+                  ),
+                );
+              } else if (value == 'sign_out') {
+                _showSignOutDialog();
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'edit_profile',
+                child: Row(
+                  children: const [
+                    Icon(Icons.edit_outlined,
+                        color: Color(0xFFADCBDB), size: 16),
+                    SizedBox(width: 10),
+                    Text('Edit Profile',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: Color(0xFFE2E5EE),
+                        )),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'sign_out',
+                child: Row(
+                  children: const [
+                    Icon(Icons.logout_rounded,
+                        color: Color(0xFFFF9993), size: 16),
+                    SizedBox(width: 10),
+                    Text('Sign Out',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 13,
+                          color: Color(0xFFFF9993),
+                        )),
+                  ],
+                ),
+              ),
+            ],
             child: Tooltip(
-              message: 'Sign out ($_userEmail)',
+              message: _userEmail,
               child: Container(
                 width: 36,
                 height: 36,

@@ -146,4 +146,59 @@ class SessionService {
         .map((j) => StudySessionModel.fromJson(j as Map<String, dynamic>))
         .toList();
   }
+
+  // ─── Force-close active session (ghost-session prevention) ───────────────
+
+  /// Force-closes any currently active session for this user.
+  ///
+  /// Uses [last_activity_at] as [end_time] so the user only gets credit
+  /// for time they were confirmed present — not the unconfirmed tail.
+  ///
+  /// Called when:
+  ///   • Joining a different room (room-hopping)
+  ///   • Leaving a room manually
+  ///   • Back-navigation out of RoomDetailScreen
+  ///
+  /// ⚠️ MVP limitation: this closes ALL active sessions for this user,
+  /// including sessions from other devices. Multi-device support (device_id
+  /// column) is planned for Phase 3.x.
+  static Future<void> forceCloseActiveSession() async {
+    final existing = await _client
+        .from('study_sessions')
+        .select('last_activity_at')
+        .eq('user_id', _uid)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if (existing == null) return; // Nothing active — no-op.
+
+    final endTime = existing['last_activity_at'] as String? ??
+        DateTime.now().toUtc().toIso8601String();
+
+    await _client
+        .from('study_sessions')
+        .update({
+          'is_active': false,
+          'end_time': endTime,
+        })
+        .eq('user_id', _uid)
+        .eq('is_active', true);
+  }
+
+  // ─── Stale-session cleanup (pg_cron fallback) ─────────────────────────────
+
+  /// Triggers the [close_stale_sessions] DB function client-side.
+  ///
+  /// This is the fallback for Supabase free-tier where pg_cron may be
+  /// unavailable. Called fire-and-forget on app startup from [main.dart].
+  ///
+  /// The DB function marks sessions inactive where
+  /// [last_activity_at] < NOW() - 25 minutes.
+  static Future<void> cleanUpStaleSessions() async {
+    try {
+      await _client.rpc('close_stale_sessions');
+    } catch (_) {
+      // Best-effort — never block app startup.
+    }
+  }
 }

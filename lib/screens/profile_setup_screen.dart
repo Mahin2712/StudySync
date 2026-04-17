@@ -4,9 +4,13 @@ import '../services/profile_service.dart';
 import 'home_screen.dart';
 
 /// Forced onboarding screen shown to any user whose profile is incomplete.
-/// Users cannot bypass this screen — the back button is blocked.
+/// Also used to edit an existing profile when [isEditing] is true.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  /// When [isEditing] is true the screen pre-populates fields from the
+  /// current profile and allows the user to navigate back.
+  final bool isEditing;
+
+  const ProfileSetupScreen({super.key, this.isEditing = false});
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -35,6 +39,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.isEditing) _prefillFromProfile();
+  }
+
+  /// Pre-populate controllers with the user's existing profile data.
+  Future<void> _prefillFromProfile() async {
+    final profile = await ProfileService.getMyProfile();
+    if (!mounted || profile == null) return;
+    setState(() {
+      _usernameCtrl.text = profile.username;
+      _nameCtrl.text     = profile.studentName ?? '';
+      _schoolCtrl.text   = profile.schoolName ?? '';
+      _phoneCtrl.text    = profile.phoneNumber ?? '';
+    });
+  }
+
+  @override
   void dispose() {
     _usernameCtrl.dispose();
     _nameCtrl.dispose();
@@ -55,9 +77,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         phoneNumber: _phoneCtrl.text.isEmpty ? null : _phoneCtrl.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      if (widget.isEditing) {
+        // Return to caller (home screen) after a successful edit.
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().contains('unique')
@@ -73,7 +100,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Block back navigation — profile must be completed
+      // Block back-nav only during initial onboarding (not in edit mode).
+      canPop: widget.isEditing,
       child: Scaffold(
         backgroundColor: _bg,
         body: SafeArea(
@@ -202,9 +230,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           child: const Icon(Icons.person_pin_rounded, color: _primary, size: 26),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Set Up Your Profile',
-          style: TextStyle(
+        Text(
+          widget.isEditing ? 'Edit Your Profile' : 'Set Up Your Profile',
+          style: const TextStyle(
             fontFamily: 'Inter',
             fontSize: 26,
             fontWeight: FontWeight.w800,
@@ -213,9 +241,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'Fill in your details to join study rooms and appear on the leaderboard.',
-          style: TextStyle(
+        Text(
+          widget.isEditing
+              ? 'Update your details below.'
+              : 'Fill in your details to join study rooms and appear on the leaderboard.',
+          style: const TextStyle(
             fontFamily: 'Inter',
             fontSize: 14,
             color: _onSurfaceVar,
@@ -331,7 +361,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   color: _onPrimaryCont,
                 ),
               )
-            : const Text('Save & Continue →'),
+            : Text(widget.isEditing ? 'Save Changes' : 'Save & Continue →'),
       ),
     );
   }

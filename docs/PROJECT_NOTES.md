@@ -420,3 +420,67 @@ N/A
 
 ?? Notes / Issues
 - Building for Web requires assets listed in pubspec.yaml to physically exist.
+
+[2026-04-17 20:02] — Phase 2.5 Complete: Session Guards, Chapter Dropdown, Privacy Layer
+
+? Completed
+- ChapterService: New service (lib/services/chapter_service.dart) with static chapter maps for all 13 SSC/HSC subjects — isolated for zero-refactor DB migration later.
+- Start Dialog Overhaul: Subject rooms now show a chapter dropdown (DropdownButtonFormField with chapters from ChapterService) plus a free-text override field. Custom rooms keep the plain text-only flow.
+- Smart Navigation Guard: _autoStop() no longer calls Navigator.maybePop(). Instead it sets _sessionEndedByTimeout = true, keeping user in the room and showing an amber banner ("Session paused — check-in missed. Tap Start to resume.").
+- PopScope wrapper: build() now wraps Scaffold in PopScope(canPop: true, onPopInvokedWithResult:…) — if a user presses Back while a session is active, forceCloseActiveSession() is called to prevent ghost rows.
+- Ghost-session Fix on Leave: _leaveRoom() now calls SessionService.forceCloseActiveSession() instead of stopSession(). joinRoom() in RoomService also pre-closes any active session before joining.
+- Watchdog Heartbeat hardened: Timer interval raised to 30 s; recordActivity() is now only called when _mySession != null (no unnecessary DB writes when idle).
+- Privacy Layer: ProfileService updated — getMyProfile() queries full profiles table for self; getProfileById() queries public_profiles view for others; searchPublicProfiles() replaces searchProfiles() (deprecated alias kept for BC).
+- main.dart: Fires cleanUpStaleSessions() on app start (fire-and-forget) as a fallback for the pg_cron gap on the free tier.
+
+?? Changes
+- [NEW] lib/services/chapter_service.dart
+- [MODIFIED] lib/screens/room_detail_screen.dart — _showStartDialog, _autoStop, _leaveRoom, _startWatchdog, build()
+- [MODIFIED] lib/services/session_service.dart — forceCloseActiveSession(), cleanUpStaleSessions()
+- [MODIFIED] lib/services/room_service.dart — joinRoom() pre-closes active session
+- [MODIFIED] lib/services/profile_service.dart — getMyProfile, getProfileById, searchPublicProfiles
+- [MODIFIED] lib/main.dart — SessionService import + initState stale cleanup trigger
+- [DB] public_profiles VIEW created in Supabase (privacy layer — no phone/email exposure)
+- [DB] close_stale_sessions() RPC function created in Supabase
+
+?? Status
+Phase 2.5 (UX Refinements): ? COMPLETE (100%)
+Phase 3 (Privacy & Polish): ?? In Progress (~30%) — public_profiles view done; profile edit flow pending
+
+?? Next Steps
+- Test manually: chapter dropdown in subject rooms, auto-stop banner, back-nav session close, room-hop ghost fix.
+- Implement Edit Profile feature (isEditing mode in ProfileSetupScreen accessible from home menu).
+- Enforce profile completion redirect for new sign-ups (LoginScreen ? ProfileSetupScreen).
+- Phase 3.x: Add device_id column to study_sessions for proper multi-device session isolation.
+- Optional: Set up external uptime monitor to ping Supabase Edge Function for stale session cleanup.
+
+?? Notes / Issues
+- .env asset warning in pubspec.yaml is pre-existing (file exists locally; warning appears because .env is gitignored).
+- DropdownButtonFormField uses initialValue (not value) per Flutter 3.33+ deprecation.
+- Multi-device limitation: forceCloseActiveSession() closes ALL active sessions for a user regardless of device. device_id column planned for Phase 3.x.
+
+[2026-04-17 20:10] — Phase 3 Partial Complete: Edit Profile + Home Screen Account Menu
+
+? Completed
+- Edit Profile Mode: ProfileSetupScreen now accepts isEditing: bool (default false). In edit mode: canPop:true, fields pre-populated via _prefillFromProfile() ? ProfileService.getMyProfile(), header reads "Edit Your Profile", button reads "Save Changes", success pops back to HomeScreen.
+- Account Menu: Home screen avatar GestureDetector replaced with PopupMenuButton showing "Edit Profile" and "Sign Out" options. Edit Profile navigates to ProfileSetupScreen(isEditing: true).
+- All Flutter analyze issues resolved — only pre-existing .env asset warning remains (expected; file is gitignored).
+
+?? Changes
+- [MODIFIED] lib/screens/profile_setup_screen.dart — isEditing param, _prefillFromProfile(), dynamic labels
+- [MODIFIED] lib/screens/home_screen.dart — PopupMenuButton account menu, ProfileSetupScreen import
+
+?? Status
+Phase 2.5 (UX Refinements): ? COMPLETE
+Phase 3 (Privacy & Polish): ?? In Progress (~60%)
+  Done: public_profiles view, ProfileService privacy layer, Edit Profile flow, Account menu
+  Pending: device_id for multi-device isolation (Phase 3.x), edge function for stale session cleanup
+
+?? Next Steps
+- Manual QA: chapter dropdown, auto-stop banner, room-hop ghost fix, Edit Profile flow from home.
+- Phase 3.x: Add device_id UUID column to study_sessions for multi-device session isolation.
+- Optional: Set up Supabase Edge Function + external uptime monitor to automate stale session cleanup.
+
+?? Notes / Issues
+- All new code passes flutter analyze with zero errors/warnings (only .env pre-existing warning).
+- PopupMenuButton uses const children list — works with Flutter stable.

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/room_model.dart';
+import 'session_service.dart';
 
 class RoomService {
   static final _client = Supabase.instance.client;
@@ -37,10 +38,16 @@ class RoomService {
   }
 
   /// Join a room (insert into room_members — note Supabase typo)
+  ///
+  /// Force-closes any active study session before joining to prevent
+  /// "ghost studier" rows when the user hops between rooms.
   static Future<void> joinRoom(String roomId) async {
     final userId = _client.auth.currentUser!.id;
 
-    // Prevent duplicate entries
+    // 1. Kill any active session (ghost-session prevention).
+    await SessionService.forceCloseActiveSession();
+
+    // 2. Prevent duplicate room_member entries.
     final existing = await _client
         .from('room_members')
         .select('id')

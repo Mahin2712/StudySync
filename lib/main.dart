@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'services/profile_service.dart';
+import 'services/session_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +49,18 @@ class _AppRouter extends StatefulWidget {
 }
 
 class _AppRouterState extends State<_AppRouter> {
+  @override
+  void initState() {
+    super.initState();
+    // Fire-and-forget stale session cleanup.
+    // Fallback for Supabase free-tier (no pg_cron).
+    // Marks sessions inactive where last_activity_at < now - 25 min.
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      SessionService.cleanUpStaleSessions();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = Supabase.instance.client.auth.currentSession;
