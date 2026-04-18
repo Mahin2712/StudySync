@@ -687,3 +687,28 @@ Phase 3 (Privacy and Polish): ? Test Isolation & DI Integrated (100%)
 
 ?? Next Steps
 - Antigravity: Start Phase 3.x (Multi-device isolation with device_id).
+
+[2026-04-18 22:03] — Apply SQL Migration Audit Fixes
+? Completed
+- Applied docs/migration_audit_fixes.sql migration to Supabase production.
+- Enhanced study_sessions table with device_id, last_activity_at, missed_checkins, and chapter columns.
+- Replaced per-user active session unique index with per-device-per-user index (enabling multi-device isolation).
+- Created atomic start_session_atomic RPC function to prevent race conditions during session start.
+
+?? Changes
+- [DB Schema] Added columns and default values to public.study_sessions.
+- [DB Index] Replaced idx_one_active_session_per_user with idx_one_active_session_per_user_device.
+- [DB Function] Created public.start_session_atomic.
+
+? Status
+Phase 3.x (Multi-device isolation): ? In Progress (~10%)
+Database foundation deployed.
+
+? Next Steps
+- Implement device_id storage in Flutter app.
+- Refactor StudySessionService to use the new start_session_atomic RPC.
+
+?? Notes / Issues
+- Existing sessions have been backfilled with random device_ids.
+- The start_session_atomic RPC requires p_device_id as a parameter.
+

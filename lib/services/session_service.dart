@@ -1,44 +1,47 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/study_session_model.dart';
+import 'device_identity_service.dart';
 
 class SessionService {
   static final _client = Supabase.instance.client;
 
   static String get _uid => _client.auth.currentUser!.id;
+  static Future<String> getCurrentDeviceId() =>
+      DeviceIdentityService.getDeviceId();
 
-  // ─── Start session ────────────────────────────────────────────────────────
+  // Start session
 
   /// Starts a new study session atomically via a DB RPC.
   ///
   /// Uses [start_session_atomic] which:
-  ///   • Attempts INSERT ... ON CONFLICT DO NOTHING (race-safe).
-  ///   • Always returns the single active session row.
-  ///   • Enforced by a partial unique index (user_id WHERE is_active=true).
-  ///
-  /// Returns the existing session if one is already active — no duplicate
-  /// rows can be created even under concurrent tab/device access.
+  ///   - Attempts INSERT ... ON CONFLICT DO NOTHING (race-safe).
+  ///   - Always returns the single active session row for this device.
+  ///   - Is enforced by a partial unique index on (user_id, device_id).
   static Future<StudySessionModel?> startSession(
     String roomId, {
     String? subject,
     String? chapter,
   }) async {
+    final deviceId = await getCurrentDeviceId();
     final data = await _client.rpc(
       'start_session_atomic',
       params: {
         'p_room_id': roomId,
         'p_subject': subject,
         'p_chapter': chapter,
+        'p_device_id': deviceId,
       },
     );
     if (data == null) return null;
     return StudySessionModel.fromJson(data as Map<String, dynamic>);
   }
 
+  // Stop session
 
-  // ─── Stop session ─────────────────────────────────────────────────────────
-
-  /// Stops the current user's active session.
+  /// Stops the current device's active session.
   static Future<void> stopSession() async {
+    final deviceId = await getCurrentDeviceId();
     await _client
         .from('study_sessions')
         .update({
@@ -46,29 +49,26 @@ class SessionService {
           'end_time': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true);
   }
 
-  // ─── Auto-stop (missed check-in) ──────────────────────────────────────────
+  // Auto-stop (missed check-in)
 
-  /// Stops session and increments missed_checkins by 1.
+  /// Stops this device's session and increments missed_checkins by 1.
   static Future<void> autoStopSession() async {
-    // Fetch both missed_checkins and last_activity_at.
-    // We use last_activity_at as end_time so the user is only credited for
-    // the time they were *confirmed present* — not the unconfirmed tail segment.
+    final deviceId = await getCurrentDeviceId();
     final existing = await _client
         .from('study_sessions')
         .select('missed_checkins, last_activity_at')
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true)
         .maybeSingle();
 
-    if (existing == null) return; // Already stopped — nothing to do.
+    if (existing == null) return;
 
     final currentMissed = (existing['missed_checkins'] as int?) ?? 0;
-
-    // Prefer last_activity_at as the honest end_time; fall back to now() only
-    // if the column is somehow null (e.g. very old rows).
     final endTime = existing['last_activity_at'] != null
         ? existing['last_activity_at'] as String
         : DateTime.now().toUtc().toIso8601String();
@@ -81,19 +81,22 @@ class SessionService {
           'missed_checkins': currentMissed + 1,
         })
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true);
   }
 
-  // ─── Confirm check-in ─────────────────────────────────────────────────────
+  // Confirm check-in
 
   /// User tapped "Yes, I'm still here". Resets the activity clock.
-  /// Returns the updated session.
+  /// Returns the updated session for this device.
   static Future<StudySessionModel?> confirmCheckin() async {
+    final deviceId = await getCurrentDeviceId();
     final now = DateTime.now().toUtc().toIso8601String();
     final data = await _client
         .from('study_sessions')
         .update({'last_activity_at': now})
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true)
         .select()
         .maybeSingle();
@@ -102,26 +105,29 @@ class SessionService {
     return StudySessionModel.fromJson(data);
   }
 
-  // ─── Record activity (future: chat / emoji / sticker) ─────────────────────
+  // Record activity (future: chat / emoji / sticker)
 
-  /// Call this whenever the user does ANY active thing (chat, emoji, etc.)
-  /// to reset the inactivity clock without showing the check-in popup.
+  /// Resets the inactivity clock for the current device.
   static Future<void> recordActivity() async {
+    final deviceId = await getCurrentDeviceId();
     final now = DateTime.now().toUtc().toIso8601String();
     await _client
         .from('study_sessions')
         .update({'last_activity_at': now})
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true);
   }
 
-  // ─── Fetch current user's active session ─────────────────────────────────
+  // Fetch current device's active session
 
   static Future<StudySessionModel?> getActiveSessionForUser() async {
+    final deviceId = await getCurrentDeviceId();
     final data = await _client
         .from('study_sessions')
         .select()
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true)
         .maybeSingle();
 
@@ -129,74 +135,99 @@ class SessionService {
     return StudySessionModel.fromJson(data);
   }
 
-  // ─── Fetch all active sessions in a room ─────────────────────────────────
+  // Fetch visible active sessions in a room
 
+  /// Returns one visible active session per user for room UI purposes.
+  ///
+  /// Multi-device rows are deduped so the room still renders one seat/member
+  /// per user, while the current device keeps its own session identity.
   static Future<List<StudySessionModel>> getActiveSessions(
-      String roomId) async {
+    String roomId,
+  ) async {
+    final currentDeviceId = await getCurrentDeviceId();
     final data = await _client
         .from('study_sessions')
         .select()
         .eq('room_id', roomId)
         .eq('is_active', true)
-        .order('start_time', ascending: true);
+        .order('last_activity_at', ascending: false)
+        .order('start_time', ascending: false);
 
-    return (data as List<dynamic>)
+    final sessions = (data as List<dynamic>)
         .map((j) => StudySessionModel.fromJson(j as Map<String, dynamic>))
         .toList();
+
+    final dedupedByUser = <String, StudySessionModel>{};
+    for (final session in sessions) {
+      final existing = dedupedByUser[session.userId];
+      if (existing == null ||
+          _shouldPreferRoomSession(session, existing, currentDeviceId)) {
+        dedupedByUser[session.userId] = session;
+      }
+    }
+
+    final visibleSessions = dedupedByUser.values.toList()
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    return visibleSessions;
   }
 
-  // ─── Force-close active session (ghost-session prevention) ───────────────
+  // Force-close active session (ghost-session prevention)
 
-  /// Force-closes any currently active session for this user.
-  ///
-  /// Uses [last_activity_at] as [end_time] so the user only gets credit
-  /// for time they were confirmed present — not the unconfirmed tail.
-  ///
-  /// Called when:
-  ///   • Joining a different room (room-hopping)
-  ///   • Leaving a room manually
-  ///   • Back-navigation out of RoomDetailScreen
-  ///
-  /// ⚠️ MVP limitation: this closes ALL active sessions for this user,
-  /// including sessions from other devices. Multi-device support (device_id
-  /// column) is planned for Phase 3.x.
+  /// Force-closes the current device's active session only.
   static Future<void> forceCloseActiveSession() async {
+    final deviceId = await getCurrentDeviceId();
     final existing = await _client
         .from('study_sessions')
         .select('last_activity_at')
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true)
         .maybeSingle();
 
-    if (existing == null) return; // Nothing active — no-op.
+    if (existing == null) return;
 
-    final endTime = existing['last_activity_at'] as String? ??
+    final endTime =
+        existing['last_activity_at'] as String? ??
         DateTime.now().toUtc().toIso8601String();
 
     await _client
         .from('study_sessions')
-        .update({
-          'is_active': false,
-          'end_time': endTime,
-        })
+        .update({'is_active': false, 'end_time': endTime})
         .eq('user_id', _uid)
+        .eq('device_id', deviceId)
         .eq('is_active', true);
   }
 
-  // ─── Stale-session cleanup (pg_cron fallback) ─────────────────────────────
+  // Stale-session cleanup (pg_cron fallback)
 
   /// Triggers the [close_stale_sessions] DB function client-side.
-  ///
-  /// This is the fallback for Supabase free-tier where pg_cron may be
-  /// unavailable. Called fire-and-forget on app startup from [main.dart].
-  ///
-  /// The DB function marks sessions inactive where
-  /// [last_activity_at] < NOW() - 25 minutes.
   static Future<void> cleanUpStaleSessions() async {
     try {
       await _client.rpc('close_stale_sessions');
     } catch (_) {
-      // Best-effort — never block app startup.
+      // Best-effort - never block app startup.
     }
+  }
+
+  static bool _shouldPreferRoomSession(
+    StudySessionModel candidate,
+    StudySessionModel existing,
+    String currentDeviceId,
+  ) {
+    final candidateIsCurrentDevice =
+        candidate.userId == _uid && candidate.deviceId == currentDeviceId;
+    final existingIsCurrentDevice =
+        existing.userId == _uid && existing.deviceId == currentDeviceId;
+
+    if (candidateIsCurrentDevice != existingIsCurrentDevice) {
+      return candidateIsCurrentDevice;
+    }
+
+    final candidateActivity = candidate.lastActivityAt ?? candidate.startTime;
+    final existingActivity = existing.lastActivityAt ?? existing.startTime;
+    if (candidateActivity.isAtSameMomentAs(existingActivity)) {
+      return candidate.startTime.isAfter(existing.startTime);
+    }
+    return candidateActivity.isAfter(existingActivity);
   }
 }

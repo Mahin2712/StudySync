@@ -4,6 +4,7 @@ class StudySessionModel {
   final String id;
   final String userId;
   final String roomId;
+  final String? deviceId;
   final String? subject;
   final DateTime startTime;
   final DateTime? endTime;
@@ -22,6 +23,7 @@ class StudySessionModel {
     required this.id,
     required this.userId,
     required this.roomId,
+    this.deviceId,
     this.subject,
     required this.startTime,
     this.endTime,
@@ -32,8 +34,7 @@ class StudySessionModel {
   });
 
   /// Always computed from DB start_time → never stored incrementally.
-  Duration get elapsed =>
-      DateTime.now().toUtc().difference(startTime.toUtc());
+  Duration get elapsed => DateTime.now().toUtc().difference(startTime.toUtc());
 
   /// How long ago the user last confirmed activity.
   /// This is the SINGLE SOURCE OF TRUTH for check-in decisions.
@@ -49,8 +50,7 @@ class StudySessionModel {
   bool get isAutoStopDue => timeSinceActivity >= checkinInterval + checkinGrace;
 
   /// Derived convenience — NOT stored in DB.
-  DateTime? get nextCheckinAt =>
-      lastActivityAt?.toUtc().add(checkinInterval);
+  DateTime? get nextCheckinAt => lastActivityAt?.toUtc().add(checkinInterval);
 
   /// Active = check-in not yet due. Warning = check-in overdue.
   CheckinStatus get checkinStatus {
@@ -65,6 +65,7 @@ class StudySessionModel {
       id: json['id'] as String,
       userId: json['user_id'] as String,
       roomId: json['room_id'] as String,
+      deviceId: json['device_id'] as String?,
       subject: json['subject'] as String?,
       startTime: DateTime.parse(json['start_time'] as String).toUtc(),
       endTime: json['end_time'] != null

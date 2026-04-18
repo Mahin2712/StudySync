@@ -16,7 +16,7 @@ Format: Use the following structure:
 
 [YYYY-MM-DD HH:MM] — Update Title
 ✅ Completed
-[List of finished tasks or features]
+[List of finished tasks, implementations, walkthroughs or features]
 
 🔧 Changes
 [Specific technical changes: Code, DB Schema, Logic, or UI]

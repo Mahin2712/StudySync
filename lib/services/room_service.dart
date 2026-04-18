@@ -22,7 +22,10 @@ class RoomService {
   }
 
   /// Create a new room and return its id
-  static Future<String> createRoom(String name, {String subject = 'Others'}) async {
+  static Future<String> createRoom(
+    String name, {
+    String subject = 'Others',
+  }) async {
     final userId = _client.auth.currentUser!.id;
     final data = await _client
         .from('rooms')
@@ -39,7 +42,7 @@ class RoomService {
 
   /// Join a room (insert into room_members — note Supabase typo)
   ///
-  /// Force-closes any active study session before joining to prevent
+  /// Force-closes this device's active study session before joining to prevent
   /// "ghost studier" rows when the user hops between rooms.
   static Future<void> joinRoom(String roomId) async {
     final userId = _client.auth.currentUser!.id;
@@ -80,8 +83,6 @@ class RoomService {
         .select('user_id')
         .eq('room_id', roomId);
 
-    return (data as List)
-        .map((m) => m['user_id'] as String)
-        .toList();
+    return (data as List).map((m) => m['user_id'] as String).toList();
   }
 }
