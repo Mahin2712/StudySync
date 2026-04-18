@@ -17,11 +17,13 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const StudySyncApp());
+  runApp(StudySyncApp(supabaseClient: Supabase.instance.client));
 }
 
 class StudySyncApp extends StatelessWidget {
-  const StudySyncApp({super.key});
+  final SupabaseClient? supabaseClient;
+
+  const StudySyncApp({super.key, this.supabaseClient});
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +37,16 @@ class StudySyncApp extends StatelessWidget {
           surface: Color(0xFF111417),
         ),
       ),
-      home: const _AppRouter(),
+      home: _AppRouter(supabaseClient: supabaseClient ?? Supabase.instance.client),
     );
   }
 }
 
 /// Async routing widget that checks auth state and profile completeness.
 class _AppRouter extends StatefulWidget {
-  const _AppRouter();
+  final SupabaseClient supabaseClient;
+
+  const _AppRouter({required this.supabaseClient});
 
   @override
   State<_AppRouter> createState() => _AppRouterState();
@@ -55,7 +59,7 @@ class _AppRouterState extends State<_AppRouter> {
     // Fire-and-forget stale session cleanup.
     // Fallback for Supabase free-tier (no pg_cron).
     // Marks sessions inactive where last_activity_at < now - 25 min.
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = widget.supabaseClient.auth.currentUser;
     if (user != null) {
       SessionService.cleanUpStaleSessions();
     }
@@ -63,7 +67,7 @@ class _AppRouterState extends State<_AppRouter> {
 
   @override
   Widget build(BuildContext context) {
-    final session = Supabase.instance.client.auth.currentSession;
+    final session = widget.supabaseClient.auth.currentSession;
 
     // Not logged in → go to login
     if (session == null) return const LoginScreen();
