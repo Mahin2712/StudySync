@@ -12,7 +12,9 @@ import '../services/session_service.dart';
 /// login, sign-up) must navigate to [AppRouter] so the profile-completion gate
 /// is always enforced — never bypass this by pushing [HomeScreen] directly.
 class AppRouter extends StatefulWidget {
-  const AppRouter({super.key});
+  final SupabaseClient? supabaseClient;
+
+  const AppRouter({super.key, this.supabaseClient});
 
   @override
   State<AppRouter> createState() => _AppRouterState();
@@ -25,7 +27,8 @@ class _AppRouterState extends State<AppRouter> {
     // Fire-and-forget stale session cleanup.
     // Fallback for Supabase free-tier (no pg_cron).
     // Marks sessions inactive where last_activity_at < now - 25 min.
-    final user = Supabase.instance.client.auth.currentUser;
+    final client = widget.supabaseClient ?? Supabase.instance.client;
+    final user = client.auth.currentUser;
     if (user != null) {
       SessionService.cleanUpStaleSessions();
     }
@@ -33,7 +36,8 @@ class _AppRouterState extends State<AppRouter> {
 
   @override
   Widget build(BuildContext context) {
-    final session = Supabase.instance.client.auth.currentSession;
+    final client = widget.supabaseClient ?? Supabase.instance.client;
+    final session = client.auth.currentSession;
 
     // Not logged in → go to login
     if (session == null) return const LoginScreen();

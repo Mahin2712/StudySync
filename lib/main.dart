@@ -13,11 +13,13 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const StudySyncApp());
+  runApp(StudySyncApp(supabaseClient: Supabase.instance.client));
 }
 
 class StudySyncApp extends StatelessWidget {
-  const StudySyncApp({super.key});
+  final SupabaseClient? supabaseClient;
+
+  const StudySyncApp({super.key, this.supabaseClient});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class StudySyncApp extends StatelessWidget {
           surface: Color(0xFF111417),
         ),
       ),
-      home: const AppRouter(),
+      home: AppRouter(supabaseClient: supabaseClient),
     );
   }
 }
