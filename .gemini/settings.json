@@ -1,0 +1,9 @@
+{
+  "project": {
+    "name": "StudySync",
+    "description": "Flutter & Supabase education platform"
+  },
+  "tools": {
+    "enabled": true
+  }
+}

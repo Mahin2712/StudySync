@@ -526,3 +526,43 @@ Phase 3 (Privacy and Polish): ?? In Progress (~70%)
 
 ?? Notes / Issues
 - English 2nd chapters have no serial numbers in the source doc; added 1-12 serial prefix for consistency in dropdown.
+
+[2026-04-18 19:22] — Gemini CLI System Setup
+? Completed
+- Installed official Google Gemini CLI globally via npm (@google/gemini-cli).
+- Verified installation (version 0.38.2).
+
+?? Changes
+- System-wide installation of gemini package.
+
+?? Status
+Phase 3 (Privacy and Polish): ?? In Progress (~70%)
+
+?? Next Steps
+- User to complete interactive 'gemini login' authentication.
+- Resume Phase 3.x: Add device_id for multi-device isolation.
+
+?? Notes / Issues
+- Global installation requires npm permissions.
+
+[2026-04-18 19:57] — Gemini CLI Personalization
+? Completed
+- Created global persona templates: Auditor, Specialist, and Creative.
+- Set up project-specific context in StudySync\.gemini\GEMINI.md.
+- Implemented smart 'gg' PowerShell function with 'Set-Execute-Clear' pattern and automatic context injection for 'gg audit <file>'.
+- Configured global settings for UI theme and default model.
+
+?? Changes
+- [NEW] ~/.gemini/personas/auditor.md, specialist.md, creative.md
+- [NEW] StudySync/.gemini/GEMINI.md, settings.json
+- [MODIFIED] PowerShell Profile: Added gg function.
+
+?? Status
+Phase 3 (Privacy and Polish): ?? In Progress (~75%)
+
+?? Next Steps
+- User to test 'gg audit' and personas.
+- Resume Phase 3.x: Add device_id for multi-device isolation.
+
+?? Notes / Issues
+- PowerShell profile created if missing; instructions added to the end.
