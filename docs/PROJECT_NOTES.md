@@ -484,3 +484,45 @@ Phase 3 (Privacy & Polish): ?? In Progress (~60%)
 ?? Notes / Issues
 - All new code passes flutter analyze with zero errors/warnings (only .env pre-existing warning).
 - PopupMenuButton uses const children list — works with Flutter stable.
+
+[2026-04-18 09:32] — Resolved .env Asset Compilation Error
+? Completed
+- Fixed 'No file or variants found for asset: .env' compilation error by creating a valid .env file.
+- Populated .env with verified Supabase URL and Anon Key using Supabase MCP tools.
+- Verified that the application now successfully compiles and launches on the web server.
+
+?? Changes
+- [NEW] .env — Added Supabase environment variables.
+
+?? Status
+Phase 3 (Privacy & Polish): ?? In Progress (~65%)
+
+?? Next Steps
+- Resume Manual QA for Phase 2.5/3 features (chapter dropdown, room-hop ghost fix).
+- Implement device_id for multi-device isolation.
+
+?? Notes / Issues
+- Build is now passing; previous blocking asset error is resolved.
+
+[2026-04-18 09:50] — Fixed Chapter Names to Match Exact SSC Curriculum
+? Completed
+- Replaced all incorrect/random English chapter names in ChapterService with exact names from Subject_chapter_list.md.
+- Bangla subject chapters are now in Bangla (Bengali script). English subjects remain in English.
+- All chapters are numbered serially (1 to last) using Bangla numerals for Bangla subjects, Arabic numerals for English.
+- Islam: simplified to 5 main chapter headings only (sub-topics excluded from dropdown to keep UX clean).
+- Hinduism: all 10 chapter headings correctly listed in Bangla.
+- History key ('history') correctly mapped to History/BGS chapters (15 chapters).
+- Build verified: lutter build web completes with zero errors.
+
+?? Changes
+- [MODIFIED] lib/services/chapter_service.dart — Full rewrite of _chapters map with correct curriculum data.
+
+?? Status
+Phase 3 (Privacy and Polish): ?? In Progress (~70%)
+
+?? Next Steps
+- Manual QA of chapter dropdown in the app (room_detail_screen).
+- Phase 3.x: Add device_id for multi-device isolation.
+
+?? Notes / Issues
+- English 2nd chapters have no serial numbers in the source doc; added 1-12 serial prefix for consistency in dropdown.
