@@ -34,10 +34,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   bool _isLoading = true;
   List<LeaderboardEntry> _entries = [];
   UserStats _myStats = UserStats.zero;
+  String? _statsError;
   Timer? _pollTimer;
 
-  String get _myUserId =>
-      Supabase.instance.client.auth.currentUser?.id ?? '';
+  String get _myUserId => Supabase.instance.client.auth.currentUser?.id ?? '';
 
   @override
   void initState() {
@@ -63,19 +63,28 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
 
   Future<void> _load() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _statsError = null;
+    });
     try {
-      final futures = await Future.wait([
-        _fetchForTab(_tabController.index),
-        if (_myUserId.isNotEmpty)
-          LeaderboardService.getUserStats(_myUserId)
-        else
-          Future.value(UserStats.zero),
-      ]);
+      final entries = await _fetchForTab(_tabController.index);
+      var stats = UserStats.zero;
+      String? statsError;
+
+      if (_myUserId.isNotEmpty) {
+        try {
+          stats = await LeaderboardService.getUserStats(_myUserId);
+        } catch (e) {
+          statsError = e.toString();
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _entries = futures[0] as List<LeaderboardEntry>;
-          _myStats = futures[1] as UserStats;
+          _entries = entries;
+          _myStats = stats;
+          _statsError = statsError;
           _isLoading = false;
         });
       }
@@ -120,8 +129,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     child: CircularProgressIndicator(color: _primary),
                   )
                 : _entries.isEmpty
-                    ? _buildEmpty()
-                    : _buildContent(),
+                ? _buildEmpty()
+                : _buildContent(),
           ),
           _buildMyStatsBar(),
         ],
@@ -145,8 +154,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: _onSurfaceVariant, size: 22),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: _onSurfaceVariant,
+              size: 22,
+            ),
             padding: EdgeInsets.zero,
           ),
           const SizedBox(width: 8),
@@ -179,8 +191,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           // Refresh button
           IconButton(
             onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded,
-                color: _onSurfaceVariant, size: 20),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: _onSurfaceVariant,
+              size: 20,
+            ),
             tooltip: 'Refresh',
           ),
         ],
@@ -240,8 +255,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         ] else ...[
           // If fewer than 3, show all as rows (no podium)
           ..._entries.asMap().entries.map(
-                (e) => _buildRankRow(e.value, e.key + 1),
-              ),
+            (e) => _buildRankRow(e.value, e.key + 1),
+          ),
         ],
       ],
     );
@@ -277,8 +292,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.local_fire_department_rounded,
-                  color: _gold, size: 14),
+              Icon(Icons.local_fire_department_rounded, color: _gold, size: 14),
               SizedBox(width: 4),
               Text(
                 'TOP CHAMPIONS',
@@ -347,9 +361,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 12,
-                          fontWeight: isMe
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                           color: isMe ? _primary : _onSurface,
                         ),
                       ),
@@ -375,7 +387,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                             topRight: Radius.circular(8),
                           ),
                           border: Border.all(
-                              color: color.withValues(alpha: 0.3)),
+                            color: color.withValues(alpha: 0.3),
+                          ),
                         ),
                       ),
                     ],
@@ -454,9 +467,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   ? _primaryContainer.withValues(alpha: 0.3)
                   : _surfaceHighest,
               border: Border.all(
-                  color: isMe
-                      ? _primary.withValues(alpha: 0.4)
-                      : _outline.withValues(alpha: 0.3)),
+                color: isMe
+                    ? _primary.withValues(alpha: 0.4)
+                    : _outline.withValues(alpha: 0.3),
+              ),
             ),
             child: Center(
               child: Text(
@@ -481,8 +495,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 13,
-                    fontWeight:
-                        isMe ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                     color: isMe ? _primary : _onSurface,
                   ),
                 ),
@@ -521,8 +534,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events_outlined,
-              color: _outline, size: 48),
+          const Icon(Icons.emoji_events_outlined, color: _outline, size: 48),
           const SizedBox(height: 16),
           const Text(
             'No data yet.',
@@ -551,7 +563,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               elevation: 0,
               shape: const StadiumBorder(),
               textStyle: const TextStyle(
-                  fontFamily: 'Inter', fontWeight: FontWeight.w600),
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: const Text('Refresh'),
           ),
@@ -568,8 +582,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     return Container(
       decoration: BoxDecoration(
         color: _surface,
-        border: Border(
-            top: BorderSide(color: _outline.withValues(alpha: 0.3))),
+        border: Border(top: BorderSide(color: _outline.withValues(alpha: 0.3))),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Column(
@@ -577,8 +590,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         children: [
           Row(
             children: [
-              const Icon(Icons.person_outline_rounded,
-                  color: _primary, size: 14),
+              const Icon(
+                Icons.person_outline_rounded,
+                color: _primary,
+                size: 14,
+              ),
               const SizedBox(width: 6),
               const Text(
                 'YOUR STATS',
@@ -604,17 +620,48 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              _statChip('Today', _myStats.daily),
-              const SizedBox(width: 8),
-              _statChip('Week', _myStats.weekly),
-              const SizedBox(width: 8),
-              _statChip('Month', _myStats.monthly),
-              const SizedBox(width: 8),
-              _statChip('Total', _myStats.total),
-            ],
-          ),
+          if (_statsError != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _surfaceHigh,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _outline.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Color(0xFFFFB74D),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _statsError!,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: _onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Row(
+              children: [
+                _statChip('Today', _myStats.daily),
+                const SizedBox(width: 8),
+                _statChip('Week', _myStats.weekly),
+                const SizedBox(width: 8),
+                _statChip('Month', _myStats.monthly),
+                const SizedBox(width: 8),
+                _statChip('Total', _myStats.total),
+              ],
+            ),
         ],
       ),
     );

@@ -712,3 +712,57 @@ Database foundation deployed.
 - Existing sessions have been backfilled with random device_ids.
 - The start_session_atomic RPC requires p_device_id as a parameter.
 
+
+[2026-04-18 22:18] - Phase 3.x: Device-Scoped Session Isolation Wired Into Flutter
+? Completed
+- Added persistent local device identity generation/storage using SharedPreferences.
+- App startup now initializes a stable device_id before the StudySync UI boots.
+- SessionService now scopes all "my active session" reads/writes to (user_id, device_id) instead of only user_id.
+- Room join/leave/back-nav now close only the current device's active session, preventing one device from silently ending another device's session.
+- Room active-session fetch remains UI-safe by deduping multiple active rows down to one visible session per user.
+
+?? Changes
+- [NEW] lib/services/device_identity_service.dart
+- [MODIFIED] lib/main.dart - initializes DeviceIdentityService before runApp()
+- [MODIFIED] lib/models/study_session_model.dart - parses/stores device_id
+- [MODIFIED] lib/services/session_service.dart - device-scoped session reads/writes
+- [MODIFIED] lib/services/room_service.dart - comments/flow aligned to device-scoped close
+- [MODIFIED] pubspec.yaml, pubspec.lock - shared_preferences promoted to direct dependency
+- [NEW] docs/migration_audit_fixes.sql - repo-tracked SQL source of truth for device_id migration/index/RPC
+
+?? Status
+Phase 3.x (Multi-device isolation): In Progress (~55%)
+Database and Flutter ownership model are now aligned on device-scoped active sessions.
+
+?? Next Steps
+- Manual QA: open two devices/tabs with the same user and verify stopping/leaving on one does not kill the other.
+- Decide whether room UI should eventually show multiple device sessions per user or keep the current one-row-per-user presentation.
+
+?? Notes / Issues
+- Multi-device session ownership is now enforced for the current user's active-session operations, but room UI still intentionally displays one visible row per user.
+- Applying migration_audit_fixes.sql is now required for fresh environments because Flutter expects p_device_id-aware start_session_atomic behavior.
+
+[2026-04-18 22:27] - Stats RPC Failures Now Surface as Errors Instead of Fake Zeroes
+? Completed
+- Removed the silent UserStats.zero fallback from LeaderboardService.getUserStats().
+- Added explicit StatsLoadException handling when the get_my_stats RPC is unavailable or malformed.
+- StatsDashboardScreen now shows its existing error state instead of rendering misleading 0m values when stats loading fails.
+- LeaderboardScreen now loads ranked entries and personal stats separately, so leaderboard rows still render even if personal stats fail.
+- Bottom-bar personal stats in LeaderboardScreen now show an inline warning instead of fake zero-value chips on RPC failure.
+- Verified with dart analyze lib test and flutter test test/widget_test.dart (both passed).
+
+?? Changes
+- [MODIFIED] lib/services/leaderboard_service.dart - throws StatsLoadException on RPC failure/invalid payload
+- [MODIFIED] lib/screens/stats_dashboard_screen.dart - clears _stats and displays error state on stats load failure
+- [MODIFIED] lib/screens/leaderboard_screen.dart - decoupled leaderboard/stats loading, added inline stats warning
+
+?? Status
+Audit Fix: Stats integrity COMPLETE
+Stats failures are now visible and no longer misrepresented as "no study time".
+
+?? Next Steps
+- Consider applying the same explicit-error pattern to leaderboard view fetches if the views are unavailable.
+- Manual QA: temporarily break get_my_stats or revoke access and verify both stats surfaces show errors cleanly.
+
+?? Notes / Issues
+- Leaderboard rows still depend on the leaderboard_* views; only personal stats failure handling was hardened in this pass.

@@ -1,10 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/leaderboard_entry_model.dart';
+
+class StatsLoadException implements Exception {
+  final String message;
+
+  const StatsLoadException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class LeaderboardService {
   static final _client = Supabase.instance.client;
 
-  // ─── Offline leaderboards (completed sessions only) ──────────────────────
+  // Offline leaderboards (completed sessions only)
 
   static Future<List<LeaderboardEntry>> getDailyLeaderboard() =>
       _fetch('leaderboard_daily');
@@ -25,28 +35,24 @@ class LeaderboardService {
         .toList();
   }
 
-  // ─── Personal stats for current user ─────────────────────────────────────
+  // Personal stats for current user
 
   /// Fetches boundary-correct personal stats via the [get_my_stats] DB RPC.
   ///
-  /// The RPC:
-  ///   • Clips sessions to window boundaries with GREATEST/LEAST so a session
-  ///     spanning midnight is proportionally credited to both days.
-  ///   • Derives identity from auth.uid() — no user can read another's stats.
-  ///   • Returns subject_breakdown so [UserStats.subjectBreakdown] is preserved.
-  ///
   /// [userId] is kept in the signature for call-site compatibility but is
-  /// ignored — the RPC enforces the current user's identity server-side.
+  /// ignored. The RPC enforces the current user's identity server-side.
   static Future<UserStats> getUserStats(String userId) async {
+    final data = await _client.rpc('get_my_stats');
+    if (data == null) {
+      throw const StatsLoadException('Stats are unavailable right now.');
+    }
+    if (data is! Map<String, dynamic>) {
+      throw const StatsLoadException('Stats response was invalid.');
+    }
+
+    final Map<String, double> subjectBreakdown = {};
+    final rawBreakdown = data['subject_breakdown'];
     try {
-      final data = await _client.rpc('get_my_stats');
-      if (data == null) return UserStats.zero;
-
-      final json = data as Map<String, dynamic>;
-
-      // Rebuild subjectBreakdown from the JSON object.
-      final Map<String, double> subjectBreakdown = {};
-      final rawBreakdown = json['subject_breakdown'];
       if (rawBreakdown is Map) {
         rawBreakdown.forEach((k, v) {
           subjectBreakdown[k as String] = (v as num).toDouble();
@@ -54,19 +60,18 @@ class LeaderboardService {
       }
 
       return UserStats(
-        daily:            (json['daily']   as num?)?.toDouble() ?? 0,
-        weekly:           (json['weekly']  as num?)?.toDouble() ?? 0,
-        monthly:          (json['monthly'] as num?)?.toDouble() ?? 0,
-        total:            (json['total']   as num?)?.toDouble() ?? 0,
+        daily: (data['daily'] as num?)?.toDouble() ?? 0,
+        weekly: (data['weekly'] as num?)?.toDouble() ?? 0,
+        monthly: (data['monthly'] as num?)?.toDouble() ?? 0,
+        total: (data['total'] as num?)?.toDouble() ?? 0,
         subjectBreakdown: subjectBreakdown,
       );
     } catch (_) {
-      return UserStats.zero;
+      throw const StatsLoadException('Stats response could not be parsed.');
     }
   }
 
-
-  // ─── Username management ──────────────────────────────────────────────────
+  // Username management
 
   /// Get the current user's profile username.
   static Future<String?> getMyUsername() async {
@@ -84,8 +89,10 @@ class LeaderboardService {
   static Future<void> updateUsername(String username) async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
-    await _client
-        .from('profiles')
-        .upsert({'id': uid, 'username': username, 'updated_at': DateTime.now().toUtc().toIso8601String()});
+    await _client.from('profiles').upsert({
+      'id': uid,
+      'username': username,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
   }
 }

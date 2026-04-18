@@ -16,19 +16,19 @@ class StatsDashboardScreen extends StatefulWidget {
 
 class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
   // ─── Design tokens (matches RoomDetailScreen palette) ─────────────────────
-  static const _bg             = Color(0xFF0C0E11);
-  static const _surface        = Color(0xFF111417);
-  static const _surfaceHigh    = Color(0xFF1C2025);
+  static const _bg = Color(0xFF0C0E11);
+  static const _surface = Color(0xFF111417);
+  static const _surfaceHigh = Color(0xFF1C2025);
   static const _surfaceHighest = Color(0xFF22262C);
-  static const _primary        = Color(0xFFADCBDB);
-  static const _primaryCont    = Color(0xFF395664);
-  static const _onPrimaryCont  = Color(0xFFC9E8F8);
-  static const _onSurface      = Color(0xFFE2E5EE);
-  static const _onSurfaceVar   = Color(0xFFA7ABB3);
-  static const _outline        = Color(0xFF44484F);
-  static const _green          = Color(0xFF4CAF50);
-  static const _amber          = Color(0xFFFFB74D);
-  static const _red            = Color(0xFFFF6B6B);
+  static const _primary = Color(0xFFADCBDB);
+  static const _primaryCont = Color(0xFF395664);
+  static const _onPrimaryCont = Color(0xFFC9E8F8);
+  static const _onSurface = Color(0xFFE2E5EE);
+  static const _onSurfaceVar = Color(0xFFA7ABB3);
+  static const _outline = Color(0xFF44484F);
+  static const _green = Color(0xFF4CAF50);
+  static const _amber = Color(0xFFFFB74D);
+  static const _red = Color(0xFFFF6B6B);
 
   // ─── State ────────────────────────────────────────────────────────────────
   UserStats? _stats;
@@ -51,9 +51,18 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
       if (uid == null) throw Exception('Not logged in');
       await SubjectService.getSubjects(); // Prefetch dynamic subjects cache
       final stats = await LeaderboardService.getUserStats(uid);
-      if (mounted) setState(() => _stats = stats);
+      if (mounted) {
+        setState(() {
+          _stats = stats;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() {
+          _stats = null;
+          _error = e.toString();
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -83,10 +92,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: _primary))
+                    child: CircularProgressIndicator(color: _primary),
+                  )
                 : _error != null
-                    ? _buildError()
-                    : _buildBody(),
+                ? _buildError()
+                : _buildBody(),
           ),
         ],
       ),
@@ -103,8 +113,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           if (Navigator.of(context).canPop())
             IconButton(
               onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: _onSurfaceVar, size: 18),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: _onSurfaceVar,
+                size: 18,
+              ),
             ),
           const Text(
             'StudySync',
@@ -129,8 +142,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const Spacer(),
           IconButton(
             onPressed: _loadStats,
-            icon: const Icon(Icons.refresh_rounded,
-                color: _onSurfaceVar, size: 20),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: _onSurfaceVar,
+              size: 20,
+            ),
             tooltip: 'Refresh',
           ),
         ],
@@ -151,7 +167,10 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
               _error!,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  fontFamily: 'Inter', color: _onSurfaceVar, fontSize: 13),
+                fontFamily: 'Inter',
+                color: _onSurfaceVar,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -218,14 +237,34 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
 
   Widget _buildOverviewCards(UserStats stats) {
     final cards = [
-      _CardData('Today', _fmt(stats.daily), Icons.wb_sunny_outlined,
-          _amber, 'Confirmed study time today'),
-      _CardData('Weekly', _fmt(stats.weekly), Icons.date_range_outlined,
-          _primary, 'Last 7 days'),
-      _CardData('Monthly', _fmt(stats.monthly),
-          Icons.calendar_month_outlined, _green, 'This month'),
-      _CardData('All Time', _fmt(stats.total),
-          Icons.emoji_events_outlined, const Color(0xFFCF9D5E), 'Total verified'),
+      _CardData(
+        'Today',
+        _fmt(stats.daily),
+        Icons.wb_sunny_outlined,
+        _amber,
+        'Confirmed study time today',
+      ),
+      _CardData(
+        'Weekly',
+        _fmt(stats.weekly),
+        Icons.date_range_outlined,
+        _primary,
+        'Last 7 days',
+      ),
+      _CardData(
+        'Monthly',
+        _fmt(stats.monthly),
+        Icons.calendar_month_outlined,
+        _green,
+        'This month',
+      ),
+      _CardData(
+        'All Time',
+        _fmt(stats.total),
+        Icons.emoji_events_outlined,
+        const Color(0xFFCF9D5E),
+        'Total verified',
+      ),
     ];
 
     return Wrap(
@@ -267,8 +306,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
               const Spacer(),
               Tooltip(
                 message: c.tooltip,
-                child: const Icon(Icons.info_outline_rounded,
-                    color: _outline, size: 12),
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: _outline,
+                  size: 12,
+                ),
               ),
             ],
           ),
@@ -335,9 +377,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
         return a.key.compareTo(b.key);
       });
 
-    final totalHours = stats.subjectBreakdown.values
-        .fold(0.0, (sum, h) => sum + h);
-        
+    final totalHours = stats.subjectBreakdown.values.fold(
+      0.0,
+      (sum, h) => sum + h,
+    );
+
     final subjects = SubjectService.getCachedSubjects();
     final subjectMap = {for (var s in subjects) s.key: s};
 
@@ -345,10 +389,12 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
       children: entries.map((e) {
         final isOthers = e.key == 'others';
         final subjectInfo = subjectMap[e.key];
-        
-        final displayName = isOthers ? 'Others' : (subjectInfo?.displayName ?? _titleCase(e.key));
+
+        final displayName = isOthers
+            ? 'Others'
+            : (subjectInfo?.displayName ?? _titleCase(e.key));
         final emoji = isOthers ? '📝' : (subjectInfo?.emoji ?? '📚');
-        
+
         final fraction = totalHours > 0 ? (e.value / totalHours) : 0.0;
         final barColor = isOthers ? _outline : _primary;
 
@@ -373,10 +419,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
-                      child: Text(
-                        emoji,
-                        style: const TextStyle(fontSize: 15),
-                      ),
+                      child: Text(emoji, style: const TextStyle(fontSize: 15)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -426,7 +469,8 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                   minHeight: 4,
                   backgroundColor: _surfaceHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                      barColor.withValues(alpha: 0.8)),
+                    barColor.withValues(alpha: 0.8),
+                  ),
                 ),
               ),
             ],
@@ -476,10 +520,13 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
 
   static String _titleCase(String s) {
     if (s.isEmpty) return s;
-    return s.split(' ').map((w) {
-      if (w.isEmpty) return w;
-      return w[0].toUpperCase() + w.substring(1);
-    }).join(' ');
+    return s
+        .split(' ')
+        .map((w) {
+          if (w.isEmpty) return w;
+          return w[0].toUpperCase() + w.substring(1);
+        })
+        .join(' ');
   }
 }
 
