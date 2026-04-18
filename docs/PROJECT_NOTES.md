@@ -650,3 +650,22 @@ Fixes #1, #2, #3, #5 — DONE. Fix #4 (test isolation) — PENDING Jules.
 ?? Notes / Issues
 - Fix #4 (Jules) is the only remaining open item from the audit.
 - The stats RPC subject list in SQL must stay in sync with SubjectService._fallbackSubjects.
+
+[2026-04-18 21:25] — Fix #4 (Test Isolation via Jules) - PR Created
+? Completed
+- Jules (autonomous AI) completed the migration to isolated testing.
+- Mocktail integrated for mocking Supabase dependency in widget tests.
+- Removed .env dependency from test/widget_test.dart.
+- StudySyncApp refactored for dependency injection of SupabaseClient.
+
+?? Changes
+- [PR] https://github.com/Mahin2712/StudySync/pull/18
+- [MODIFIED] lib/main.dart, pubspec.yaml, test/widget_test.dart
+
+?? Status
+Phase 3 (Privacy and Polish): ? Test Infrastructure Fixed (~90%)
+
+?? Next Steps
+- USER: Review and Merge PR #18.
+- USER: Run 'flutter test' locally to confirm < 10s execution.
+- Antigravity: Proceed with Phase 3.x isolation steps (device_id, etc).
