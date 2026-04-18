@@ -669,3 +669,21 @@ Phase 3 (Privacy and Polish): ? Test Infrastructure Fixed (~90%)
 - USER: Review and Merge PR #18.
 - USER: Run 'flutter test' locally to confirm < 10s execution.
 - Antigravity: Proceed with Phase 3.x isolation steps (device_id, etc).
+
+[2026-04-18 21:32] — Merge PR #18 (Test Isolation) & Final Verification
+? Completed
+- Merged Jules' PR #18 into main branch locally.
+- Resolved merge conflict in lib/main.dart by integrating dependency injection into screens/app_router.dart.
+- Verified code health with 'flutter analyze' (Passed).
+- Verified test isolation with 'flutter test' (Passed in 3s).
+- Pushed merged main to origin.
+
+?? Changes
+- [MERGED] origin/jules-smoke-test-mocktail-10033182039686010772
+- [MODIFIED] lib/main.dart, lib/screens/app_router.dart: Integrated SupabaseClient DI.
+
+?? Status
+Phase 3 (Privacy and Polish): ? Test Isolation & DI Integrated (100%)
+
+?? Next Steps
+- Antigravity: Start Phase 3.x (Multi-device isolation with device_id).
