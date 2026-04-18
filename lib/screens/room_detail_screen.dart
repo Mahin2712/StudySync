@@ -233,11 +233,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     _watchdogTimer =
         Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted) return;
-      // Presence heartbeat — only ping DB if there’s an active session.
-      // Prevents unnecessary writes when the user is idle.
-      if (_mySession != null) {
-        await SessionService.recordActivity();
-      }
+      // NOTE: recordActivity() intentionally not called here.
+      // Calling it on a timer reset last_activity_at every 30 s and
+      // disabled the anti-fake-study check-in requirement.
+      // Activity is recorded only from real user interactions.
       final elapsed = DateTime.now().difference(_lastRealtimeEvent).inSeconds;
       if (elapsed >= 30) {
         // No realtime update received — fall back to a manual poll.
@@ -245,6 +244,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       }
     });
   }
+
 
   // ─── Session actions ──────────────────────────────────────────────────────
 

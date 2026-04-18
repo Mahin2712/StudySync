@@ -566,3 +566,87 @@ Phase 3 (Privacy and Polish): ?? In Progress (~75%)
 
 ?? Notes / Issues
 - PowerShell profile created if missing; instructions added to the end.
+
+[2026-04-18 20:29] — Audit Bug Fixes: DB Migration + Dart Services (Antigravity)
+? Completed
+- Created docs/migration_audit_fixes.sql (ready to run in Supabase SQL Editor):
+  - Partial unique index: idx_one_active_session_per_user (WHERE is_active=true)
+  - start_session_atomic RPC: race-safe INSERT ON CONFLICT DO NOTHING
+  - get_my_stats RPC: boundary-correct time windows + subject_breakdown
+- Updated SessionService.startSession() to use start_session_atomic RPC.
+- Updated LeaderboardService.getUserStats() to use get_my_stats RPC.
+- Removed unused SubjectService import from leaderboard_service.dart.
+
+?? Changes
+- [NEW] docs/migration_audit_fixes.sql
+- [MODIFIED] lib/services/session_service.dart — startSession() now calls RPC
+- [MODIFIED] lib/services/leaderboard_service.dart — getUserStats() now calls RPC, import cleaned
+
+?? Status
+Phase 3 (Privacy and Polish): ?? In Progress (~80%)
+DB migration: PENDING USER ACTION — run migration_audit_fixes.sql in Supabase SQL Editor.
+Dart code: ? flutter analyze — No issues found.
+
+?? Next Steps
+- USER: Run docs/migration_audit_fixes.sql in Supabase Dashboard ? SQL Editor.
+- Gemini CLI: Fix #1 (watchdog recordActivity removal) using: gg auditor prompt from plan.
+- Gemini CLI: Fix #3 (AppRouter extraction + login rewire) using: gg specialist prompt from plan.
+- Jules: Fix #4 (test isolation with mocktail).
+
+?? Notes / Issues
+- SQL migration MUST be run before apps go live; the new RPCs in session_service will fail until then.
+- The stats RPC subject list is hardcoded in SQL — must stay in sync with SubjectService._fallbackSubjects.
+
+[2026-04-18 20:59] — Add Jules MCP Server
+? Completed
+- Configured Jules (by Google) MCP server in antigravity/mcp_config.json.
+- Verified authentication and connectivity using 'jules-mcp doctor'.
+
+?? Changes
+- [MODIFIED] C:\Users\SER\.gemini\antigravity\mcp_config.json: Added 'jules' configuration with environment-based API key.
+
+?? Status
+Phase 3 (Privacy and Polish): ? Configuration Complete (~85%)
+
+?? Next Steps
+- Use Jules MCP tools to assist with autonomous coding tasks (Fix #4: test isolation).
+
+?? Notes / Issues
+- The Jules API is in alpha; configuration uses @google/jules-mcp package via npx.
+
+[2026-04-18 21:03] — Audit Bug Fixes: All Code Fixes Applied + DB Migration Executed
+? Completed
+- DB migration applied directly via Supabase MCP (no manual step needed):
+  - idx_one_active_session_per_user (partial unique index) — CONFIRMED in pg_indexes
+  - start_session_atomic RPC — CONFIRMED in information_schema.routines
+  - get_my_stats RPC — CONFIRMED in information_schema.routines
+- Fix #1 (Critical): Removed SessionService.recordActivity() from _startWatchdog() timer.
+  Anti-fake-study check-in system is now active again.
+- Fix #2 (High): SessionService.startSession() now calls start_session_atomic RPC.
+  Race-safe, DB-level enforced.
+- Fix #3 (High): Extracted _AppRouter ? public AppRouter in lib/screens/app_router.dart.
+  login_screen.dart now pushes AppRouter (not HomeScreen) after sign-in.
+  Profile-completion gate enforced on every auth entry point.
+- Fix #5 (Medium): LeaderboardService.getUserStats() now calls get_my_stats RPC.
+  Boundary-correct time windows. subjectBreakdown preserved.
+- flutter analyze lib/ — No issues found!
+
+?? Changes
+- [NEW] lib/screens/app_router.dart
+- [MODIFIED] lib/main.dart — uses AppRouter, removed _AppRouter class
+- [MODIFIED] lib/screens/login_screen.dart — routes through AppRouter via pushAndRemoveUntil
+- [MODIFIED] lib/screens/room_detail_screen.dart — recordActivity removed from watchdog timer
+- [MODIFIED] lib/services/session_service.dart — startSession uses RPC
+- [MODIFIED] lib/services/leaderboard_service.dart — getUserStats uses RPC, unused import removed
+
+?? Status
+Phase 3 (Privacy and Polish): ?? In Progress (~90%)
+Fixes #1, #2, #3, #5 — DONE. Fix #4 (test isolation) — PENDING Jules.
+
+?? Next Steps
+- Assign Jules: Replace test/widget_test.dart with offline mocktail-based smoke tests.
+- Manual verification: dual-tab race condition, check-in popup, new-user routing, stats dashboard.
+
+?? Notes / Issues
+- Fix #4 (Jules) is the only remaining open item from the audit.
+- The stats RPC subject list in SQL must stay in sync with SubjectService._fallbackSubjects.

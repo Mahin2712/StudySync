@@ -8,34 +8,32 @@ class SessionService {
 
   // ─── Start session ────────────────────────────────────────────────────────
 
-  /// Starts a new study session. Sets last_activity_at = now (UTC).
-  /// Returns existing session without inserting if one is already active.
+  /// Starts a new study session atomically via a DB RPC.
+  ///
+  /// Uses [start_session_atomic] which:
+  ///   • Attempts INSERT ... ON CONFLICT DO NOTHING (race-safe).
+  ///   • Always returns the single active session row.
+  ///   • Enforced by a partial unique index (user_id WHERE is_active=true).
+  ///
+  /// Returns the existing session if one is already active — no duplicate
+  /// rows can be created even under concurrent tab/device access.
   static Future<StudySessionModel?> startSession(
     String roomId, {
     String? subject,
     String? chapter,
   }) async {
-    // Duplicate guard
-    final existing = await getActiveSessionForUser();
-    if (existing != null) return existing;
-
-    final now = DateTime.now().toUtc().toIso8601String();
-    final data = await _client
-        .from('study_sessions')
-        .insert({
-          'user_id': _uid,
-          'room_id': roomId,
-          'subject': subject,
-          'chapter': chapter,
-          'start_time': now,
-          'is_active': true,
-          'last_activity_at': now,
-        })
-        .select()
-        .single();
-
-    return StudySessionModel.fromJson(data);
+    final data = await _client.rpc(
+      'start_session_atomic',
+      params: {
+        'p_room_id': roomId,
+        'p_subject': subject,
+        'p_chapter': chapter,
+      },
+    );
+    if (data == null) return null;
+    return StudySessionModel.fromJson(data as Map<String, dynamic>);
   }
+
 
   // ─── Stop session ─────────────────────────────────────────────────────────
 

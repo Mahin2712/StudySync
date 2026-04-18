@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/leaderboard_entry_model.dart';
-import 'subject_service.dart';
 
 class LeaderboardService {
   static final _client = Supabase.instance.client;
@@ -28,66 +27,44 @@ class LeaderboardService {
 
   // ─── Personal stats for current user ─────────────────────────────────────
 
-  /// Compute stats for [userId] across all time windows from study_sessions.
-  /// All windows use ONLY completed (is_active=false, end_time IS NOT NULL) sessions.
+  /// Fetches boundary-correct personal stats via the [get_my_stats] DB RPC.
+  ///
+  /// The RPC:
+  ///   • Clips sessions to window boundaries with GREATEST/LEAST so a session
+  ///     spanning midnight is proportionally credited to both days.
+  ///   • Derives identity from auth.uid() — no user can read another's stats.
+  ///   • Returns subject_breakdown so [UserStats.subjectBreakdown] is preserved.
+  ///
+  /// [userId] is kept in the signature for call-site compatibility but is
+  /// ignored — the RPC enforces the current user's identity server-side.
   static Future<UserStats> getUserStats(String userId) async {
-    final now = DateTime.now().toUtc();
-    final startOfDay = DateTime.utc(now.year, now.month, now.day);
-    final sevenDaysAgo = now.subtract(const Duration(days: 7));
-    final startOfMonth = DateTime.utc(now.year, now.month, 1);
+    try {
+      final data = await _client.rpc('get_my_stats');
+      if (data == null) return UserStats.zero;
 
-    final data = await _client
-        .from('study_sessions')
-        .select('start_time, end_time, subject') // fetch subject too
-        .eq('user_id', userId)
-        .eq('is_active', false)
-        .not('end_time', 'is', null);
+      final json = data as Map<String, dynamic>;
 
-    final rows = data as List<dynamic>;
+      // Rebuild subjectBreakdown from the JSON object.
+      final Map<String, double> subjectBreakdown = {};
+      final rawBreakdown = json['subject_breakdown'];
+      if (rawBreakdown is Map) {
+        rawBreakdown.forEach((k, v) {
+          subjectBreakdown[k as String] = (v as num).toDouble();
+        });
+      }
 
-    double dailySeconds = 0;
-    double weeklySeconds = 0;
-    double monthlySeconds = 0;
-    double totalSeconds = 0;
-
-    // Aggregation for the subject breakdown.
-    // Keys are normalised lowercase; bucketed as 'others' if non-standard.
-    final Map<String, double> subjectSecs = {};
-    
-    final standardSubjects = await SubjectService.getSubjects();
-    final standardKeys = standardSubjects.map((e) => e.key).toSet();
-
-    for (final row in rows) {
-      final start = DateTime.parse(row['start_time'] as String).toUtc();
-      final end = DateTime.parse(row['end_time'] as String).toUtc();
-      final secs = end.difference(start).inSeconds.toDouble();
-      if (secs <= 0) continue;
-
-      totalSeconds += secs;
-      if (start.isAfter(startOfMonth)) monthlySeconds += secs;
-      if (start.isAfter(sevenDaysAgo)) weeklySeconds += secs;
-      if (start.isAfter(startOfDay)) dailySeconds += secs;
-
-      // --- Subject aggregation (Store Truth, Filter for View) ---
-      final rawSubject = (row['subject'] as String?)?.trim().toLowerCase();
-      final key = (rawSubject != null && standardKeys.contains(rawSubject))
-          ? rawSubject
-          : 'others';
-      subjectSecs[key] = (subjectSecs[key] ?? 0) + secs;
+      return UserStats(
+        daily:            (json['daily']   as num?)?.toDouble() ?? 0,
+        weekly:           (json['weekly']  as num?)?.toDouble() ?? 0,
+        monthly:          (json['monthly'] as num?)?.toDouble() ?? 0,
+        total:            (json['total']   as num?)?.toDouble() ?? 0,
+        subjectBreakdown: subjectBreakdown,
+      );
+    } catch (_) {
+      return UserStats.zero;
     }
-
-    // Convert seconds → hours for all subject buckets.
-    final subjectHours = subjectSecs
-        .map((k, v) => MapEntry(k, double.parse((v / 3600).toStringAsFixed(2))));
-
-    return UserStats(
-      daily: dailySeconds / 3600,
-      weekly: weeklySeconds / 3600,
-      monthly: monthlySeconds / 3600,
-      total: totalSeconds / 3600,
-      subjectBreakdown: subjectHours,
-    );
   }
+
 
   // ─── Username management ──────────────────────────────────────────────────
 

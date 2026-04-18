@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home_screen.dart';
+import 'app_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,14 +60,15 @@ class _LoginScreenState extends State<LoginScreen>
       if (response.user != null) {
         _showSnack('Welcome back, ${response.user!.email}!');
         if (mounted) {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, _, _) => const HomeScreen(),
+              pageBuilder: (_, _, _) => const AppRouter(),
               transitionsBuilder: (_, anim, _, child) =>
                   FadeTransition(opacity: anim, child: child),
               transitionDuration: const Duration(milliseconds: 400),
             ),
+            (_) => false, // clear entire back-stack
           );
         }
       }
