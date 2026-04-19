@@ -170,7 +170,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 'Leaderboard',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: _onSurface,
@@ -180,7 +180,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 'Ranked by completed study hours',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 12,
                   color: _onSurfaceVariant,
                 ),
@@ -222,12 +222,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelStyle: const TextStyle(
-          fontFamily: 'Inter',
+          
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontFamily: 'Inter',
+          
           fontSize: 13,
           fontWeight: FontWeight.w400,
         ),
@@ -297,7 +297,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 'TOP CHAMPIONS',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 10,
                   letterSpacing: 2,
                   color: _gold,
@@ -343,7 +343,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                           child: Text(
                             entry.initials,
                             style: TextStyle(
-                              fontFamily: 'Inter',
+                              
                               fontSize: i == 1 ? 18 : 14,
                               fontWeight: FontWeight.w800,
                               color: color,
@@ -359,7 +359,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 12,
                           fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                           color: isMe ? _primary : _onSurface,
@@ -369,7 +369,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       Text(
                         entry.formattedHours,
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 11,
                           color: color,
                           fontWeight: FontWeight.w600,
@@ -413,7 +413,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       child: Text(
         label,
         style: TextStyle(
-          fontFamily: 'Inter',
+          
           fontSize: 10,
           fontWeight: FontWeight.w700,
           color: color,
@@ -450,7 +450,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             child: Text(
               '#$rank',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: isMe ? _primary : _onSurfaceVariant,
@@ -476,7 +476,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               child: Text(
                 entry.initials,
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: isMe ? _primary : _onSurfaceVariant,
@@ -493,7 +493,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 Text(
                   entry.username,
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 13,
                     fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                     color: isMe ? _primary : _onSurface,
@@ -503,7 +503,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   const Text(
                     'You',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 10,
                       color: _primary,
                       letterSpacing: 0.5,
@@ -516,7 +516,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Text(
             entry.formattedHours,
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: isMe ? _primary : _onSurface,
@@ -539,7 +539,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           const Text(
             'No data yet.',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: _onSurface,
@@ -549,7 +549,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           const Text(
             'Complete a study session to appear here.',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               color: _onSurfaceVariant,
             ),
@@ -563,7 +563,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               elevation: 0,
               shape: const StadiumBorder(),
               textStyle: const TextStyle(
-                fontFamily: 'Inter',
+                
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -599,7 +599,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               const Text(
                 'YOUR STATS',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 10,
                   letterSpacing: 1.5,
                   color: _onSurfaceVariant,
@@ -611,7 +611,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 Text(
                   'Rank #$rank',
                   style: const TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 12,
                     color: _primary,
                     fontWeight: FontWeight.w700,
@@ -641,7 +641,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     child: Text(
                       _statsError!,
                       style: const TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 11,
                         color: _onSurfaceVariant,
                       ),
@@ -682,7 +682,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             Text(
               entry.formattedHours,
               style: const TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: _primary,
@@ -691,7 +691,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             Text(
               label,
               style: const TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 9,
                 color: _onSurfaceVariant,
                 letterSpacing: 0.5,

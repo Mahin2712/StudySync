@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen>
           const Text(
             'StudySync',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: _primary,
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const Text(
                   'Quantum Physics Room • 0 Studiers',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 12,
                     color: _onSurfaceVariant,
                     letterSpacing: 0.2,
@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen>
             child: const Text(
               'Leaderboard',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 13,
                 color: _primary,
                 fontWeight: FontWeight.w600,
@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen>
             child: const Text(
               'My Stats',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 13,
                 color: _primary,
                 fontWeight: FontWeight.w600,
@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen>
                     SizedBox(width: 10),
                     Text('Edit Profile',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 13,
                           color: Color(0xFFE2E5EE),
                         )),
@@ -271,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen>
                     SizedBox(width: 10),
                     Text('Sign Out',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 13,
                           color: Color(0xFFFF9993),
                         )),
@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Text(
       label,
       style: const TextStyle(
-        fontFamily: 'Inter',
+        
         fontSize: 13,
         color: _onSurfaceVariant,
         letterSpacing: 0.2,
@@ -353,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen>
                   Text(
                     'Study Controls',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _primary,
@@ -362,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen>
                   Text(
                     'DEEP WORK PHASE',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 9,
                       color: _onSurfaceVariant,
                       letterSpacing: 1.2,
@@ -415,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen>
                   borderRadius: BorderRadius.circular(14),
                 ),
                 textStyle: const TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -451,7 +451,7 @@ class _HomeScreenState extends State<HomeScreen>
           title: Text(
             label,
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               color: active ? _primary : _onSurfaceVariant,
@@ -579,7 +579,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 const Text(
                                   'The room is quiet.',
                                   style: TextStyle(
-                                    fontFamily: 'Inter',
+                                    
                                     fontSize: 22,
                                     fontWeight: FontWeight.w700,
                                     color: _onSurface,
@@ -594,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     'Ready to start your focused study session? Be the first to take a seat.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontFamily: 'Inter',
+                                      
                                       fontSize: 13,
                                       color: _onSurfaceVariant,
                                       height: 1.6,
@@ -612,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen>
                                         horizontal: 32, vertical: 14),
                                     shape: const StadiumBorder(),
                                     textStyle: const TextStyle(
-                                      fontFamily: 'Inter',
+                                      
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
                                     ),
@@ -694,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'COLLABORATION',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 10,
                       letterSpacing: 1.5,
                       color: _onSurfaceVariant,
@@ -704,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'Active Peers',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: _primary,
@@ -714,7 +714,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'Join the table to see who is studying.',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 12,
                       color: _onSurfaceVariant,
                     ),
@@ -731,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Text(
                         'LEADERBOARD',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 10,
                           letterSpacing: 1.5,
                           color: _onSurfaceVariant,
@@ -758,7 +758,7 @@ class _HomeScreenState extends State<HomeScreen>
                         Text(
                           'No active leaderboard yet.',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 13,
                             color: _onSurfaceVariant,
                             fontStyle: FontStyle.italic,
@@ -779,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Text(
                         'MINIMAL CHAT',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 10,
                           letterSpacing: 1.5,
                           color: _onSurfaceVariant,
@@ -815,7 +815,7 @@ class _HomeScreenState extends State<HomeScreen>
                           'Be the first to join the chat.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 13,
                             color: _onSurfaceVariant,
                           ),
@@ -825,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen>
                           'Share resources, ask questions,\nor just send a focused hello.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 11,
                             color: _outline,
                             height: 1.5,
@@ -864,7 +864,7 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Text(
                           'Join the room to chat...',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 12,
                             color: _onSurfaceVariant,
                           ),
@@ -892,12 +892,12 @@ class _HomeScreenState extends State<HomeScreen>
         title: const Text(
           'Sign Out',
           style: TextStyle(
-              fontFamily: 'Inter', color: _onSurface, fontWeight: FontWeight.w700),
+               color: _onSurface, fontWeight: FontWeight.w700),
         ),
         content: Text(
           'Signed in as $_userEmail\n\nAre you sure you want to sign out?',
           style: const TextStyle(
-              fontFamily: 'Inter', color: _onSurfaceVariant, fontSize: 13),
+               color: _onSurfaceVariant, fontSize: 13),
         ),
         actions: [
           TextButton(
@@ -918,7 +918,7 @@ class _HomeScreenState extends State<HomeScreen>
                   borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Sign Out',
-                style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                style: TextStyle( fontWeight: FontWeight.w600)),
           ),
         ],
       ),

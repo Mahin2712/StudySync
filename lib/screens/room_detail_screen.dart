@@ -317,7 +317,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           title: Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Inter',
+              
               fontWeight: FontWeight.w700,
               color: _primary,
             ),
@@ -333,7 +333,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   const Text(
                     'Select chapter',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       color: _onSurfaceVariant,
                       fontSize: 12,
                     ),
@@ -344,7 +344,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     isExpanded: true,
                     dropdownColor: const Color(0xFF1C2025),
                     style: const TextStyle(
-                      fontFamily: 'Inter',
+                      
                       color: _onSurface,
                       fontSize: 13,
                     ),
@@ -359,7 +359,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                       ),
                       hintText: '-- Quick-select chapter --',
                       hintStyle: const TextStyle(
-                          color: _onSurfaceVariant, fontFamily: 'Inter'),
+                          color: _onSurfaceVariant, ),
                     ),
                     items: [
                       ...chapters.map(
@@ -377,7 +377,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   const Text(
                     'Or type a custom chapter / topic',
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       color: _onSurfaceVariant,
                       fontSize: 12,
                     ),
@@ -387,7 +387,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   const Text(
                     'What are you studying?',
                     style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         color: _onSurfaceVariant,
                         fontSize: 13),
                   ),
@@ -397,13 +397,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 TextField(
                   controller: customController,
                   autofocus: isCustom || chapters.isEmpty,
-                  style: const TextStyle(fontFamily: 'Inter', color: _onSurface),
+                  style: const TextStyle( color: _onSurface),
                   decoration: InputDecoration(
                     hintText: isCustom
                         ? 'e.g. My Personal Project'
                         : 'e.g. Chapter 3, Thermodynamics...',
                     hintStyle: const TextStyle(
-                        color: _onSurfaceVariant, fontFamily: 'Inter'),
+                        color: _onSurfaceVariant, ),
                     filled: true,
                     fillColor: _surfaceHigh,
                     border: OutlineInputBorder(
@@ -429,7 +429,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel',
                   style: TextStyle(
-                      fontFamily: 'Inter', color: _onSurfaceVariant)),
+                       color: _onSurfaceVariant)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -447,7 +447,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
                 textStyle: const TextStyle(
-                    fontFamily: 'Inter', fontWeight: FontWeight.w600),
+                     fontWeight: FontWeight.w600),
               ),
               child: const Text('Start'),
             ),
@@ -487,7 +487,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 Text(
                   'Still studying?',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontWeight: FontWeight.w700,
                     color: _primary,
                   ),
@@ -500,7 +500,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 const Text(
                   'Confirm you\'re still here to keep your session going.',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 13,
                     color: _onSurfaceVariant,
                   ),
@@ -525,7 +525,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     Text(
                       '$countdown',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: countdown > 20 ? _amber : _red,
@@ -537,7 +537,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 Text(
                   'Auto-stopping in ${countdown}s…',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 11,
                     color: countdown <= 10 ? _red : _onSurfaceVariant,
                   ),
@@ -563,7 +563,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
@@ -681,7 +681,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                           child: Text(
                             'Session paused — check-in missed. Tap Start to resume.',
                             style: TextStyle(
-                              fontFamily: 'Inter',
+                              
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFFFFB74D),
@@ -727,7 +727,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           const Text(
             'StudySync',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: _primary,
@@ -759,7 +759,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 Text(
                   '${widget.roomName} • $studierCount Active${studierCount == 1 ? '' : ' Studiers'}',
                   style: const TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 12,
                     color: _primary,
                     letterSpacing: 0.2,
@@ -789,7 +789,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
               textStyle: const TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -857,7 +857,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: dotColor,
@@ -900,7 +900,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     Text(
                       widget.roomName,
                       style: const TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: _primary,
@@ -911,7 +911,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     Text(
                       _isStudying ? 'IN SESSION' : 'ACTIVE SESSION',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 9,
                         color: _isStudying ? _green : _onSurfaceVariant,
                         letterSpacing: 1.2,
@@ -952,7 +952,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   Text(
                     StudySessionModel.formatDuration(_mySession!.elapsed),
                     style: const TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: _green,
@@ -981,7 +981,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   child: Text(
                     widget.roomId.substring(0, 8).toUpperCase(),
                     style: const TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 11,
                       color: _onSurfaceVariant,
                       letterSpacing: 1.5,
@@ -991,7 +991,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 const Text(
                   'ROOM ID',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 9,
                     color: _outline,
                     letterSpacing: 0.5,
@@ -1027,7 +1027,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           title: Text(
             label,
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               color: active ? _green : _onSurfaceVariant,
@@ -1167,7 +1167,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                   ? 'You are alone here.'
                   : 'Studying together!',
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: _onSurface,
@@ -1178,7 +1178,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         Text(
           '${_memberIds.length} member${_memberIds.length == 1 ? '' : 's'} in this room',
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 13,
             color: _onSurfaceVariant,
           ),
@@ -1198,7 +1198,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                       horizontal: 28, vertical: 14),
                   shape: const StadiumBorder(),
                   textStyle: const TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -1236,7 +1236,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         Text(
           StudySessionModel.formatDuration(elapsed),
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 38,
             fontWeight: FontWeight.w800,
             color: _green,
@@ -1248,7 +1248,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           Text(
             _mySession!.subject!,
             style: const TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               color: _onSurfaceVariant,
               fontStyle: FontStyle.italic,
@@ -1260,7 +1260,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         const Text(
           'IN SESSION',
           style: TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 10,
             color: _green,
             letterSpacing: 2,
@@ -1279,7 +1279,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             padding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             textStyle: const TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -1397,7 +1397,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                       const Text(
                         'LIVE NOW',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 10,
                           letterSpacing: 1.5,
                           color: _onSurfaceVariant,
@@ -1409,7 +1409,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                           Text(
                             '${liveRanked.length} Studying',
                             style: const TextStyle(
-                              fontFamily: 'Inter',
+                              
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
                               color: _primary,
@@ -1451,7 +1451,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                         Text(
                           'LIVE',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             color: _green,
@@ -1487,7 +1487,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             child: Text(
               'ALL MEMBERS  •  ${_memberIds.length} in room',
               style: const TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 9,
                 letterSpacing: 1.5,
                 color: _onSurfaceVariant,
@@ -1541,7 +1541,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             child: Text(
               '#$rank',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: isMe ? _primary : _onSurfaceVariant,
@@ -1563,7 +1563,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               child: Text(
                 '$rank',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: accentColor,
@@ -1577,7 +1577,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             child: Text(
               isMe ? 'You' : shortId,
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 12,
                 fontWeight:
                     isMe ? FontWeight.w700 : FontWeight.w500,
@@ -1594,7 +1594,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
               Text(
                 StudySessionModel.formatDuration(session.elapsed),
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: accentColor,
@@ -1664,7 +1664,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                       : Text(
                           '${index + 1}',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: accentColor,
@@ -1680,7 +1680,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     Text(
                       isMe ? 'You' : 'Studier #${index + 1}',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isMe ? _primary : _onSurface,
@@ -1689,7 +1689,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     Text(
                       isRecentlyMissed ? 'Missed check-in' : shortId,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 10,
                         color: isRecentlyMissed ? _red : _onSurfaceVariant,
                         letterSpacing: isRecentlyMissed ? 0 : 1,
@@ -1722,7 +1722,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 Text(
                   StudySessionModel.formatDuration(session.elapsed),
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: accentColor,
@@ -1735,7 +1735,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     child: Text(
                       session.subject!,
                       style: const TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 10,
                         color: _onSurfaceVariant,
                         fontStyle: FontStyle.italic,
@@ -1764,7 +1764,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             Text(
               'No members yet',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 14,
                 color: _onSurfaceVariant,
               ),

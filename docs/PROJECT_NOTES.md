@@ -765,4 +765,51 @@ Stats failures are now visible and no longer misrepresented as "no study time".
 - Manual QA: temporarily break get_my_stats or revoke access and verify both stats surfaces show errors cleanly.
 
 ?? Notes / Issues
-- Leaderboard rows still depend on the leaderboard_* views; only personal stats failure handling was hardened in this pass.
+- Leaderboard rows still depend on the leaderboard_* views; only personal stats failure handling was hardened in this pass.[2026-04-19 12:30] — Bangla Font Integration & Console Fix
+? Completed
+- Integrated Purno BCC (Regular & Semibold) as the global application font.
+- Resolved console warnings regarding missing Noto fallback fonts for Bangla characters.
+- Created asset infrastructure for custom fonts in assets/fonts/.
+
+?? Changes
+- [NEW] assets/fonts/BCC Purno Regular.ttf
+- [NEW] assets/fonts/BCC Purno Semibold.ttf
+- [MODIFIED] pubspec.yaml: added fonts section to register PurnoBCC.
+- [MODIFIED] lib/main.dart: set fontFamily: " PurnoBCC\ in global ThemeData.
+
+?? Status
+Phase 3.x (Multi-device isolation): In Progress (~58%)
+(Minor detour for UI accessibility/Bangla support completed).
+
+?? Next Steps
+- Manual QA: Verify Bangla text rendering on various screens.
+- Resume Phase 3.x testing for multi-device session isolation.
+
+?? Notes / Issues
+- The Intl.v8BreakIterator deprecation warning in Chrome console is internal to Flutter Web engine and safe to ignore for now.
+
+[2026-04-19 13:03] - Account-Wide Focus Enforcement (Atomic Session Handoff)
+? Completed
+- Reverted the idx_one_active_session_per_user_device multi-device index.
+- Applied idx_one_active_session_per_user strict unique index.
+- Refactored start_session_atomic RPC to automatically terminate existing sessions for a user and safely perform atomic handoffs.
+
+?? Changes
+- [DB Schema] Dropped index idx_one_active_session_per_user_device
+- [DB Schema] Created unique index idx_one_active_session_per_user where is_active = true
+- [DB RPC] Modified start_session_atomic logic to update older sessions to is_active = false before proceeding to insert.
+
+?? Status
+Phase 3.x (Multi-device isolation): In Progress (~62%)
+(Atomic session single source constraint deployed)
+
+?? Next Steps
+- Verify realtime listener properly triggers the "Session Paused" UI state on displaced devices.
+- Begin final integration checks for Phase 3.x.
+
+?? Notes / Issues
+- Zero-Logout UX logic effectively handles active tracking, meaning leaderboard and focus time increments naturally correctly after switching.
+  
+[2026-04-19 13:05] -- Future Feature Roadmap  
+?? Planned  
+- Tracked implementation details in DEVICE_TRACKING_PLAN.md 

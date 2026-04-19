@@ -37,6 +37,7 @@ dependencies:
   supabase_flutter: ^2.12.2
   flutter_dotenv: ^6.0.0
   shared_preferences: ^2.5.5
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +61,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: PurnoBCC
+      fonts:
+        - asset: assets/fonts/BCC Purno Regular.ttf
+        - asset: assets/fonts/BCC Purno Semibold.ttf
+          weight: 600
+
 
   # To add assets to your application, add an assets section, like this:
   assets:

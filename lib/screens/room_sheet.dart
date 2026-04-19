@@ -192,7 +192,7 @@ class _RoomSheetState extends State<RoomSheet> {
                     const Text(
                       'Study Rooms',
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: _onSurface,
@@ -237,7 +237,7 @@ class _RoomSheetState extends State<RoomSheet> {
           child: Text(
             title.toUpperCase(),
             style: const TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
@@ -294,7 +294,7 @@ class _RoomSheetState extends State<RoomSheet> {
                     subject.displayName,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: _onSurface,
@@ -315,7 +315,7 @@ class _RoomSheetState extends State<RoomSheet> {
                       Text(
                         '$count active',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 11,
                           color: isActive ? Colors.greenAccent : _onSurfaceVariant,
                         ),
@@ -351,7 +351,7 @@ class _RoomSheetState extends State<RoomSheet> {
             Text(
               'Custom Study Room',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFFC9E8F8),

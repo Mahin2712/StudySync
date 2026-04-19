@@ -175,7 +175,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             child: Text(
                               _errorMessage!,
                               style: const TextStyle(
-                                fontFamily: 'Inter',
+                                
                                 fontSize: 13,
                                 color: _error,
                               ),
@@ -198,7 +198,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: const Text(
                         'Sign out and use a different account',
                         style: TextStyle(
-                          fontFamily: 'Inter',
+                          
                           fontSize: 12,
                           color: _onSurfaceVar,
                         ),
@@ -233,7 +233,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         Text(
           widget.isEditing ? 'Edit Your Profile' : 'Set Up Your Profile',
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: _onSurface,
@@ -246,7 +246,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ? 'Update your details below.'
               : 'Fill in your details to join study rooms and appear on the leaderboard.',
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 14,
             color: _onSurfaceVar,
             height: 1.5,
@@ -285,7 +285,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: _onSurfaceVar,
@@ -297,14 +297,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           controller: controller,
           keyboardType: keyboardType,
           style: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 14,
             color: _onSurface,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 14,
               color: _onSurfaceVar.withValues(alpha: 0.6),
             ),
@@ -347,7 +347,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
+            
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),

@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen>
                             const Text(
                               'StudySync',
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                
                                 fontSize: 28,
                                 fontWeight: FontWeight.w800,
                                 color: Color(0xFFADCBDB),
@@ -218,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen>
                             const Text(
                               'Your focused study companion',
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                
                                 fontSize: 13,
                                 color: Color(0xFFA7ABB3),
                               ),
@@ -246,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen>
                             const Text(
                               'Welcome back',
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFFE2E5EE),
@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                             const Text(
                               'Sign in to continue your session',
                               style: TextStyle(
-                                fontFamily: 'Inter',
+                                
                                 fontSize: 13,
                                 color: Color(0xFFA7ABB3),
                               ),
@@ -324,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     : const Text(
                                         'Sign In',
                                         style: TextStyle(
-                                          fontFamily: 'Inter',
+                                          
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -349,7 +349,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   child: Text(
                                     'or',
                                     style: TextStyle(
-                                      fontFamily: 'Inter',
+                                      
                                       fontSize: 12,
                                       color: Color(0xFF72767D),
                                     ),
@@ -386,7 +386,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 child: const Text(
                                   'Create Account',
                                   style: TextStyle(
-                                    fontFamily: 'Inter',
+                                    
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -402,7 +402,7 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Text(
                           'By continuing, you agree to our Terms & Privacy Policy',
                           style: TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 11,
                             color: const Color(0xFF72767D),
                           ),
@@ -424,7 +424,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Text(
       text,
       style: const TextStyle(
-        fontFamily: 'Inter',
+        
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: Color(0xFFA7ABB3),
@@ -445,7 +445,7 @@ class _LoginScreenState extends State<LoginScreen>
       keyboardType: keyboardType,
       obscureText: obscureText,
       style: const TextStyle(
-        fontFamily: 'Inter',
+        
         fontSize: 14,
         color: Color(0xFFE2E5EE),
       ),

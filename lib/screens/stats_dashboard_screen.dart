@@ -122,7 +122,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const Text(
             'StudySync',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: _primary,
@@ -133,7 +133,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const Text(
             'My Stats',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 13,
               color: _onSurfaceVar,
               fontWeight: FontWeight.w500,
@@ -167,7 +167,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
               _error!,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Inter',
+                
                 color: _onSurfaceVar,
                 fontSize: 13,
               ),
@@ -226,7 +226,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
     return Text(
       text,
       style: const TextStyle(
-        fontFamily: 'Inter',
+        
         fontSize: 10,
         letterSpacing: 1.8,
         color: _onSurfaceVar,
@@ -318,7 +318,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             c.value,
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: c.color,
@@ -328,7 +328,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             c.label,
             style: const TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 11,
               color: _onSurfaceVar,
             ),
@@ -356,7 +356,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
               'Stats count only confirmed intervals. '
               'Sessions auto-stopped on missed check-ins are not counted.',
               style: TextStyle(
-                fontFamily: 'Inter',
+                
                 fontSize: 11,
                 color: _onSurfaceVar,
                 height: 1.5,
@@ -430,7 +430,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                         Text(
                           displayName,
                           style: const TextStyle(
-                            fontFamily: 'Inter',
+                            
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: _onSurface,
@@ -440,7 +440,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                           const Text(
                             'Custom / unrecognised subjects',
                             style: TextStyle(
-                              fontFamily: 'Inter',
+                              
                               fontSize: 10,
                               color: _onSurfaceVar,
                               fontStyle: FontStyle.italic,
@@ -452,7 +452,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                   Text(
                     _fmt(e.value),
                     style: TextStyle(
-                      fontFamily: 'Inter',
+                      
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isOthers ? _onSurfaceVar : _primary,
@@ -496,7 +496,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             'No sessions yet',
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: _onSurface,
@@ -507,7 +507,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
             'Complete your first study session to see\nyour subject breakdown here.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Inter',
+              
               fontSize: 12,
               color: _onSurfaceVar,
               height: 1.6,
