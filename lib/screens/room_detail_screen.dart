@@ -12,6 +12,8 @@ import '../models/room_model.dart';
 /// we received a Postgres‑change event (to avoid false 🟡 in quiet rooms).
 enum _ConnStatus { live, idle, disconnected }
 
+enum LocalSessionState { idle, starting, active, stopping, displaced, timedOut }
+
 /// Screen shown once a user has joined/created a room.
 class RoomDetailScreen extends StatefulWidget {
   final String roomId;
@@ -34,7 +36,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   // ─── State ───────────────────────────────────────────────────────────────
   List<String> _memberIds = [];
   bool _isLoading = true;
-  bool _isStarting = false; // prevents double-tap
+  LocalSessionState _sessionState = LocalSessionState.idle;
 
   StudySessionModel? _mySession; // null = not studying
   List<StudySessionModel> _activeSessions = [];
@@ -49,9 +51,6 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   bool _checkinPopupShowing = false;
   // uid → time they disappeared (shows 🔴 for 5 s)
   final Map<String, DateTime> _recentlyMissedUserIds = {};
-  /// True when the session was ended automatically (missed check-in).
-  /// Shows a banner instead of popping the screen.
-  bool _sessionEndedByTimeout = false;
 
   late AnimationController _glowCtrl;
   late Animation<double> _glowAnim;
@@ -147,9 +146,18 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         for (final uid in oldIds.difference(newIds)) {
           if (uid != _myUserId) _recentlyMissedUserIds[uid] = now;
         }
+
+        LocalSessionState newState = _sessionState;
+        if (_sessionState == LocalSessionState.active && my == null) {
+          newState = LocalSessionState.displaced;
+        } else if (my != null) {
+          newState = LocalSessionState.active;
+        }
+
         setState(() {
           _mySession = my;
           _activeSessions = all;
+          _sessionState = newState;
         });
       }
     } catch (_) {}
@@ -249,10 +257,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   // ─── Session actions ──────────────────────────────────────────────────────
 
   Future<void> _startStudying({String? subject, String? chapter}) async {
-    if (_isStarting) return;
+    if (_sessionState == LocalSessionState.starting) return;
     setState(() {
-      _isStarting = true;
-      _sessionEndedByTimeout = false; // Dismiss timeout banner on new start
+      _sessionState = LocalSessionState.starting;
     });
     try {
       final session = await SessionService.startSession(
@@ -261,11 +268,15 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         chapter: chapter,
       );
       if (mounted) {
-        setState(() => _mySession = session);
+        setState(() {
+          _mySession = session;
+          if (session != null) _sessionState = LocalSessionState.active;
+        });
         await _loadSessionState(); // refresh others' sessions too
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _sessionState = LocalSessionState.idle);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not start session: $e'),
@@ -273,20 +284,24 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isStarting = false);
     }
   }
 
   Future<void> _stopStudying() async {
+    if (_sessionState == LocalSessionState.stopping) return;
+    setState(() => _sessionState = LocalSessionState.stopping);
     try {
       await SessionService.stopSession();
       if (mounted) {
-        setState(() => _mySession = null);
+        setState(() {
+          _mySession = null;
+          _sessionState = LocalSessionState.idle;
+        });
         await _loadSessionState();
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _sessionState = LocalSessionState.active);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not stop session: $e'),
@@ -598,7 +613,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   }
 
   Future<void> _autoStop() async {
-    if (!mounted) return;
+    if (!mounted || _sessionState == LocalSessionState.stopping) return;
     // ── Race condition guard: re-fetch before stopping ──────────────────────
     final updated = await SessionService.getActiveSessionForUser();
     if (updated != null && !updated.isCheckinDue) {
@@ -607,17 +622,19 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         setState(() {
           _checkinPopupShowing = false;
           _mySession = updated;
+          _sessionState = LocalSessionState.active;
         });
       }
       return;
     }
     // Proceed with auto-stop — stop DB but KEEP user on screen.
+    setState(() => _sessionState = LocalSessionState.stopping);
     await SessionService.autoStopSession();
     if (mounted) {
       setState(() {
         _checkinPopupShowing = false;
         _mySession = null;
-        _sessionEndedByTimeout = true; // Show in-screen banner instead of popping
+        _sessionState = LocalSessionState.timedOut;
       });
       await _loadSessionState();
     }
@@ -665,8 +682,51 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
             Column(
               children: [
                 _buildAppBar(),
+                // ── Session displaced banner ─────────────────────────────
+                if (_sessionState == LocalSessionState.displaced)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    color: const Color(0xFF2A1A00),
+                    child: Row(
+                      children: [
+                        const Text('⚠️', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Session paused — you started studying on another device.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFFFB86B),
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _sessionState = LocalSessionState.idle);
+                            _showStartDialog();
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.1),
+                            foregroundColor: const Color(0xFFFFB86B),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('Continue Here', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () => setState(() => _sessionState = LocalSessionState.idle),
+                          child: const Icon(Icons.close, color: Color(0xFFFFB86B), size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
                 // ── Session-ended timeout banner ─────────────────────────────
-                if (_sessionEndedByTimeout)
+                if (_sessionState == LocalSessionState.timedOut)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -690,7 +750,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                         ),
                         GestureDetector(
                           onTap: () =>
-                              setState(() => _sessionEndedByTimeout = false),
+                              setState(() => _sessionState = LocalSessionState.idle),
                           child: const Icon(Icons.close,
                               color: Color(0xFFFFB74D), size: 16),
                         ),
@@ -1184,7 +1244,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           ),
         ),
         const SizedBox(height: 24),
-        _isStarting
+        _sessionState == LocalSessionState.starting
             ? const CircularProgressIndicator(color: _primary, strokeWidth: 2)
             : ElevatedButton.icon(
                 onPressed: _showStartDialog,
@@ -1514,6 +1574,18 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     );
   }
 
+  IconData _getDeviceIcon(String? deviceType) {
+    switch (deviceType) {
+      case 'pc':
+        return Icons.desktop_windows;
+      case 'tablet':
+        return Icons.tablet_android;
+      case 'mobile':
+      default:
+        return Icons.smartphone;
+    }
+  }
+
   /// A compact ranked row in the live leaderboard.
   Widget _buildLiveRow(StudySessionModel session, int rank) {
     final isMe = session.userId == _myUserId;
@@ -1574,15 +1646,30 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
           const SizedBox(width: 8),
           // Name
           Expanded(
-            child: Text(
-              isMe ? 'You' : shortId,
-              style: TextStyle(
-                
-                fontSize: 12,
-                fontWeight:
-                    isMe ? FontWeight.w700 : FontWeight.w500,
-                color: isMe ? _primary : _onSurface,
-              ),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    isMe ? 'You' : shortId,
+                    style: TextStyle(
+                      
+                      fontSize: 12,
+                      fontWeight:
+                          isMe ? FontWeight.w700 : FontWeight.w500,
+                      color: isMe ? _primary : _onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (session.deviceType != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    _getDeviceIcon(session.deviceType),
+                    size: 11,
+                    color: isMe ? _primary.withValues(alpha: 0.7) : _onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                ],
+              ],
             ),
           ),
           // Live timer
@@ -1677,14 +1764,29 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isMe ? 'You' : 'Studier #${index + 1}',
-                      style: TextStyle(
-                        
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isMe ? _primary : _onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            isMe ? 'You' : 'Studier #${index + 1}',
+                            style: TextStyle(
+                              
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isMe ? _primary : _onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (session?.deviceType != null) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            _getDeviceIcon(session?.deviceType),
+                            size: 13,
+                            color: isMe ? _primary.withValues(alpha: 0.7) : _onSurfaceVariant.withValues(alpha: 0.7),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       isRecentlyMissed ? 'Missed check-in' : shortId,

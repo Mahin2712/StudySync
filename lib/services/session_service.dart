@@ -1,3 +1,7 @@
+import 'dart:io' show Platform;
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/study_session_model.dart';
@@ -24,6 +28,7 @@ class SessionService {
     String? chapter,
   }) async {
     final deviceId = await getCurrentDeviceId();
+    final deviceType = _getDeviceType();
     final data = await _client.rpc(
       'start_session_atomic',
       params: {
@@ -31,10 +36,27 @@ class SessionService {
         'p_subject': subject,
         'p_chapter': chapter,
         'p_device_id': deviceId,
+        'p_device_type': deviceType,
       },
     );
     if (data == null) return null;
     return StudySessionModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  static String _getDeviceType() {
+    if (kIsWeb) return 'pc';
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) return 'pc';
+    
+    // For mobile/tablet, check logical screen width
+    try {
+      final view = ui.PlatformDispatcher.instance.views.first;
+      final logicalWidth = view.physicalSize.width / view.devicePixelRatio;
+      if (logicalWidth >= 600) return 'tablet';
+      return 'mobile';
+    } catch (_) {
+      // Fallback
+      return 'mobile';
+    }
   }
 
   // Stop session

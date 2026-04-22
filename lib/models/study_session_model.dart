@@ -5,6 +5,7 @@ class StudySessionModel {
   final String userId;
   final String roomId;
   final String? deviceId;
+  final String? deviceType;
   final String? subject;
   final DateTime startTime;
   final DateTime? endTime;
@@ -24,6 +25,7 @@ class StudySessionModel {
     required this.userId,
     required this.roomId,
     this.deviceId,
+    this.deviceType,
     this.subject,
     required this.startTime,
     this.endTime,
@@ -66,6 +68,7 @@ class StudySessionModel {
       userId: json['user_id'] as String,
       roomId: json['room_id'] as String,
       deviceId: json['device_id'] as String?,
+      deviceType: json['device_type'] as String?,
       subject: json['subject'] as String?,
       startTime: DateTime.parse(json['start_time'] as String).toUtc(),
       endTime: json['end_time'] != null
