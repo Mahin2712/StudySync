@@ -1885,7 +1885,6 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       ),
     );
   }
-}
 
 // ─── Dot grid background ──────────────────────────────────────────────────────
 
@@ -1939,6 +1938,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       },
     );
   }
+}
+
 class _DotPainter extends CustomPainter {
   final bool studying;
   const _DotPainter({this.studying = false});
