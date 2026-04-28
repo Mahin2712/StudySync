@@ -5,6 +5,8 @@ import 'room_sheet.dart';
 import 'leaderboard_screen.dart';
 import 'stats_dashboard_screen.dart';
 import 'profile_setup_screen.dart';
+import '../services/chat_service.dart';
+import '../widgets/chat_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,12 +21,16 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double> _glowAnim;
   final bool _isSidebarExpanded = true;
 
+  // Chat
+  final _chatService = ChatService();
+
   String get _userEmail =>
       Supabase.instance.client.auth.currentUser?.email ?? 'Studier';
 
   @override
   void initState() {
     super.initState();
+    _chatService.joinGlobalChat();
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -37,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _glowController.dispose();
+    _chatService.leaveGlobalChat();
     super.dispose();
   }
 
@@ -220,6 +227,28 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(width: 24),
           _navLink('Settings'),
           const SizedBox(width: 20),
+
+          // Global Chat button
+          Tooltip(
+            message: 'Global Chat',
+            child: InkWell(
+              onTap: () => showChatBottomSheet(
+                context,
+                chatService: _chatService,
+                isGlobal: true,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: _primary,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
 
           // Icon buttons
           _iconBtn(Icons.group_outlined),

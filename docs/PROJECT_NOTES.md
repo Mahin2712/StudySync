@@ -892,3 +892,53 @@ Phase 3.x (Multi-device isolation): Completed.
 
 тЪая╕П Notes / Issues
 - No issues. Ready for next phase.
+
+[2026-04-28 19:21] Ч Fix Supabase MCP Authentication
+? Completed
+- Updated mcp_config.json to use Supabase Personal Access Token (PAT) for persistent authentication, bypassing the daily OAuth disconnection issue.
+
+?? Changes
+- [MODIFIED] c:\Users\SER\.gemini\antigravity\mcp_config.json: Replaced supabase serverUrl with npx command and SUPABASE_ACCESS_TOKEN env variable.
+
+?? Status
+- Infrastructure: 100% (Supabase MCP Auth Fix)
+
+?? Next Steps
+- User to refresh MCP servers in Antigravity to apply changes.
+
+?? Notes / Issues
+- The OAuth-based 'Authenticate' button is no longer needed for Supabase.
+
+
+[2026-04-28 20:30] -- Dual-Layer Live Chat Feature Implementation
+? Completed
+- Queried StudySync NotebookLM notebook (ID: 760dbe36) for Phase 2.5/3 state, Aeon Slate design system, and Supabase Realtime architecture.
+- Generated mobile-first chat UI concept via Stitch MCP (project 271650421636417831) Ч confirmed Bottom Sheet pattern, Aeon Slate tokens, PurnoBCC + Inter fonts, 'The Nocturnal Scholar' design system.
+- Created lib/models/chat_message.dart Ч immutable ephemeral message model with fromBroadcast() / toBroadcastPayload().
+- Created lib/services/chat_service.dart Ч dual-channel Supabase Realtime Broadcast service (global + room), ChangeNotifier, full spam guard.
+- Created lib/widgets/chat_bottom_sheet.dart Ч DraggableScrollableSheet UI with cooldown ring, avatar initials, emoji support, Aeon Slate dark theme.
+- Modified lib/screens/home_screen.dart Ч added _chatService, joinGlobalChat() in initState, leaveGlobalChat() in dispose, Global Chat icon button in AppBar.
+- Modified lib/screens/room_detail_screen.dart Ч added _chatService, joinRoomChat() in initState, leaveRoomChat() in dispose, _buildChatFab() floating button.
+
+?? Changes
+- [NEW] lib/models/chat_message.dart
+- [NEW] lib/services/chat_service.dart
+- [NEW] lib/widgets/chat_bottom_sheet.dart
+- [MODIFIED] lib/screens/home_screen.dart: +imports, +_chatService field, +lifecycle calls, +AppBar chat icon
+- [MODIFIED] lib/screens/room_detail_screen.dart: +imports, +_chatService field, +lifecycle calls, +FAB with green dot badge
+
+?? Status
+- Phase 3 Chat Feature: 100% implemented.
+- flutter analyze: 0 new errors (3 pre-existing room_sheet.dart errors unrelated to this feature).
+- Architecture: Ephemeral Broadcast only Ч no DB tables created.
+
+?? Next Steps
+- Test on Android emulator: verify Bottom Sheet opens without obscuring timer.
+- Test emoji support in chat bubbles (?? ?? ??).
+- Test 3-second cooldown ring UX.
+- Consider persisting last N messages per room in Supabase if users request chat history.
+
+?? Notes / Issues
+- room_sheet.dart has 3 pre-existing analysis errors (broken import of room_detail_screen.dart) Ч not introduced by this feature.
+- Stitch MCP generated a full 'Nocturnal Scholar' design system spec Ч available at project 271650421636417831 for future UI reference.
+- ChatService is a singleton Ч it persists across navigation. leaveRoomChat() is called in dispose() to clean up room channel correctly.

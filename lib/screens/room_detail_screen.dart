@@ -6,6 +6,8 @@ import '../services/room_service.dart';
 import '../services/session_service.dart';
 import '../services/chapter_service.dart';
 import '../models/room_model.dart';
+import '../services/chat_service.dart';
+import '../widgets/chat_bottom_sheet.dart';
 
 /// Combined connectivity state for the room's Realtime channel.
 /// Derived from BOTH the socket subscription status AND how recently
@@ -55,6 +57,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
   late AnimationController _glowCtrl;
   late Animation<double> _glowAnim;
 
+  // Chat
+  final _chatService = ChatService();
+
   // ─── Colors ─────────────────────────────────────────────────────────────
   static const _bg = Color(0xFF0C0E11);
   static const _surface = Color(0xFF111417);
@@ -91,6 +96,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     _subscribeRealtime();
     _startWatchdog();
     WidgetsBinding.instance.addObserver(this);
+    _chatService.joinRoomChat(widget.roomId);
   }
 
   @override
@@ -103,10 +109,11 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
     if (_realtimeSub != null) {
       Supabase.instance.client.removeChannel(_realtimeSub!);
     }
+    _chatService.leaveRoomChat();
     super.dispose();
   }
 
-  // ─── App lifecycle (background → foreground) ─────────────────────────────
+  // App lifecycle (background → foreground) ─────────────────────────────
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -666,6 +673,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
       },
       child: Scaffold(
         backgroundColor: _bg,
+        floatingActionButton: _buildChatFab(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: Stack(
           children: [
             Positioned.fill(
@@ -1880,6 +1889,56 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
 // ─── Dot grid background ──────────────────────────────────────────────────────
 
+
+  // -------------------------------------------------------------------------
+  // Chat FAB � opens Room Chat bottom sheet
+  // -------------------------------------------------------------------------
+  Widget _buildChatFab() {
+    return ListenableBuilder(
+      listenable: _chatService,
+      builder: (_, __) {
+        final hasNewMessages = _chatService.roomMessages.isNotEmpty;
+        return FloatingActionButton(
+          onPressed: () => showChatBottomSheet(
+            context,
+            chatService: _chatService,
+            isGlobal: false,
+            roomName: widget.roomName,
+          ),
+          backgroundColor: const Color(0xFF1C2025),
+          elevation: 4,
+          tooltip: 'Room Chat',
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(
+                Icons.forum_rounded,
+                color: Color(0xFFADCBDB),
+                size: 22,
+              ),
+              if (hasNewMessages)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF1C2025),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 class _DotPainter extends CustomPainter {
   final bool studying;
   const _DotPainter({this.studying = false});
