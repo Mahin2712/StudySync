@@ -6,7 +6,7 @@ import 'leaderboard_screen.dart';
 import 'stats_dashboard_screen.dart';
 import 'profile_setup_screen.dart';
 import '../services/chat_service.dart';
-import '../widgets/chat_bottom_sheet.dart';
+import '../widgets/sidebar_chat.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _glowController;
   late Animation<double> _glowAnim;
   final bool _isSidebarExpanded = true;
+  bool _isRightSidebarExpanded = true;
 
   // Chat
   final _chatService = ChatService();
@@ -82,6 +83,11 @@ class _HomeScreenState extends State<HomeScreen>
     final isNarrow = screenWidth < 900;
 
     return Scaffold(
+      endDrawer: isNarrow ? Drawer(
+        width: 320,
+        backgroundColor: const Color(0xFF111417),
+        child: _buildRightPanel(isMobile: true),
+      ) : null,
       backgroundColor: _bg,
       body: Stack(
         children: [
@@ -100,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen>
 
           Column(
             children: [
-              _buildTopAppBar(),
+              _buildTopAppBar(isNarrow),
               Expanded(
                 child: Row(
                   children: [
@@ -112,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen>
                     Expanded(child: _buildMainCanvas()),
 
                     // Right panel
-                    if (!isNarrow) _buildRightPanel(),
+                    if (!isNarrow) _buildRightPanel(isMobile: false, isExpanded: _isRightSidebarExpanded),
                   ],
                 ),
               ),
@@ -124,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ─── Top App Bar ───────────────────────────────────────────────────────────
-  Widget _buildTopAppBar() {
+  Widget _buildTopAppBar(bool isNarrow) {
     return Container(
       height: 64,
       color: _bg,
@@ -228,21 +234,23 @@ class _HomeScreenState extends State<HomeScreen>
           _navLink('Settings'),
           const SizedBox(width: 20),
 
-          // Global Chat button
+          // Global Chat button (toggle sidebar on desktop, open drawer on mobile)
           Tooltip(
             message: 'Global Chat',
             child: InkWell(
-              onTap: () => showChatBottomSheet(
-                context,
-                chatService: _chatService,
-                isGlobal: true,
-              ),
+              onTap: () {
+                if (isNarrow) {
+                  Scaffold.of(context).openEndDrawer();
+                } else {
+                  setState(() => _isRightSidebarExpanded = !_isRightSidebarExpanded);
+                }
+              },
               borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
                 child: Icon(
                   Icons.chat_bubble_outline_rounded,
-                  color: _primary,
+                  color: _isRightSidebarExpanded || isNarrow ? _primary : _onSurfaceVariant,
                   size: 20,
                 ),
               ),
@@ -702,20 +710,22 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ─── Right Panel ───────────────────────────────────────────────────────────
-  Widget _buildRightPanel() {
+  // ─── Right Panel ───────────────────────────────────────────────────────────
+  Widget _buildRightPanel({required bool isMobile, bool isExpanded = true}) {
+    if (!isExpanded && !isMobile) return _buildNarrowRightRail();
     return Container(
-      width: 288,
+      width: isMobile ? 320 : 288,
       decoration: const BoxDecoration(
         color: Color(0xFF111417),
         border: Border(
           left: BorderSide(color: Color(0x26A7ABB3), width: 1),
         ),
       ),
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -723,7 +733,6 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'COLLABORATION',
                     style: TextStyle(
-                      
                       fontSize: 10,
                       letterSpacing: 1.5,
                       color: _onSurfaceVariant,
@@ -733,7 +742,6 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'Active Peers',
                     style: TextStyle(
-                      
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: _primary,
@@ -743,7 +751,6 @@ class _HomeScreenState extends State<HomeScreen>
                   const Text(
                     'Join the table to see who is studying.',
                     style: TextStyle(
-                      
                       fontSize: 12,
                       color: _onSurfaceVariant,
                     ),
@@ -760,7 +767,6 @@ class _HomeScreenState extends State<HomeScreen>
                       Text(
                         'LEADERBOARD',
                         style: TextStyle(
-                          
                           fontSize: 10,
                           letterSpacing: 1.5,
                           color: _onSurfaceVariant,
@@ -787,7 +793,6 @@ class _HomeScreenState extends State<HomeScreen>
                         Text(
                           'No active leaderboard yet.',
                           style: TextStyle(
-                            
                             fontSize: 13,
                             color: _onSurfaceVariant,
                             fontStyle: FontStyle.italic,
@@ -798,115 +803,52 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
 
                   const SizedBox(height: 24),
-
-                  // Chat section
-                  Row(
-                    children: const [
-                      Icon(Icons.chat_bubble_outline_rounded,
-                          color: _onSurfaceVariant, size: 14),
-                      SizedBox(width: 6),
-                      Text(
-                        'MINIMAL CHAT',
-                        style: TextStyle(
-                          
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          color: _onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: _surfaceHigh.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _outlineVariant.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _surfaceHighest,
-                          ),
-                          child: const Icon(Icons.forum_outlined,
-                              color: Color(0x80ADCBDB), size: 20),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Be the first to join the chat.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            
-                            fontSize: 13,
-                            color: _onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Share resources, ask questions,\nor just send a focused hello.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            
-                            fontSize: 11,
-                            color: _outline,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-
-          // Disabled chat input
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Color(0x1AA7ABB3)),
-              ),
-            ),
-            child: Opacity(
-              opacity: 0.4,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 42,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: _surfaceHighest,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Join the room to chat...',
-                          style: TextStyle(
-                            
-                            fontSize: 12,
-                            color: _onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.send_rounded, color: _primary, size: 20),
-                ],
-              ),
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: SidebarChat(
+              chatService: _chatService,
+              isGlobal: true,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNarrowRightRail() {
+    return Container(
+      width: 72,
+      decoration: const BoxDecoration(
+        color: Color(0xFF111417),
+        border: Border(
+          left: BorderSide(color: Color(0x26A7ABB3), width: 1),
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          const Tooltip(
+            message: 'Active Peers',
+            child: Icon(Icons.people_alt_outlined, color: _onSurfaceVariant, size: 24),
+          ),
+          const SizedBox(height: 24),
+          const Tooltip(
+            message: 'Leaderboard',
+            child: Icon(Icons.emoji_events_outlined, color: _onSurfaceVariant, size: 24),
+          ),
+          const Spacer(),
+          Tooltip(
+            message: 'Expand Sidebar',
+            child: IconButton(
+              icon: const Icon(Icons.keyboard_double_arrow_left_rounded, color: _primary),
+              onPressed: () => setState(() => _isRightSidebarExpanded = true),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );

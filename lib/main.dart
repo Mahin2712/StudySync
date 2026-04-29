@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'screens/app_router.dart';
 import 'services/device_identity_service.dart';
 
@@ -31,8 +31,12 @@ class StudySyncApp extends StatelessWidget {
       title: 'StudySync',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: GoogleFonts.inter().fontFamily,
-        fontFamilyFallback: const ['PurnoBCC'],
+        fontFamily: 'PurnoBCC',
+        fontFamilyFallback: const ['Inter'],
+        textTheme: ThemeData.dark().textTheme.apply(
+          fontFamily: 'PurnoBCC',
+          fontFamilyFallback: ['Inter'],
+        ),
         scaffoldBackgroundColor: const Color(0xFF0C0E11),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFADCBDB),

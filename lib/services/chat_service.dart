@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message.dart';
+import 'profile_service.dart';
 
 /// Dual-layer ephemeral chat service using Supabase Realtime Broadcasting.
 ///
@@ -63,11 +64,24 @@ class ChatService extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────────────────
   String get _myUserId => _supabase.auth.currentUser?.id ?? '';
 
-  String get _myUsername {
-    final email = _supabase.auth.currentUser?.email ?? '';
-    // Use the part before @ as the display name
-    return email.split('@').first.isNotEmpty ? email.split('@').first : 'Student';
+  String _cachedUsername = 'Student';
+  bool _isUsernameLoaded = false;
+
+  Future<void> _ensureUsernameLoaded() async {
+    if (_isUsernameLoaded) return;
+    try {
+      final profile = await ProfileService.getMyProfile();
+      if (profile != null && profile.username.isNotEmpty) {
+        _cachedUsername = profile.username;
+      } else {
+        final email = _supabase.auth.currentUser?.email ?? '';
+        _cachedUsername = email.split('@').first.isNotEmpty ? email.split('@').first : 'Student';
+      }
+      _isUsernameLoaded = true;
+    } catch (_) {}
   }
+
+  String get _myUsername => _cachedUsername;
 
   // ─────────────────────────────────────────────────────────────────────────
   // Global Chat
@@ -76,6 +90,7 @@ class ChatService extends ChangeNotifier {
   /// Subscribes to the global broadcast channel.
   /// Call once from [HomeScreen.initState].
   Future<void> joinGlobalChat() async {
+    await _ensureUsernameLoaded();
     if (_globalChannel != null) return; // already subscribed
 
     _globalChannel = _supabase
@@ -102,6 +117,7 @@ class ChatService extends ChangeNotifier {
   /// Subscribes to the room-specific broadcast channel.
   /// Call from [RoomDetailScreen.initState] with the current room's ID.
   Future<void> joinRoomChat(String roomId) async {
+    await _ensureUsernameLoaded();
     // Leave any existing room channel first
     if (_currentRoomId != null && _currentRoomId != roomId) {
       await leaveRoomChat();
@@ -174,6 +190,20 @@ class ChatService extends ChangeNotifier {
       timestamp: DateTime.now(),
     );
 
+    // Optimistic Update
+    if (isGlobal) {
+      _globalMessages.add(message);
+      if (_globalMessages.length > _maxStoredMessages) {
+        _globalMessages.removeAt(0);
+      }
+    } else {
+      _roomMessages.add(message);
+      if (_roomMessages.length > _maxStoredMessages) {
+        _roomMessages.removeAt(0);
+      }
+    }
+    notifyListeners();
+
     channel.sendBroadcastMessage(
       event: 'message',
       payload: message.toBroadcastPayload(),
@@ -193,6 +223,8 @@ class ChatService extends ChangeNotifier {
 
   void _onIncomingMessage(Map<String, dynamic> payload, {required bool isGlobal}) {
     final msg = ChatMessage.fromBroadcast(payload);
+    if (msg.userId == _myUserId) return; // Prevent duplicate if self=true
+    
     if (isGlobal) {
       _globalMessages.add(msg);
       if (_globalMessages.length > _maxStoredMessages) {

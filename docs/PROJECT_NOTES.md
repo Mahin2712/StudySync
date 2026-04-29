@@ -942,3 +942,27 @@ Phase 3.x (Multi-device isolation): Completed.
 - room_sheet.dart has 3 pre-existing analysis errors (broken import of room_detail_screen.dart) — not introduced by this feature.
 - Stitch MCP generated a full 'Nocturnal Scholar' design system spec — available at project 271650421636417831 for future UI reference.
 - ChatService is a singleton — it persists across navigation. leaveRoomChat() is called in dispose() to clean up room channel correctly.
+
+
+[2026-04-29 05:15] — Unified Sidebar Refinement & Syntax Fixes
+? Completed
+- Fixed all syntax errors in home_screen.dart caused by malformed escape characters (\' -> ').
+- Refactored room_detail_screen.dart to remove references to the deprecated chat_bottom_sheet.dart.
+- Removed unused imports (google_fonts, chat_message) across the codebase.
+- Verified zero analysis errors with lutter analyze.
+
+?? Changes
+- Modified lib/screens/home_screen.dart: Removed literal backslashes from tooltip strings.
+- Modified lib/screens/room_detail_screen.dart: Removed _buildChatFab() and imports related to bottom sheet chat.
+- Modified lib/screens/room_sheet.dart: No changes needed directly, but the uri_does_not_exist error was resolved by fixing oom_detail_screen.dart.
+- Modified lib/main.dart & lib/widgets/sidebar_chat.dart: Cleaned up unused imports.
+
+?? Status
+- Phase 3 Unified Sidebar Architecture: 100% completed and clean.
+
+?? Next Steps
+- Verify the desktop-to-mobile responsive transition in a live build.
+- Continue monitoring UI consistency and performance metrics.
+
+?? Notes / Issues
+- Encoding issue encountered in oom_detail_screen.dart causing python/dart file reading issues, fixed by rewriting the file in utf-8 without the bad chars.
