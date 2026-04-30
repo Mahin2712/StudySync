@@ -966,3 +966,4 @@ Phase 3.x (Multi-device isolation): Completed.
 
 ?? Notes / Issues
 - Encoding issue encountered in oom_detail_screen.dart causing python/dart file reading issues, fixed by rewriting the file in utf-8 without the bad chars.
+$content
