@@ -183,6 +183,7 @@ class _SidebarChatState extends State<SidebarChat> {
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                         color: _primary,
+                                        fontFamilyFallback: ['PurnoBCC'],
                                       ),
                                     ),
                                   ),
@@ -191,6 +192,7 @@ class _SidebarChatState extends State<SidebarChat> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: isMe ? _onPrimaryContainer : _onSurface,
+                                    fontFamilyFallback: const ['PurnoBCC'],
                                   ),
                                 ),
                               ],

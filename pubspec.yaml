@@ -63,6 +63,9 @@ flutter:
   uses-material-design: true
 
   fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
     - family: PurnoBCC
       fonts:
         - asset: assets/fonts/BCC Purno Regular.ttf

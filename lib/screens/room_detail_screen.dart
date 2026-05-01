@@ -733,13 +733,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
                     dropdownColor: const Color(0xFF1C2025),
 
                     style: const TextStyle(
-
-                      
-
                       color: _onSurface,
-
                       fontSize: 13,
-
+                      fontFamilyFallback: ['PurnoBCC'],
                     ),
 
                     decoration: InputDecoration(
@@ -772,7 +768,13 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
                       ...chapters.map(
 
-                        (c) => DropdownMenuItem(value: c, child: Text(c)),
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(
+                            c,
+                            style: const TextStyle(fontFamilyFallback: ['PurnoBCC']),
+                          ),
+                        ),
 
                       ),
 

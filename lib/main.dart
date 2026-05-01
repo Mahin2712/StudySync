@@ -31,11 +31,14 @@ class StudySyncApp extends StatelessWidget {
       title: 'StudySync',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'PurnoBCC',
-        fontFamilyFallback: const ['Inter'],
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        // Use the bundled Inter font family
+        fontFamily: 'Inter',
+        fontFamilyFallback: const ['PurnoBCC'],
         textTheme: ThemeData.dark().textTheme.apply(
-          fontFamily: 'PurnoBCC',
-          fontFamilyFallback: ['Inter'],
+          fontFamily: 'Inter',
+          fontFamilyFallback: ['PurnoBCC'],
         ),
         scaffoldBackgroundColor: const Color(0xFF0C0E11),
         colorScheme: const ColorScheme.dark(

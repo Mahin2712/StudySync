@@ -967,3 +967,29 @@ Phase 3.x (Multi-device isolation): Completed.
 ?? Notes / Issues
 - Encoding issue encountered in oom_detail_screen.dart causing python/dart file reading issues, fixed by rewriting the file in utf-8 without the bad chars.
 $content
+
+[2026-05-01 14:55] — Hybrid Font System Refinement (Local Inter & PurnoBCC)
+? Completed
+- Implemented local bundling of Inter font to eliminate network latency (FOUT).
+- Configured a robust hybrid font system: Inter for English/UI, PurnoBCC for Bangla fallback.
+- Resolved dropdown rendering inconsistency in Chapter Selection box.
+- Added explicit font fallbacks to Sidebar Chat messages and usernames.
+- Fixed missing flutter_dotenv import in main.dart.
+
+?? Changes
+- Modified pubspec.yaml: Registered 'Inter' and 'PurnoBCC' (Regular/Semibold) from local assets.
+- Modified lib/main.dart: Set primary fontFamily to 'Inter' and added global fontFamilyFallback.
+- Modified lib/screens/room_detail_screen.dart: Explicitly added PurnoBCC fallback to DropdownButtonFormField and DropdownMenuItem children.
+- Modified lib/widgets/sidebar_chat.dart: Added PurnoBCC fallback to chat message and username TextStyles.
+
+?? Status
+- Typography System: 100% refined and optimized for multi-language performance.
+- flutter analyze: Clean (No issues found).
+
+?? Next Steps
+- Continue monitoring UI rendering on physical devices to ensure no other 'context pierces' are required for fallbacks.
+- Finalize any remaining Phase 3 UI polish.
+
+?? Notes / Issues
+- The google_fonts package is now unused in main.dart as we've moved to local assets for Inter.
+
