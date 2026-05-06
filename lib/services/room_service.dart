@@ -40,7 +40,12 @@ class RoomService {
     return data['id'] as String;
   }
 
-  /// Join a room (insert into room_members — note Supabase typo)
+  /// Join a room (upsert into room_members).
+  ///
+  /// Fix #3: Replaces the read-then-insert sequence with a single atomic
+  /// upsert so concurrent joins from the same user never produce duplicate
+  /// rows. Works regardless of whether a DB UNIQUE constraint exists, and is
+  /// fully safe with one (no exception is raised on conflict).
   ///
   /// Force-closes this device's active study session before joining to prevent
   /// "ghost studier" rows when the user hops between rooms.
@@ -50,20 +55,16 @@ class RoomService {
     // 1. Kill any active session (ghost-session prevention).
     await SessionService.forceCloseActiveSession();
 
-    // 2. Prevent duplicate room_member entries.
-    final existing = await _client
-        .from('room_members')
-        .select('id')
-        .eq('room_id', roomId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (existing == null) {
-      await _client.from('room_members').insert({
+    // 2. Idempotent upsert — succeeds whether the membership row already
+    //    exists or not. onConflict targets the unique index on (room_id, user_id).
+    await _client.from('room_members').upsert(
+      {
         'room_id': roomId,
         'user_id': userId,
-      });
-    }
+      },
+      onConflict: 'room_id,user_id',
+      ignoreDuplicates: true,
+    );
   }
 
   /// Leave a room

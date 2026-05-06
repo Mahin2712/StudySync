@@ -13,25 +13,39 @@ import 'profile_service.dart';
 /// Messages are NEVER written to the database; they are purely ephemeral
 /// Broadcast payloads and support full Unicode / emoji natively.
 class ChatService extends ChangeNotifier {
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Singleton
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   static final ChatService _instance = ChatService._internal();
   factory ChatService() => _instance;
-  ChatService._internal();
+  ChatService._internal() {
+    // Fix #6: Subscribe to auth changes to reset cached identity on
+    // sign-out / sign-in so a different account always gets a fresh username.
+    _authSubscription = _supabase.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedOut ||
+          event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.userUpdated) {
+        _resetUserIdentity();
+      }
+    });
+  }
 
   final _supabase = Supabase.instance.client;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // Fix #6: Hold the auth subscription so we can cancel it in dispose().
+  StreamSubscription<AuthState>? _authSubscription;
+
+  // ════════════════════════════════════════════════════════════════════════
   // Spam-guard constants
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   static const int _cooldownSeconds = 3;
   static const int _maxChars = 120;
   static const int _maxStoredMessages = 80; // keep memory bounded
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // State
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   RealtimeChannel? _globalChannel;
   RealtimeChannel? _roomChannel;
   String? _currentRoomId;
@@ -47,9 +61,9 @@ class ChatService extends ChangeNotifier {
   int _cooldownRemaining = 0; // seconds left on cooldown
   Timer? _cooldownTimer;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Read-only accessors
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   List<ChatMessage> get globalMessages => List.unmodifiable(_globalMessages);
   List<ChatMessage> get roomMessages => List.unmodifiable(_roomMessages);
 
@@ -59,13 +73,20 @@ class ChatService extends ChangeNotifier {
 
   String? get currentRoomId => _currentRoomId;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Current user helpers
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   String get _myUserId => _supabase.auth.currentUser?.id ?? '';
 
   String _cachedUsername = 'Student';
   bool _isUsernameLoaded = false;
+
+  /// Fix #6: Clears the cached identity so the next join call re-fetches
+  /// the correct profile for the currently signed-in account.
+  void _resetUserIdentity() {
+    _isUsernameLoaded = false;
+    _cachedUsername = 'Student';
+  }
 
   Future<void> _ensureUsernameLoaded() async {
     if (_isUsernameLoaded) return;
@@ -75,7 +96,8 @@ class ChatService extends ChangeNotifier {
         _cachedUsername = profile.username;
       } else {
         final email = _supabase.auth.currentUser?.email ?? '';
-        _cachedUsername = email.split('@').first.isNotEmpty ? email.split('@').first : 'Student';
+        _cachedUsername =
+            email.split('@').first.isNotEmpty ? email.split('@').first : 'Student';
       }
       _isUsernameLoaded = true;
     } catch (_) {}
@@ -83,9 +105,9 @@ class ChatService extends ChangeNotifier {
 
   String get _myUsername => _cachedUsername;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Global Chat
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
 
   /// Subscribes to the global broadcast channel.
   /// Call once from [HomeScreen.initState].
@@ -108,26 +130,27 @@ class ChatService extends ChangeNotifier {
     if (_globalChannel == null) return;
     await _supabase.removeChannel(_globalChannel!);
     _globalChannel = null;
+    _globalMessages.clear();
+    notifyListeners();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Room Chat
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
 
-  /// Subscribes to the room-specific broadcast channel.
-  /// Call from [RoomDetailScreen.initState] with the current room's ID.
+  /// Subscribes to a room-scoped broadcast channel.
+  /// Call from [RoomDetailScreen.initState].
   Future<void> joinRoomChat(String roomId) async {
     await _ensureUsernameLoaded();
-    // Leave any existing room channel first
+
+    // Leave old room channel if switching rooms.
     if (_currentRoomId != null && _currentRoomId != roomId) {
       await leaveRoomChat();
     }
 
-    if (_currentRoomId == roomId && _roomChannel != null) return;
+    if (_roomChannel != null) return; // already subscribed to this room
 
     _currentRoomId = roomId;
-    _roomMessages.clear();
-
     _roomChannel = _supabase
         .channel('room:chat_$roomId')
         .onBroadcast(
@@ -148,14 +171,17 @@ class ChatService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Send a Message
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
 
   /// Attempts to send a message on either the global or room channel.
   ///
   /// Returns a [ChatSendResult] describing success or the reason for failure.
-  ChatSendResult sendMessage(String rawText, {required bool isGlobal}) {
+  ///
+  /// Fix #4: This is now async so we can await the broadcast and detect
+  /// transport-level failures, rolling back the optimistic append if needed.
+  Future<ChatSendResult> sendMessage(String rawText, {required bool isGlobal}) async {
     // ── 1. Trim whitespace ──────────────────────────────────────────────
     final text = rawText.trim();
 
@@ -182,7 +208,7 @@ class ChatService extends ChangeNotifier {
     final channel = isGlobal ? _globalChannel : _roomChannel;
     if (channel == null) return ChatSendResult.notConnected;
 
-    // ── 7. Build and broadcast ──────────────────────────────────────────
+    // ── 7. Build and optimistically append ──────────────────────────────
     final message = ChatMessage(
       userId: _myUserId,
       username: _myUsername,
@@ -190,7 +216,6 @@ class ChatService extends ChangeNotifier {
       timestamp: DateTime.now(),
     );
 
-    // Optimistic Update
     if (isGlobal) {
       _globalMessages.add(message);
       if (_globalMessages.length > _maxStoredMessages) {
@@ -204,12 +229,25 @@ class ChatService extends ChangeNotifier {
     }
     notifyListeners();
 
-    channel.sendBroadcastMessage(
-      event: 'message',
-      payload: message.toBroadcastPayload(),
-    );
+    // ── 8. Broadcast and handle transport failure ────────────────────────
+    // Fix #4: Await the Future<ChannelResponse> so transport errors are caught.
+    try {
+      await channel.sendBroadcastMessage(
+        event: 'message',
+        payload: message.toBroadcastPayload(),
+      );
+    } catch (_) {
+      // Roll back the optimistic append on transport failure.
+      if (isGlobal) {
+        _globalMessages.remove(message);
+      } else {
+        _roomMessages.remove(message);
+      }
+      notifyListeners();
+      return ChatSendResult.sendFailed;
+    }
 
-    // ── 8. Update spam guard state ──────────────────────────────────────
+    // ── 9. Update spam guard state ───────────────────────────────────────
     _lastSentAt = DateTime.now();
     _lastSentText = text;
     _startCooldown(_cooldownSeconds);
@@ -217,14 +255,14 @@ class ChatService extends ChangeNotifier {
     return ChatSendResult.success;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
   // Internal helpers
-  // ─────────────────────────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
 
   void _onIncomingMessage(Map<String, dynamic> payload, {required bool isGlobal}) {
     final msg = ChatMessage.fromBroadcast(payload);
     if (msg.userId == _myUserId) return; // Prevent duplicate if self=true
-    
+
     if (isGlobal) {
       _globalMessages.add(msg);
       if (_globalMessages.length > _maxStoredMessages) {
@@ -258,15 +296,16 @@ class ChatService extends ChangeNotifier {
   @override
   void dispose() {
     _cooldownTimer?.cancel();
+    _authSubscription?.cancel(); // Fix #6: clean up auth listener
     leaveGlobalChat();
     leaveRoomChat();
     super.dispose();
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
 // Result enum for send operations
-// ─────────────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
 
 enum ChatSendResult {
   success,
@@ -274,7 +313,8 @@ enum ChatSendResult {
   tooLong,
   onCooldown,
   duplicate,
-  notConnected;
+  notConnected,
+  sendFailed; // Fix #4: transport-level failure after optimistic rollback
 
   String get userMessage => switch (this) {
         ChatSendResult.success => '',
@@ -283,5 +323,6 @@ enum ChatSendResult {
         ChatSendResult.onCooldown => 'Please wait before sending again.',
         ChatSendResult.duplicate => 'You already sent that message.',
         ChatSendResult.notConnected => 'Chat not connected. Please wait.',
+        ChatSendResult.sendFailed => 'Failed to send. Please try again.',
       };
 }

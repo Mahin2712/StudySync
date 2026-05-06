@@ -35,6 +35,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   List<LeaderboardEntry> _entries = [];
   UserStats _myStats = UserStats.zero;
   String? _statsError;
+  String? _fetchError; // Fix #5: distinct error state for leaderboard fetch failures
   Timer? _pollTimer;
 
   String get _myUserId => Supabase.instance.client.auth.currentUser?.id ?? '';
@@ -66,6 +67,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     setState(() {
       _isLoading = true;
       _statsError = null;
+      _fetchError = null; // Fix #5: clear previous error on every reload
     });
     try {
       final entries = await _fetchForTab(_tabController.index);
@@ -88,8 +90,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           _isLoading = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+    } catch (e) {
+      // Fix #5: surface the real error instead of silently falling back to empty.
+      if (mounted) {
+        setState(() {
+          _fetchError = 'Failed to load leaderboard. Tap to retry.';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -128,6 +136,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 ? const Center(
                     child: CircularProgressIndicator(color: _primary),
                   )
+                : _fetchError != null
+                ? _buildFetchError() // Fix #5: dedicated error widget
                 : _entries.isEmpty
                 ? _buildEmpty()
                 : _buildContent(),
@@ -527,7 +537,52 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     );
   }
 
-  // ─── Empty state ──────────────────────────────────────────────────────────
+  // ═══ Error state (Fix #5) ═════════════════════════════════════════════
+
+  Widget _buildFetchError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: _outline, size: 48),
+          const SizedBox(height: 16),
+          const Text(
+            'Could not load leaderboard.',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _fetchError ?? 'An unexpected error occurred.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              color: _onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryContainer,
+              foregroundColor: _onPrimaryContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══ Empty state ══════════════════════════════════════════════════════
 
   Widget _buildEmpty() {
     return Center(

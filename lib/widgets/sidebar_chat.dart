@@ -62,29 +62,31 @@ class _SidebarChatState extends State<SidebarChat> {
     }
   }
 
-  void _handleSend() {
+  // Fix #4: async so we can await the Future<ChatSendResult> from sendMessage().
+  Future<void> _handleSend() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    try {
-      widget.chatService.sendMessage(text, isGlobal: widget.isGlobal);
+    final result = await widget.chatService.sendMessage(
+      text,
+      isGlobal: widget.isGlobal,
+    );
+
+    if (!mounted) return;
+
+    if (result == ChatSendResult.success) {
+      // Only clear input on confirmed success.
       _textController.clear();
-      _showSpamWarning = false;
-      setState(() {});
+      setState(() => _showSpamWarning = false);
       Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
-    } catch (e) {
-      // Show inline spam warning
+    } else {
+      // Show the result's user-facing message as an inline warning.
       setState(() {
-        _spamWarning = e.toString().replaceAll('Exception: ', '');
+        _spamWarning = result.userMessage;
         _showSpamWarning = true;
       });
-      // Hide after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _showSpamWarning = false;
-          });
-        }
+        if (mounted) setState(() => _showSpamWarning = false);
       });
     }
   }

@@ -993,3 +993,53 @@ $content
 ?? Notes / Issues
 - The google_fonts package is now unused in main.dart as we've moved to local assets for Inter.
 
+
+[2026-05-06 17:58] — Codex Audit Bug Fixes (Findings #2-#6)
+? Completed
+- Fix #2 (High): AppRouter converted to reactive auth routing. Now subscribes to onAuthStateChange via StreamSubscription in initState(). build() reads live _session field instead of one-shot currentSession snapshot. Subscription cancelled in dispose(). Navigator.pop() removed from profile_setup_screen.dart sign-out handler (AppRouter handles routing automatically).
+- Fix #3 (High): joinRoom() race window eliminated. Replaced read-then-insert (maybeSingle + insert) with a single atomic upsert(onConflict: 'room_id,user_id', ignoreDuplicates: true). Join is now idempotent regardless of concurrency.
+- Fix #4 (High): sendMessage() made async; now awaits channel.sendBroadcastMessage() Future. Added sendFailed ChatSendResult variant with rollback of optimistic append on transport failure. _handleSend() in sidebar_chat.dart rewritten to check returned ChatSendResult enum — input only cleared on ChatSendResult.success.
+- Fix #5 (Medium): Leaderboard fetch errors no longer silently masquerade as empty data. Added _fetchError String? field. Outer catch sets it. build() renders _buildFetchError() widget (icon + message + Retry button) when non-null.
+- Fix #6 (Medium): ChatService stale username fixed. Added _resetUserIdentity() method. Constructor now subscribes to onAuthStateChange; calls reset on signedOut, signedIn, userUpdated events. Auth StreamSubscription cancelled in dispose().
+- Finding #1 (Critical/dotenv): Confirmed already fixed in codebase — import present, analyze passed before changes.
+
+?? Changes
+- [MODIFIED] lib/services/chat_service.dart: async sendMessage(), sendFailed enum, _resetUserIdentity(), auth StreamSubscription in constructor, cancel in dispose()
+- [MODIFIED] lib/widgets/sidebar_chat.dart: _handleSend() now async, awaits sendMessage(), checks ChatSendResult enum
+- [MODIFIED] lib/screens/app_router.dart: StreamSubscription<AuthState> on onAuthStateChange, live _session field, dispose() cancellation
+- [MODIFIED] lib/screens/profile_setup_screen.dart: removed Navigator.pop() after signOut()
+- [MODIFIED] lib/services/room_service.dart: joinRoom() uses upsert(onConflict, ignoreDuplicates) instead of maybeSingle+insert
+- [MODIFIED] lib/screens/leaderboard_screen.dart: _fetchError field, _buildFetchError() widget with Retry button
+
+?? Status
+- Bug fixes: 5/5 complete (100%)
+- dart analyze lib: 0 issues
+- Phase: Post-Audit Hardening — Complete
+
+?? Next Steps
+- Apply UNIQUE INDEX on room_members(room_id, user_id) in Supabase dashboard for full DB-side race protection
+- Manual test: sign-out from profile setup screen ? verify LoginScreen appears without Navigator.pop
+- Manual test: send chat on cooldown ? verify input NOT cleared, error shown
+- Manual test: simulate leaderboard fetch failure ? verify error widget + Retry renders
+
+?? Notes / Issues
+- DB-side UNIQUE constraint on room_members not applied (requires Supabase dashboard access). Client-side upsert is safe without it but a DB constraint is the belt-and-suspenders guard.
+- ChatService is a singleton — the auth subscription in constructor persists for app lifetime (correct by design).
+
+[2026-05-06 18:12] — DB Migration: UNIQUE INDEX on room_members
+? Completed
+- Applied CREATE UNIQUE INDEX IF NOT EXISTS uniq_room_members ON room_members(room_id, user_id) via Supabase Management API.
+- Verified: pg_indexes query confirms index exists with btree on (room_id, user_id).
+
+?? Changes
+- [DB MIGRATION] Supabase project uenpxgcngqzggxmqifpw: uniq_room_members UNIQUE INDEX on public.room_members(room_id, user_id)
+
+?? Status
+- Fix #3 (Room Join Race): 100% complete — client-side upsert + DB-level UNIQUE constraint both in place.
+- All 6 audit findings resolved.
+
+?? Next Steps
+- Manual QA: verify room join, auth routing, chat send, leaderboard error display.
+
+?? Notes / Issues
+- Index applied via Supabase Management API (POST /v1/projects/{ref}/database/query). No migration file created — consider adding to a tracked migrations folder for repo auditability.

@@ -192,8 +192,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     child: TextButton(
                       onPressed: () async {
                         await Supabase.instance.client.auth.signOut();
-                        if (!context.mounted) return;
-                        Navigator.of(context).pop();
+                        // Fix #2: AppRouter's onAuthStateChange listener now
+                        // reacts to the sign-out and routes back to LoginScreen
+                        // automatically — no manual Navigator call needed.
                       },
                       child: const Text(
                         'Sign out and use a different account',
