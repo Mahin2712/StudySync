@@ -1043,3 +1043,52 @@ $content
 
 ?? Notes / Issues
 - Index applied via Supabase Management API (POST /v1/projects/{ref}/database/query). No migration file created — consider adding to a tracked migrations folder for repo auditability.
+
+
+[2026-05-06 18:19] - Future Roadmap Review
+? Completed
+- Reviewed 'Study Sync Future Upgrades.md' (Tab 1 & Tab 2) and 'docs/future plans.md' against current post-audit codebase state.
+- Synthesized findings into a 4-phase roadmap (Phase 4 through Phase 7) with risk ratings, DB surface gaps, and a dependency map.
+
+?? Changes
+- [ARTIFACT] StudySync_Roadmap_Review.md created in brain/ artifacts directory.
+- No code changes made (review/planning only).
+
+?? Status
+- Phase: Pre-Phase 4 Planning
+- All audit findings resolved. Roadmap reviewed and prioritized.
+
+?? Next Steps
+- Phase 4: Minimalist Login UI + Google OAuth (zero DB dependencies, builds on hardened AppRouter)
+- Phase 5: Replace home screen placeholder data with live queries
+- Phase 6: Streak tracking, daily goals, gamification
+- Phase 7: Social graph, persistent chat, reactions, notifications
+
+?? Notes / Issues
+- Quick Reactions require a full chat persistence refactor (ephemeral broadcast ? DB-backed messages)  
+- All stats extensions must be additive to get_my_stats to avoid breaking stats_dashboard_screen.dart
+- uniq_room_members DB migration has no tracked migration file yet.
+
+
+[2026-05-06 18:35] - Ephemeral Broadcast Reactions - Design Plan Added
+? Completed
+- Reviewed proposed ephemeral broadcast reactions design (no DB required).
+- Confirmed architecture: reactions sent as a second typed broadcast event ('chat_reaction'), targeting messages by client-generated prefixed message IDs.
+- Updated StudySync_Roadmap_Review.md with full implementation plan covering: uuid package, updated ChatMessage model, _generateMessageId(), sendReaction(), _applyReaction(), reaction event handler, and UI long-press picker + reaction pills.
+- Downgraded Quick Reactions from 'Very High effort / DB refactor required' to 'Medium effort / Zero DB'.
+
+?? Changes
+- [ARTIFACT] StudySync_Roadmap_Review.md updated: Phase 7 table, priority matrix, DB surface table, and new 'Ephemeral Broadcast Reactions Implementation Plan' section appended.
+- No code changes (planning only).
+
+?? Status
+- Phase: Pre-Phase 4 Planning (roadmap fully documented)
+- pubspec.yaml: unchanged (uuid not yet added)
+
+?? Next Steps
+- Decide which phase to tackle next (recommended: Phase 4 - Minimalist Login + Google OAuth)
+- When ready to implement reactions: follow 5-step plan in roadmap artifact (4 files to change, no DB migrations)
+
+?? Notes / Issues
+- Quick Reactions toggle (double-tap to remove own reaction) is built into _applyReaction() design.
+- Late-joiner trade-off accepted: reactions and messages are equally ephemeral by design.
