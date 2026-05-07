@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/chat_message.dart';
 import 'profile_service.dart';
 
@@ -32,6 +33,7 @@ class ChatService extends ChangeNotifier {
   }
 
   final _supabase = Supabase.instance.client;
+  final _uuid = const Uuid();
 
   // Fix #6: Hold the auth subscription so we can cancel it in dispose().
   StreamSubscription<AuthState>? _authSubscription;
@@ -105,6 +107,11 @@ class ChatService extends ChangeNotifier {
 
   String get _myUsername => _cachedUsername;
 
+  String _generateMessageId() {
+    final prefix = _myUserId.length >= 6 ? _myUserId.substring(0, 6) : _myUserId;
+    return '${prefix}_${_uuid.v4()}';
+  }
+
   // ════════════════════════════════════════════════════════════════════════
   // Global Chat
   // ════════════════════════════════════════════════════════════════════════
@@ -120,6 +127,10 @@ class ChatService extends ChangeNotifier {
         .onBroadcast(
           event: 'message',
           callback: (payload) => _onIncomingMessage(payload, isGlobal: true),
+        )
+        .onBroadcast(
+          event: 'reaction',
+          callback: (payload) => _onIncomingReaction(payload, isGlobal: true),
         )
         .subscribe();
   }
@@ -156,6 +167,10 @@ class ChatService extends ChangeNotifier {
         .onBroadcast(
           event: 'message',
           callback: (payload) => _onIncomingMessage(payload, isGlobal: false),
+        )
+        .onBroadcast(
+          event: 'reaction',
+          callback: (payload) => _onIncomingReaction(payload, isGlobal: false),
         )
         .subscribe();
   }
@@ -210,6 +225,7 @@ class ChatService extends ChangeNotifier {
 
     // ── 7. Build and optimistically append ──────────────────────────────
     final message = ChatMessage(
+      messageId: _generateMessageId(),
       userId: _myUserId,
       username: _myUsername,
       text: text,
@@ -253,6 +269,69 @@ class ChatService extends ChangeNotifier {
     _startCooldown(_cooldownSeconds);
 
     return ChatSendResult.success;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // Reactions
+  // ════════════════════════════════════════════════════════════════════════
+
+  Future<void> sendReaction(String messageId, String emoji, {required bool isGlobal}) async {
+    if (_myUserId.isEmpty) return;
+
+    final channel = isGlobal ? _globalChannel : _roomChannel;
+    if (channel == null) return;
+
+    // Optimistic update
+    _applyReaction(messageId, emoji, _myUserId, isGlobal: isGlobal);
+
+    final payload = {
+      'message_id': messageId,
+      'emoji': emoji,
+      'user_id': _myUserId,
+    };
+
+    try {
+      await channel.sendBroadcastMessage(
+        event: 'reaction',
+        payload: payload,
+      );
+    } catch (_) {
+      // Roll back on failure (toggle again)
+      _applyReaction(messageId, emoji, _myUserId, isGlobal: isGlobal);
+    }
+  }
+
+  void _onIncomingReaction(Map<String, dynamic> payload, {required bool isGlobal}) {
+    final messageId = payload['message_id'] as String?;
+    final emoji = payload['emoji'] as String?;
+    final userId = payload['user_id'] as String?;
+
+    if (messageId == null || emoji == null || userId == null) return;
+    if (userId == _myUserId) return; // Prevent duplicate if self=true
+
+    _applyReaction(messageId, emoji, userId, isGlobal: isGlobal);
+  }
+
+  void _applyReaction(String messageId, String emoji, String userId, {required bool isGlobal}) {
+    final list = isGlobal ? _globalMessages : _roomMessages;
+    final index = list.indexWhere((msg) => msg.messageId == messageId);
+    if (index == -1) return;
+
+    final msg = list[index];
+    final currentReactions = msg.reactions[emoji] ?? {};
+
+    // Toggle reaction
+    if (currentReactions.contains(userId)) {
+      currentReactions.remove(userId);
+      if (currentReactions.isEmpty) {
+        msg.reactions.remove(emoji);
+      }
+    } else {
+      currentReactions.add(userId);
+      msg.reactions[emoji] = currentReactions;
+    }
+
+    notifyListeners();
   }
 
   // ════════════════════════════════════════════════════════════════════════

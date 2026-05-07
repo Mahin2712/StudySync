@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/chat_service.dart';
+import '../models/chat_message.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -60,6 +61,92 @@ class _SidebarChatState extends State<SidebarChat> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  void _showReactionPicker(BuildContext context, ChatMessage msg) {
+    final emojis = ['👍', '🎉', '😂', '❤️', '🚀', '👀'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _surfaceHighest,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            children: emojis.map((emoji) {
+              return InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.chatService.sendReaction(
+                    msg.messageId, 
+                    emoji, 
+                    isGlobal: widget.isGlobal,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(emoji, style: const TextStyle(fontSize: 32)),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildReactions(ChatMessage msg) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: msg.reactions.entries.map((e) {
+          final emoji = e.key;
+          final count = e.value.length;
+          final iReacted = e.value.contains(_currentUserId);
+          
+          return GestureDetector(
+            onTap: () {
+              widget.chatService.sendReaction(
+                msg.messageId, 
+                emoji, 
+                isGlobal: widget.isGlobal,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: iReacted ? _primary.withValues(alpha: 0.2) : _surfaceHighest,
+                border: Border.all(
+                  color: iReacted ? _primary : _outline.withValues(alpha: 0.3),
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: iReacted ? _primary : _onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   // Fix #4: async so we can await the Future<ChatSendResult> from sendMessage().
@@ -161,44 +248,54 @@ class _SidebarChatState extends State<SidebarChat> {
                           const SizedBox(width: 8),
                         ],
                         Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: isMe ? _primaryContainer : _surfaceHigh,
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(16),
-                                topRight: const Radius.circular(16),
-                                bottomLeft: Radius.circular(isMe ? 16 : 4),
-                                bottomRight: Radius.circular(isMe ? 4 : 16),
-                              ),
-                              border: isMe ? null : Border.all(color: _outline.withValues(alpha: 0.2)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                              children: [
-                                if (!isMe)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 4),
-                                    child: Text(
-                                      msg.username,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: _primary,
-                                        fontFamilyFallback: ['PurnoBCC'],
-                                      ),
+                          child: Column(
+                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onLongPress: () => _showReactionPicker(context, msg),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isMe ? _primaryContainer : _surfaceHigh,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(16),
+                                      topRight: const Radius.circular(16),
+                                      bottomLeft: Radius.circular(isMe ? 16 : 4),
+                                      bottomRight: Radius.circular(isMe ? 4 : 16),
                                     ),
+                                    border: isMe ? null : Border.all(color: _outline.withValues(alpha: 0.2)),
                                   ),
-                                Text(
-                                  msg.text,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isMe ? _onPrimaryContainer : _onSurface,
-                                    fontFamilyFallback: const ['PurnoBCC'],
+                                  child: Column(
+                                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                    children: [
+                                      if (!isMe)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: Text(
+                                            msg.username,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: _primary,
+                                              fontFamilyFallback: ['PurnoBCC'],
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        msg.text,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: isMe ? _onPrimaryContainer : _onSurface,
+                                          fontFamilyFallback: const ['PurnoBCC'],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              if (msg.reactions.isNotEmpty)
+                                _buildReactions(msg),
+                            ],
                           ),
                         ),
                       ],

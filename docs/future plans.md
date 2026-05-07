@@ -99,15 +99,10 @@
 | Profile Search / Public Directory | Tab 1 | 🟡 Medium | Existing `profiles` + policy update |
 | "Friend is Online" toast notifications | Tab 1 | 🔴 High | Presence system (Supabase Realtime presence) |
 | Invite-to-Table (direct ping) | Tab 1 | 🔴 High | Push notification service + `invites` table |
-| Quick Reactions (double-tap emoji) | Tab 1 | 🔴 High | **Must persist chat messages first** (see below) |
+| Quick Reactions (long-press emoji) | Tab 1 | 🟡 Medium | **Zero DB — Ephemeral Broadcast model** (see plan below) |
 
-> [!CAUTION]
-> **Quick Reactions require a full chat architecture change.** Current `ChatService` uses Supabase Realtime broadcast — messages are ephemeral with no IDs, no persistence, and no way to address a specific message to react to. To implement reactions, you must first:
-> 1. Create a `chat_messages` table (room_id, user_id, content, created_at)
-> 2. Switch `ChatService` from `channel.sendBroadcastMessage()` to a DB insert + Realtime subscription
-> 3. Add a `message_reactions` table (message_id, user_id, emoji)
->
-> This is a significant refactor — treat it as its own epic.
+> [!TIP]
+> **Quick Reactions do NOT require a DB refactor.** Approved design uses the existing Supabase Realtime broadcast channel. A reaction is simply a second typed broadcast event (`chat_reaction`) that targets a specific message by its client-generated prefixed ID. All state lives in memory — ephemeral, just like messages. See the **Ephemeral Broadcast Reactions Plan** section at the bottom of this document.
 
 **Dependency Map for Social Phase:**
 ```
@@ -115,9 +110,9 @@ profiles (exists)
     └─→ follows table (NEW) ─→ Friend-is-Online ─→ Invite-to-Table
     └─→ profile search (existing table, policy work)
 
-chat_messages table (NEW)
-    └─→ Quick Reactions
-    └─→ Notification on reaction
+chat_reaction broadcast event (NO NEW TABLE)
+    └─→ Quick Reactions  ← approved design
+    └─→ Reactions vanish on leave/reconnect (by design, same as messages)
 ```
 
 ---
@@ -140,7 +135,7 @@ chat_messages table (NEW)
 | Follow Graph | High (social) | High | 7 | 🔴 Later |
 | Friend Online Toasts | High (engagement) | High | 7 | 🔴 Needs presence infra |
 | Invite-to-Table | High (engagement) | High | 7 | 🔴 Needs follow graph |
-| Quick Reactions | Medium | Very High | 7 | 🔴 Needs chat persistence refactor |
+| Quick Reactions | Medium | Medium | 7 | 🟡 Approved — Ephemeral Broadcast model, no DB |
 
 ---
 
@@ -156,8 +151,8 @@ chat_messages table (NEW)
 | `exams` table | 6+ | Exam date + subject |
 | `chapter_progress` table | 6+ | Per-chapter completion |
 | `follows` table | 7 | Social graph (follower, following) |
-| `chat_messages` table | 7 | Persistent chat (replaces ephemeral) |
-| `message_reactions` table | 7 | Emoji reactions on messages |
+| ~~`chat_messages` table~~ | ~~7~~ | ~~Persistent chat~~ — **not needed, reactions use broadcast** |
+| ~~`message_reactions` table~~ | ~~7~~ | ~~DB reactions~~ — **not needed, reactions use broadcast** |
 
 ---
 
@@ -174,3 +169,292 @@ chat_messages table (NEW)
 ## 🚀 Recommended Next Action
 
 **Start Phase 4:** Implement the minimalist login screen and Google OAuth — this has zero DB dependencies, the highest daily-driver visibility, and directly builds on the now-hardened `AppRouter` auth gate.
+
+---
+
+## 💬 Ephemeral Broadcast Reactions — Implementation Plan
+*Zero DB. Zero schema changes. Works within the existing `ChatService` broadcast architecture.*
+
+### Core Concept: Event-Sourced Ephemeral State
+Reactions are **not stored**. They travel as a second broadcast event type on the same Supabase Realtime channel. All reaction state lives in each client's in-memory `List<ChatMessage>`. When a user leaves the room, reactions vanish — exactly like messages do today. This matches the app's existing philosophy of treating live rooms as **in-the-moment sessions**.
+
+---
+
+### Step 1 — Add `uuid` Package
+```yaml
+# pubspec.yaml
+dependencies:
+  uuid: ^4.5.1
+```
+
+---
+
+### Step 2 — Updated `ChatMessage` Model
+The model needs to become **mutable** (remove `const`/`final` on reactions), and gain a `messageId` and a `reactions` map.
+
+```dart
+// lib/models/chat_message.dart
+import 'package:uuid/uuid.dart';
+
+class ChatMessage {
+  final String messageId;   // e.g. "a1b2c3_f47ac10b-..."
+  final String userId;
+  final String username;
+  final String text;
+  final DateTime timestamp;
+
+  // emoji → Set<userId> who reacted with that emoji
+  // Mutable so _onIncomingReaction() can update in-place.
+  final Map<String, Set<String>> reactions;
+
+  ChatMessage({
+    required this.messageId,
+    required this.userId,
+    required this.username,
+    required this.text,
+    required this.timestamp,
+    Map<String, Set<String>>? reactions,
+  }) : reactions = reactions ?? {};
+
+  factory ChatMessage.fromBroadcast(Map<String, dynamic> payload) {
+    return ChatMessage(
+      messageId: (payload['message_id'] as String?) ?? '',
+      userId:    (payload['user_id']    as String?) ?? '',
+      username:  (payload['username']   as String?) ?? 'Anonymous',
+      text:      (payload['text']       as String?) ?? '',
+      timestamp: DateTime.tryParse((payload['ts'] as String?) ?? '') ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toBroadcastPayload() => {
+    'event_type': 'chat_message',
+    'message_id': messageId,
+    'user_id':    userId,
+    'username':   username,
+    'text':       text,
+    'ts':         timestamp.toIso8601String(),
+  };
+}
+```
+
+---
+
+### Step 3 — Prefixed Message ID Generator in `ChatService`
+Combines the first 6 chars of the auth `user_id` (user-scoped prefix) with a UUIDv4 (random uniqueness). Zero collision risk.
+
+```dart
+// Inside ChatService — add this field and method:
+final _uuid = const Uuid();
+
+String _generateMessageId() {
+  final prefix = _myUserId.length >= 6
+      ? _myUserId.substring(0, 6)
+      : _myUserId;
+  return '${prefix}_${_uuid.v4()}';
+}
+```
+
+Update `sendMessage()` to attach the generated ID:
+```dart
+final message = ChatMessage(
+  messageId: _generateMessageId(),  // ← add this
+  userId:    _myUserId,
+  username:  _myUsername,
+  text:      text,
+  timestamp: DateTime.now(),
+);
+```
+
+---
+
+### Step 4 — `sendReaction()` in `ChatService`
+A reaction is a fire-and-forget broadcast. No cooldown, no optimistic append — it just patches the target message in memory.
+
+```dart
+/// Sends a reaction emoji broadcast targeting [messageId].
+/// Skips validation — reactions are not subject to spam rules.
+Future<void> sendReaction({
+  required String messageId,
+  required String emoji,
+  required bool isGlobal,
+}) async {
+  final channel = isGlobal ? _globalChannel : _roomChannel;
+  if (channel == null) return;
+
+  // Optimistically apply locally first
+  _applyReaction(
+    messageId: messageId,
+    reactorUserId: _myUserId,
+    emoji: emoji,
+    isGlobal: isGlobal,
+  );
+
+  await channel.sendBroadcastMessage(
+    event: 'reaction',
+    payload: {
+      'event_type':  'chat_reaction',
+      'message_id':  messageId,
+      'user_id':     _myUserId,
+      'emoji':       emoji,
+    },
+  );
+}
+
+void _applyReaction({
+  required String messageId,
+  required String reactorUserId,
+  required String emoji,
+  required bool isGlobal,
+}) {
+  final list = isGlobal ? _globalMessages : _roomMessages;
+  final idx = list.indexWhere((m) => m.messageId == messageId);
+  if (idx == -1) return; // message not in local buffer (late joiner edge case)
+
+  final msg = list[idx];
+  final reactors = msg.reactions.putIfAbsent(emoji, () => {});
+
+  if (reactors.contains(reactorUserId)) {
+    // Toggle off — second tap removes the reaction
+    reactors.remove(reactorUserId);
+    if (reactors.isEmpty) msg.reactions.remove(emoji);
+  } else {
+    reactors.add(reactorUserId);
+  }
+  notifyListeners();
+}
+```
+
+Add a handler for incoming `reaction` events in channel subscription setup:
+```dart
+// Inside joinGlobalChat() / joinRoomChat() channel.subscribe() callback:
+channel.onBroadcast(
+  event: 'reaction',
+  callback: (payload) {
+    final isGlobal = /* true or false depending on channel */;
+    final reactorId = (payload['user_id'] as String?) ?? '';
+    if (reactorId == _myUserId) return; // already applied optimistically
+    _applyReaction(
+      messageId:      (payload['message_id'] as String?) ?? '',
+      reactorUserId:  reactorId,
+      emoji:          (payload['emoji'] as String?) ?? '',
+      isGlobal:       isGlobal,
+    );
+  },
+);
+```
+
+---
+
+### Step 5 — UI Changes in `sidebar_chat.dart`
+Wrap each message bubble in a `GestureDetector` with `onLongPress` to open a small emoji picker row. On emoji tap, call `chatService.sendReaction()`.
+
+Below the message text, render the reactions row:
+```dart
+// Inside the message bubble Column:
+if (msg.reactions.isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Wrap(
+      spacing: 4,
+      children: msg.reactions.entries.map((e) {
+        final isMyReaction = e.value.contains(_currentUserId);
+        return GestureDetector(
+          onTap: () => widget.chatService.sendReaction(
+            messageId: msg.messageId,
+            emoji: e.key,
+            isGlobal: widget.isGlobal,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isMyReaction
+                  ? _primaryContainer.withValues(alpha: 0.7)
+                  : _surfaceHigh,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isMyReaction ? _primary : _outline.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text('${e.key} ${e.value.length}',
+                style: const TextStyle(fontSize: 12)),
+          ),
+        );
+      }).toList(),
+    ),
+  ),
+```
+
+Emoji picker (shown on long-press):
+```dart
+// Quick emoji strip — 5 choices, no full picker needed:
+const _reactionEmojis = ['👍', '❤️', '😂', '🎉', '🔥'];
+
+void _showReactionPicker(BuildContext context, ChatMessage msg) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: _surfaceHigh,
+    builder: (_) => Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: _reactionEmojis.map((emoji) =>
+          GestureDetector(
+            onTap: () {
+              Navigator.pop(context);
+              widget.chatService.sendReaction(
+                messageId: msg.messageId,
+                emoji: emoji,
+                isGlobal: widget.isGlobal,
+              );
+            },
+            child: Text(emoji, style: const TextStyle(fontSize: 28)),
+          ),
+        ).toList(),
+      ),
+    ),
+  );
+}
+```
+
+---
+
+### Broadcast Payload Contracts (Reference)
+
+**`chat_message` event:**
+```json
+{
+  "event_type": "chat_message",
+  "message_id": "a1b2c3_f47ac10b-58b0-4b9e-9f06-d5b94a7e5a12",
+  "user_id":    "<supabase-auth-uid>",
+  "username":   "Alice",
+  "text":       "Let's study calculus!",
+  "ts":         "2026-05-06T12:30:00.000Z"
+}
+```
+
+**`reaction` event:**
+```json
+{
+  "event_type":  "chat_reaction",
+  "message_id":  "a1b2c3_f47ac10b-58b0-4b9e-9f06-d5b94a7e5a12",
+  "user_id":     "<reactor-auth-uid>",
+  "emoji":       "🎉"
+}
+```
+
+---
+
+### Trade-offs (Accepted by Design)
+
+| Trade-off | Accepted? | Reason |
+|---|---|---|
+| Reactions vanish when user leaves room | ✅ Yes | Same as messages — sessions are ephemeral by design |
+| Late joiners don't see prior reactions | ✅ Yes | Same as messages — no history loaded on join |
+| Network blip clears all state | ✅ Yes | Consistent with current chat behaviour |
+| No cross-device reaction sync | ✅ Yes | Each session is independent |
+
+### Files to Change (When Implementing)
+1. `pubspec.yaml` — add `uuid: ^4.5.1`
+2. `lib/models/chat_message.dart` — add `messageId`, `reactions` map, update factory/payload
+3. `lib/services/chat_service.dart` — add `_generateMessageId()`, `sendReaction()`, `_applyReaction()`, `reaction` event handler in channel setup
+4. `lib/widgets/sidebar_chat.dart` — add `onLongPress` picker, reactions row UI

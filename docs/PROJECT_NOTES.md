@@ -1092,3 +1092,25 @@ $content
 ?? Notes / Issues
 - Quick Reactions toggle (double-tap to remove own reaction) is built into _applyReaction() design.
 - Late-joiner trade-off accepted: reactions and messages are equally ephemeral by design.
+
+[2026-05-07 16:21] - Ephemeral Broadcast Reactions Implemented
+✅ Completed
+- Added `uuid` package to pubspec.yaml.
+- Made `ChatMessage` mutable and added `messageId` and `reactions` properties.
+- Updated `ChatService` to handle reaction broadcasts, messageId generation, and optimistic updates.
+- Integrated emoji picker (on long-press) and reaction pills into `SidebarChat` widget.
+
+🔧 Changes
+- `pubspec.yaml`: Added `uuid` dependency.
+- `lib/models/chat_message.dart`: Added `messageId` and `reactions`.
+- `lib/services/chat_service.dart`: Added `_generateMessageId()`, `sendReaction()`, `_onIncomingReaction()`, and `_applyReaction()`.
+- `lib/widgets/sidebar_chat.dart`: Wrapped message bubble in `GestureDetector` with a `showModalBottomSheet` for the emoji picker and added `_buildReactions()`.
+
+📊 Status
+- Phase: Phase 3 (Chat) completed (ephemeral reactions added). Pre-Phase 4 Planning. % progress toward next milestone: Ready for Phase 4 (Minimalist Login + Google OAuth).
+
+🚀 Next Steps
+- Proceed with Phase 4 (Minimalist Login + Google OAuth).
+
+⚠️ Notes / Issues
+- Reactions are purely ephemeral and tied to the broadcast session. If a user leaves and rejoins, reactions will not be restored, which aligns with the ephemeral nature of the chat itself.
