@@ -16,7 +16,7 @@
 | Chat persistence | ❌ Ephemeral broadcast only (no DB) |
 | Social graph | ❌ Does not exist |
 | Streak/Goal tracking | ❌ No DB contract |
-| Google OAuth | ❌ Not implemented |
+| Google OAuth | ❌ Not implemented |  
 
 **Existing DB surface:** `profiles`, `rooms`, `room_members`, `study_sessions`, `get_my_stats` RPC, `leaderboard` query.
 
