@@ -484,3 +484,26 @@ $content
 
 ⚠️ Notes / Issues
 - Reactions are purely ephemeral and tied to the broadcast session. If a user leaves and rejoins, reactions will not be restored, which aligns with the ephemeral nature of the chat itself.
+
+[2026-05-08 10:44] — Phase 4: Auth & Deep Link Hardening
+✅ Completed
+- Implemented deep link handling using `app_links` in `AppRouter` for Windows OAuth callback support.
+- Updated `LoginScreen` Google OAuth flow with a visual feedback delay to prevent UI flashing and lock-up.
+- Added explicit database migration file `20260508000000_uniq_room_members.sql`.
+- Resolved Supabase Flutter SDK v2 API changes (positional `OAuthProvider` argument).
+
+🔧 Changes
+- [MODIFIED] `lib/screens/app_router.dart`: Added `AppLinks` stream listener to intercept `studysync://` URLs.
+- [MODIFIED] `lib/screens/login_screen.dart`: Updated `_signInWithGoogle` to use `Future.delayed` and correct positional provider argument.
+- [NEW] `supabase/migrations/20260508000000_uniq_room_members.sql`: Created migration file.
+
+📊 Status
+- Phase 4 (Auth & Onboarding Polish): Completed (100%).
+- Ready for Phase 5 (Live Data Integration).
+
+🚀 Next Steps
+- Transition to Phase 5: Replace home screen placeholders with live Supabase data queries.
+- Implement room fetching and active session synchronization on the dashboard.
+
+⚠️ Notes / Issues
+- Supabase SDK v2 API changes required updating `signInWithOAuth` syntax. `dart analyze` passes with zero issues.

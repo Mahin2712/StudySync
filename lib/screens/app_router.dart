@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'profile_setup_screen.dart';
@@ -30,6 +31,9 @@ class _AppRouterState extends State<AppRouter> {
   // Fix #2: track the live session so build() stays reactive.
   Session? _session;
   StreamSubscription<AuthState>? _authSub;
+  
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _appLinksSub;
 
   @override
   void initState() {
@@ -57,11 +61,20 @@ class _AppRouterState extends State<AppRouter> {
         SessionService.cleanUpStaleSessions();
       }
     });
+
+    // Handle deep links for platforms that don't auto-intercept (e.g. Windows)
+    _appLinks = AppLinks();
+    _appLinksSub = _appLinks.uriLinkStream.listen((uri) {
+      if (uri.scheme == 'studysync') {
+        _client.auth.getSessionFromUrl(uri);
+      }
+    });
   }
 
   @override
   void dispose() {
     _authSub?.cancel();
+    _appLinksSub?.cancel();
     super.dispose();
   }
 
