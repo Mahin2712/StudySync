@@ -3,7 +3,7 @@
 ## 🗂️ Project Overview
 A Flutter + Supabase group study platform.
 **Workspace:** `c:\Users\SER\StudySync`
-**Platform target:** Web (Chrome), Windows desktop
+**Platform target:** Web (Chrome), Android
 
 ---
 
@@ -570,3 +570,22 @@ ame and username.
 
 ⚠️ Notes / Issues
 - The app now compiles and runs without asset missing errors.
+
+[2026-05-09 11:53] — Google Auth & Android Deep Link Configuration
+✅ Completed
+- Guided user through Google Cloud Console and Supabase Dashboard OAuth configurations.
+- Registered custom URI scheme (`studysync://login-callback/`) in AndroidManifest.xml for Android redirect support.
+- Updated project targets to Web and Android (dropped Windows).
+
+🔧 Changes
+- [MODIFIED] android/app/src/main/AndroidManifest.xml: Added `<intent-filter>` for `studysync` scheme.
+- [MODIFIED] docs/PROJECT_NOTES.md: Updated target platforms.
+
+📊 Status
+- Phase 4 Auth System: 100% complete for Web and Android.
+
+🚀 Next Steps
+- Verify Google Sign-in flow on Android emulator/device or Web.
+
+⚠️ Notes / Issues
+- Web uses standard redirect URL mapping, while Android utilizes the deep-link interception via the `app_links` package and intent-filters.
