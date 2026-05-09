@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:clock/clock.dart';
 import 'package:uuid/uuid.dart';
 import '../models/chat_message.dart';
 import 'profile_service.dart';
@@ -229,7 +230,7 @@ class ChatService extends ChangeNotifier {
       userId: _myUserId,
       username: _myUsername,
       text: text,
-      timestamp: DateTime.now(),
+      timestamp: clock.now(),
     );
 
     if (isGlobal) {
@@ -264,7 +265,7 @@ class ChatService extends ChangeNotifier {
     }
 
     // ── 9. Update spam guard state ───────────────────────────────────────
-    _lastSentAt = DateTime.now();
+    _lastSentAt = clock.now();
     _lastSentText = text;
     _startCooldown(_cooldownSeconds);
 
