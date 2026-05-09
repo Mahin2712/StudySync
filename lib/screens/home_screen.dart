@@ -6,6 +6,7 @@ import 'leaderboard_screen.dart';
 import 'stats_dashboard_screen.dart';
 import 'profile_setup_screen.dart';
 import '../services/chat_service.dart';
+import '../services/dashboard_service.dart';
 import '../widgets/sidebar_chat.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _glowController;
   late Animation<double> _glowAnim;
   final bool _isSidebarExpanded = true;
@@ -25,12 +26,18 @@ class _HomeScreenState extends State<HomeScreen>
   // Chat
   final _chatService = ChatService();
 
+  // Dashboard Data
+  DashboardData? _dashboardData;
+  bool _isLoadingDashboard = true;
+  String? _dashboardError;
+
   String get _userEmail =>
       Supabase.instance.client.auth.currentUser?.email ?? 'Studier';
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _chatService.joinGlobalChat();
     _glowController = AnimationController(
       vsync: this,
@@ -39,13 +46,47 @@ class _HomeScreenState extends State<HomeScreen>
     _glowAnim = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
+    _loadDashboardData();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _glowController.dispose();
     _chatService.leaveGlobalChat();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadDashboardData();
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingDashboard = true;
+      _dashboardError = null;
+    });
+
+    try {
+      final data = await DashboardService.getDashboardData();
+      if (mounted) {
+        setState(() {
+          _dashboardData = data;
+          _isLoadingDashboard = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dashboardError = 'Failed to load dashboard data.';
+          _isLoadingDashboard = false;
+        });
+      }
+    }
   }
 
   Future<void> _signOut() async {
@@ -165,13 +206,15 @@ class _HomeScreenState extends State<HomeScreen>
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _outline,
+                    color: _isLoadingDashboard ? _outline : const Color(0xFF4CAF50),
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Quantum Physics Room • 0 Studiers',
-                  style: TextStyle(
+                Text(
+                  _isLoadingDashboard 
+                      ? 'StudySync Global • Loading...' 
+                      : 'StudySync Global • ${_dashboardData?.globalCount ?? 0} Active Studiers',
+                  style: const TextStyle(
                     
                     fontSize: 12,
                     color: _onSurfaceVariant,
@@ -505,36 +548,39 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ─── Main Canvas (Study Table) ─────────────────────────────────────────────
   Widget _buildMainCanvas() {
-    return Stack(
+    return Column(
       children: [
-        // Atmospheric glow
-        Center(
-          child: AnimatedBuilder(
-            animation: _glowAnim,
-            builder: (_, _) => Container(
-              width: 500 * _glowAnim.value,
-              height: 500 * _glowAnim.value,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    _primary.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
+        Expanded(
+          child: Stack(
+            children: [
+              // Atmospheric glow
+              Center(
+                child: AnimatedBuilder(
+                  animation: _glowAnim,
+                  builder: (_, _) => Container(
+                    width: 500 * _glowAnim.value,
+                    height: 500 * _glowAnim.value,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _primary.withValues(alpha: 0.04),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
 
-        Center(
-          child: SizedBox(
-            width: 520,
-            height: 520,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Table shadow
+              Center(
+                child: SizedBox(
+                  width: 520,
+                  height: 520,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Table shadow
                 Positioned(
                   top: 20,
                   child: Container(
@@ -671,7 +717,92 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ),
+            ],
+          ),
+        ),
+        _buildRecentRoomsSection(),
       ],
+    );
+  }
+
+  Widget _buildRecentRoomsSection() {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+      decoration: BoxDecoration(
+        color: _surface.withValues(alpha: 0.8),
+        border: Border(top: BorderSide(color: _outlineVariant.withValues(alpha: 0.12))),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Recent Rooms',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _onSurfaceVariant,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _isLoadingDashboard && _dashboardData == null
+                ? const Center(child: CircularProgressIndicator(color: _primary, strokeWidth: 2))
+                : _dashboardError != null && _dashboardData == null
+                    ? Center(child: Text(_dashboardError!, style: const TextStyle(color: Color(0xFFFF6B6B))))
+                    : (_dashboardData?.recentRooms ?? []).isEmpty
+                        ? Center(
+                            child: Text(
+                              'You haven\'t joined any rooms yet.',
+                              style: TextStyle(color: _onSurfaceVariant.withValues(alpha: 0.6), fontSize: 13, fontStyle: FontStyle.italic),
+                            ),
+                          )
+                        : ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _dashboardData!.recentRooms.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 16),
+                            itemBuilder: (context, index) {
+                              final r = _dashboardData!.recentRooms[index];
+                              return InkWell(
+                                onTap: () => RoomSheet.show(context),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 240,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: _surfaceHigh.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: _outlineVariant.withValues(alpha: 0.12)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        r.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: _onSurface, fontWeight: FontWeight.w600, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.login_rounded, size: 14, color: _primary),
+                                          const SizedBox(width: 6),
+                                          const Text('Rejoin', style: TextStyle(color: _primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -710,7 +841,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ─── Right Panel ───────────────────────────────────────────────────────────
-  // ─── Right Panel ───────────────────────────────────────────────────────────
   Widget _buildRightPanel({required bool isMobile, bool isExpanded = true}) {
     if (!isExpanded && !isMobile) return _buildNarrowRightRail();
     return Container(
@@ -721,100 +851,245 @@ class _HomeScreenState extends State<HomeScreen>
           left: BorderSide(color: Color(0x26A7ABB3), width: 1),
         ),
       ),
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Active Peers header
-                  const Text(
-                    'COLLABORATION',
-                    style: TextStyle(
-                      fontSize: 10,
-                      letterSpacing: 1.5,
-                      color: _onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Active Peers',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: _primary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Join the table to see who is studying.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _onSurfaceVariant,
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Leaderboard section
-                  Row(
-                    children: const [
-                      Icon(Icons.leaderboard_outlined,
-                          color: _onSurfaceVariant, size: 14),
-                      SizedBox(width: 6),
-                      Text(
-                        'LEADERBOARD',
-                        style: TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          color: _onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: _surfaceHigh.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _outlineVariant.withValues(alpha: 0.12),
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        color: _primary,
+        backgroundColor: _surfaceHighest,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Trending Rooms header
+                    const Text(
+                      'DISCOVER',
+                      style: TextStyle(
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        color: _onSurfaceVariant,
                       ),
                     ),
-                    child: const Column(
-                      children: [
-                        Icon(Icons.emoji_events_outlined,
-                            color: _outlineVariant, size: 28),
-                        SizedBox(height: 8),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Trending Rooms',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: _primary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    _buildTrendingRoomsSection(),
+
+                    const SizedBox(height: 28),
+
+                    // Leaderboard section
+                    Row(
+                      children: const [
+                        Icon(Icons.leaderboard_outlined,
+                            color: _onSurfaceVariant, size: 14),
+                        SizedBox(width: 6),
                         Text(
-                          'No active leaderboard yet.',
+                          'LEADERBOARD (ALL TIME)',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 10,
+                            letterSpacing: 1.5,
                             color: _onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    _buildLeaderboardSection(),
 
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverFillRemaining(
-            hasScrollBody: true,
-            child: SidebarChat(
-              chatService: _chatService,
-              isGlobal: true,
+            SliverFillRemaining(
+              hasScrollBody: true,
+              child: SidebarChat(
+                chatService: _chatService,
+                isGlobal: true,
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendingRoomsSection() {
+    if (_isLoadingDashboard && _dashboardData == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: _primary, strokeWidth: 2),
+        ),
+      );
+    }
+    
+    if (_dashboardError != null && _dashboardData == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _surfaceHigh.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _outlineVariant.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Color(0xFFFF6B6B)),
+            const SizedBox(height: 8),
+            Text(_dashboardError!, style: const TextStyle(color: _onSurfaceVariant, fontSize: 12)),
+            TextButton(
+              onPressed: _loadDashboardData,
+              child: const Text('Retry', style: TextStyle(color: _primary)),
+            )
+          ],
+        ),
+      );
+    }
+
+    final rooms = _dashboardData?.trendingRooms ?? [];
+    if (rooms.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _surfaceHigh.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _outlineVariant.withValues(alpha: 0.12)),
+        ),
+        child: const Column(
+          children: [
+            Icon(Icons.meeting_room_outlined, color: _outlineVariant, size: 28),
+            SizedBox(height: 8),
+            Text(
+              'No trending rooms yet.',
+              style: TextStyle(
+                fontSize: 13,
+                color: _onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        tilePadding: EdgeInsets.zero,
+        title: const Text('Top Rooms', style: TextStyle(color: _onSurface, fontSize: 13, fontWeight: FontWeight.w600)),
+        children: rooms.map((r) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.tag, color: _primary, size: 16),
+          title: Text(r.name, style: const TextStyle(color: _onSurface, fontSize: 13)),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person, color: _onSurfaceVariant, size: 12),
+              const SizedBox(width: 4),
+              Text('${r.memberCount}', style: const TextStyle(color: _onSurfaceVariant, fontSize: 12)),
+            ],
           ),
-        ],
+          onTap: () => RoomSheet.show(context),
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardSection() {
+    if (_isLoadingDashboard && _dashboardData == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: _primary, strokeWidth: 2),
+        ),
+      );
+    }
+    
+    if (_dashboardError != null && _dashboardData == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _surfaceHigh.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _outlineVariant.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Color(0xFFFF6B6B)),
+            const SizedBox(height: 8),
+            Text(_dashboardError!, style: const TextStyle(color: _onSurfaceVariant, fontSize: 12)),
+            TextButton(
+              onPressed: _loadDashboardData,
+              child: const Text('Retry', style: TextStyle(color: _primary)),
+            )
+          ],
+        ),
+      );
+    }
+
+    final lb = _dashboardData?.leaderboard ?? [];
+    if (lb.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _surfaceHigh.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _outlineVariant.withValues(alpha: 0.12)),
+        ),
+        child: const Column(
+          children: [
+            Icon(Icons.emoji_events_outlined, color: _outlineVariant, size: 28),
+            SizedBox(height: 8),
+            Text(
+              'No active leaderboard yet.',
+              style: TextStyle(
+                fontSize: 13,
+                color: _onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        tilePadding: EdgeInsets.zero,
+        title: const Text('Top Studiers', style: TextStyle(color: _onSurface, fontSize: 13, fontWeight: FontWeight.w600)),
+        children: lb.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final user = entry.value;
+          Color rankColor = _onSurfaceVariant;
+          if (idx == 0) rankColor = const Color(0xFFFFD700); // Gold
+          if (idx == 1) rankColor = const Color(0xFFC0C0C0); // Silver
+          if (idx == 2) rankColor = const Color(0xFFCD7F32); // Bronze
+          
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Text('#${idx + 1}', style: TextStyle(color: rankColor, fontWeight: FontWeight.bold, fontSize: 14)),
+            title: Text(user.username, style: const TextStyle(color: _onSurface, fontSize: 13)),
+            trailing: Text(user.formattedHours, style: const TextStyle(color: _primary, fontSize: 12, fontWeight: FontWeight.w600)),
+          );
+        }).toList(),
       ),
     );
   }

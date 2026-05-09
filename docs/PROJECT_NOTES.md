@@ -507,3 +507,24 @@ $content
 
 ⚠️ Notes / Issues
 - Supabase SDK v2 API changes required updating `signInWithOAuth` syntax. `dart analyze` passes with zero issues.
+
+[2026-05-09 03:38] — Phase 5 Polish & Optimization
+✅ Completed
+- Fixed compilation issues in HomeScreen and LeaderboardEntry.
+- Added database index idx_sessions_active_only for faster active session counting.
+- Verified absence of aggressive polling in dashboard architecture.
+
+🔧 Changes
+- [MODIFIED] lib/screens/home_screen.dart: Fixed undefined getter ormattedTime to ormattedHours, removed dead null-aware expressions for 
+ame and username.
+- [NEW] supabase/migrations/20260509000000_idx_sessions_active_only.sql: Created and applied migration for indexing active study sessions.
+
+📊 Status
+- Phase 5: Completed (100%).
+- Ready for Phase 6.
+
+🚀 Next Steps
+- Transition to Phase 6: Streak tracking, daily goals, gamification.
+
+⚠️ Notes / Issues
+- Dashboard loading is efficiently handled by app lifecycle events and pull-to-refresh, avoiding background polling to save Supabase limits.
