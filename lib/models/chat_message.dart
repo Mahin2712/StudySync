@@ -21,16 +21,28 @@ class ChatMessage {
 
   /// Parses a raw Broadcast payload map into a [ChatMessage].
   factory ChatMessage.fromBroadcast(Map<String, dynamic> payload) {
+    final rawReactions = payload['reactions'];
+    final Map<String, Set<String>> parsedReactions = {};
+
+    if (rawReactions is Map) {
+      rawReactions.forEach((key, value) {
+        if (value is Iterable) {
+          parsedReactions[key.toString()] =
+              value.map((e) => e.toString()).toSet();
+        }
+      });
+    }
+
     return ChatMessage(
-      messageId: (payload['message_id'] as String?) ?? '',
-      userId: (payload['user_id'] as String?) ?? '',
-      username: (payload['username'] as String?) ?? 'Anonymous',
-      text: (payload['text'] as String?) ?? '',
+      messageId: payload['message_id']?.toString() ?? '',
+      userId: payload['user_id']?.toString() ?? '',
+      username: payload['username']?.toString() ?? 'Unknown User',
+      text: payload['text']?.toString() ?? '',
       timestamp: DateTime.tryParse(
-            (payload['ts'] as String?) ?? '',
+            payload['ts']?.toString() ?? '',
           ) ??
           DateTime.now(),
-      reactions: {},
+      reactions: parsedReactions,
     );
   }
 
@@ -41,5 +53,8 @@ class ChatMessage {
         'username': username,
         'text': text,
         'ts': timestamp.toIso8601String(),
+        'reactions': reactions.map(
+          (key, value) => MapEntry(key, value.toList()),
+        ),
       };
 }
