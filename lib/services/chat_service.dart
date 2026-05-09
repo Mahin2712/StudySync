@@ -308,7 +308,10 @@ class ChatService extends ChangeNotifier {
     final userId = payload['user_id'] as String?;
 
     if (messageId == null || emoji == null || userId == null) return;
-    if (userId == _myUserId) return; // Prevent duplicate if self=true
+    // Prevent duplicate if self=true AND Guard against Identity Spoofing.
+    // If the payload claims to be from the local user but didn't originate here,
+    // it's either an echo or a spoofing attempt. Reject it.
+    if (userId == _myUserId) return;
 
     _applyReaction(messageId, emoji, userId, isGlobal: isGlobal);
   }
@@ -341,7 +344,8 @@ class ChatService extends ChangeNotifier {
 
   void _onIncomingMessage(Map<String, dynamic> payload, {required bool isGlobal}) {
     final msg = ChatMessage.fromBroadcast(payload);
-    if (msg.userId == _myUserId) return; // Prevent duplicate if self=true
+    // Prevent duplicate if self=true AND Guard against Identity Spoofing.
+    if (msg.userId == _myUserId) return;
 
     if (isGlobal) {
       _globalMessages.add(msg);
