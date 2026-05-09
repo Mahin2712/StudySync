@@ -528,3 +528,26 @@ ame and username.
 
 ⚠️ Notes / Issues
 - Dashboard loading is efficiently handled by app lifecycle events and pull-to-refresh, avoiding background polling to save Supabase limits.
+
+[2026-05-09 09:55] — HomeScreen Component Refactoring
+✅ Completed
+- Extracted ~1,000 lines of UI code from `home_screen.dart` into modular, domain-specific components.
+- Established a unified `AppColors` theme file to manage all design tokens.
+- Cleaned up unused imports and fixed minor linter warnings.
+
+🔧 Changes
+- [NEW] `lib/theme/app_colors.dart`: Centralized color tokens.
+- [NEW] `lib/models/dashboard_ui_state.dart`: Encapsulated dashboard state.
+- [NEW] `lib/widgets/dashboard/`: Added `top_app_bar.dart`, `left_sidebar.dart`, `main_canvas.dart`, `recent_rooms.dart`.
+- [NEW] `lib/widgets/dashboard/right_panel/`: Added `leaderboard_section.dart`, `trending_rooms.dart`, `narrow_right_rail.dart`, `right_panel.dart`.
+- [MODIFIED] `lib/screens/home_screen.dart`: Refactored into a lean controller coordinating modular widgets.
+
+📊 Status
+- Pre-Phase 6 Refactoring: Completed (100%).
+- Ready for Phase 6.
+
+🚀 Next Steps
+- Begin Phase 6: Database migrations for streak tracking, daily goals, and gamification.
+
+⚠️ Notes / Issues
+- `dart analyze lib` reports zero issues. The dashboard architecture is now clean and modularized for upcoming gamification additions.
