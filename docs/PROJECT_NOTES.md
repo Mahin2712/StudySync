@@ -650,3 +650,15 @@ ame and username.
 
 ⚠️ Notes / Issues
 - H3 popup-remains-open behavior means if the user ignores the snackbar, the 60-second auto-stop will still fire. This is intentional — the user must actively retry to confirm attendance.
+
+
+[2026-05-10 12:44]   Fixed Failing Smoke Test
+' Completed
+- Resolved crash in StudySync app smoke test.
+- Stubbed onAuthStateChange in MockGoTrueClient to support reactive AppRouter initialization.
+
+=' Changes
+- [MODIFIED] test/widget_test.dart: Added stub for onAuthStateChange returning Stream.empty().
+
+= Status
+- Phase: Pre-Phase 6 (Gamification). Smoke test stabilized.

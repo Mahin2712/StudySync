@@ -15,6 +15,7 @@ void main() {
     when(() => mockClient.auth).thenReturn(mockAuth);
     when(() => mockAuth.currentUser).thenReturn(null);
     when(() => mockAuth.currentSession).thenReturn(null);
+    when(() => mockAuth.onAuthStateChange).thenAnswer((_) => const Stream.empty());
 
     // Basic smoke test — just ensures the app builds without crashing
     await tester.pumpWidget(StudySyncApp(supabaseClient: mockClient));
