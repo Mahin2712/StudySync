@@ -29,7 +29,8 @@ class LeaderboardService {
       _fetch('leaderboard_all_time');
 
   static Future<List<LeaderboardEntry>> _fetch(String viewName) async {
-    final data = await _client.from(viewName).select();
+    // M3 fix: cap at 100 rows so the full view is not transferred on every poll.
+    final data = await _client.from(viewName).select().limit(100);
     return (data as List<dynamic>)
         .map((j) => LeaderboardEntry.fromJson(j as Map<String, dynamic>))
         .toList();

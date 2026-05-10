@@ -42,21 +42,20 @@ class RoomService {
 
   /// Join a room (upsert into room_members).
   ///
-  /// Fix #3: Replaces the read-then-insert sequence with a single atomic
-  /// upsert so concurrent joins from the same user never produce duplicate
-  /// rows. Works regardless of whether a DB UNIQUE constraint exists, and is
-  /// fully safe with one (no exception is raised on conflict).
+  /// Joins the given room for the current user.
   ///
-  /// Force-closes this device's active study session before joining to prevent
-  /// "ghost studier" rows when the user hops between rooms.
+  /// The membership upsert is performed first. The active study session is only
+  /// force-closed after the join is confirmed, so a failed join (network error,
+  /// RLS rejection, etc.) leaves the user's current session intact.
+  ///
+  /// H2 fix: reversed the previous order (close → join) which could permanently
+  /// destroy the active session when the join failed.
   static Future<void> joinRoom(String roomId) async {
     final userId = _client.auth.currentUser!.id;
 
-    // 1. Kill any active session (ghost-session prevention).
-    await SessionService.forceCloseActiveSession();
-
-    // 2. Idempotent upsert — succeeds whether the membership row already
+    // 1. Idempotent upsert — succeeds whether the membership row already
     //    exists or not. onConflict targets the unique index on (room_id, user_id).
+    //    Throws on any backend error; session is still active at this point.
     await _client.from('room_members').upsert(
       {
         'room_id': roomId,
@@ -65,6 +64,10 @@ class RoomService {
       onConflict: 'room_id,user_id',
       ignoreDuplicates: true,
     );
+
+    // 2. Join confirmed — now safe to close the previous session.
+    //    Ghost-studier rows from the old room are cleaned up here.
+    await SessionService.forceCloseActiveSession();
   }
 
   /// Leave a room

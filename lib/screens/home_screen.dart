@@ -22,6 +22,10 @@ class _HomeScreenState extends State<HomeScreen>
   final bool _isSidebarExpanded = true;
   bool _isRightSidebarExpanded = true;
 
+  // H1 fix: key gives the callback direct access to this Scaffold's state,
+  // avoiding Scaffold.of(capturedContext) where capturedContext is above the Scaffold.
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   // Chat
   final _chatService = ChatService();
 
@@ -97,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen>
     final isNarrow = screenWidth < 900;
 
     return Scaffold(
+      key: _scaffoldKey,
       endDrawer: isNarrow ? Drawer(
         width: 320,
         backgroundColor: const Color(0xFF111417),
@@ -133,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen>
                 uiState: _uiState,
                 onToggleRightSidebar: () {
                   if (isNarrow) {
-                    Scaffold.of(context).openEndDrawer();
+                    _scaffoldKey.currentState?.openEndDrawer();
                   } else {
                     setState(() => _isRightSidebarExpanded = !_isRightSidebarExpanded);
                   }

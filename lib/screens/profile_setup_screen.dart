@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_service.dart';
-import 'home_screen.dart';
+import 'app_router.dart';
 
 /// Forced onboarding screen shown to any user whose profile is incomplete.
 /// Also used to edit an existing profile when [isEditing] is true.
@@ -81,8 +81,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         // Return to caller (home screen) after a successful edit.
         Navigator.of(context).pop();
       } else {
+        // M4 fix: route through AppRouter so the profile-completeness gate
+        // and auth state are re-evaluated before landing on HomeScreen.
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const AppRouter()),
         );
       }
     } catch (e) {

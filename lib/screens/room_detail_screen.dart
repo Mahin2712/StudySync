@@ -278,7 +278,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
       if (mounted) setState(() => _memberIds = ids);
 
-    } catch (_) {}
+    } catch (e) {
+      // M1 fix: log so backend/RLS failures are visible to operators.
+      debugPrint('[RoomDetail] _loadMembers failed: $e');
+    }
 
   }
 
@@ -336,7 +339,10 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
       }
 
-    } catch (_) {}
+    } catch (e) {
+      // M1 fix: log so backend/RLS failures are visible to operators.
+      debugPrint('[RoomDetail] _loadSessionState failed: $e');
+    }
 
   }
 
@@ -1232,10 +1238,21 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
       }
 
-    } catch (_) {
-
-      if (mounted) setState(() => _checkinPopupShowing = false);
-
+    } catch (e) {
+      // H3 fix: do NOT dismiss the popup — leave it open so the user can retry.
+      // The 60-second auto-stop timer is already armed; if the confirm actually
+      // failed at the DB level, the session may be terminated unless the user
+      // retries successfully before the timer fires.
+      debugPrint('[RoomDetail] confirmCheckin failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Check-in failed — please tap "I\'m Here" again.'),
+            backgroundColor: Color(0xFF5C1A1C),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
     }
 
   }
