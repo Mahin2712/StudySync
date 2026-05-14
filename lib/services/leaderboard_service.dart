@@ -39,10 +39,8 @@ class LeaderboardService {
   // Personal stats for current user
 
   /// Fetches boundary-correct personal stats via the [get_my_stats] DB RPC.
-  ///
-  /// [userId] is kept in the signature for call-site compatibility but is
-  /// ignored. The RPC enforces the current user's identity server-side.
-  static Future<UserStats> getUserStats(String userId) async {
+  /// The RPC enforces the current user's identity server-side.
+  static Future<UserStats> getUserStats() async {
     final data = await _client.rpc('get_my_stats');
     if (data == null) {
       throw const StatsLoadException('Stats are unavailable right now.');

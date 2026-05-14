@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/leaderboard_entry_model.dart';
 import '../services/leaderboard_service.dart';
 import '../services/subject_service.dart';
@@ -47,10 +46,8 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
       _error = null;
     });
     try {
-      final uid = Supabase.instance.client.auth.currentUser?.id;
-      if (uid == null) throw Exception('Not logged in');
       await SubjectService.getSubjects(); // Prefetch dynamic subjects cache
-      final stats = await LeaderboardService.getUserStats(uid);
+      final stats = await LeaderboardService.getUserStats();
       if (mounted) {
         setState(() {
           _stats = stats;

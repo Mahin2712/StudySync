@@ -76,7 +76,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
 
       if (_myUserId.isNotEmpty) {
         try {
-          stats = await LeaderboardService.getUserStats(_myUserId);
+          stats = await LeaderboardService.getUserStats();
         } catch (e) {
           statsError = e.toString();
         }
