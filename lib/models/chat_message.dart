@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 /// Model for an ephemeral Broadcast chat message.
 /// Messages are never persisted to the database.
 class ChatMessage {
@@ -21,12 +23,12 @@ class ChatMessage {
 
   /// Parses a raw Broadcast payload map into a [ChatMessage].
   factory ChatMessage.fromBroadcast(Map<String, dynamic> payload) {
-    final rawReactions = payload['reactions'];
+    // Safely parse reactions
     final Map<String, Set<String>> parsedReactions = {};
-
+    final rawReactions = payload['reactions'];
     if (rawReactions is Map) {
       rawReactions.forEach((key, value) {
-        if (value is Iterable) {
+        if (value is List) {
           parsedReactions[key.toString()] =
               value.map((e) => e.toString()).toSet();
         }
@@ -41,7 +43,7 @@ class ChatMessage {
       timestamp: DateTime.tryParse(
             payload['ts']?.toString() ?? '',
           ) ??
-          DateTime.now(),
+          clock.now(),
       reactions: parsedReactions,
     );
   }
@@ -53,8 +55,6 @@ class ChatMessage {
         'username': username,
         'text': text,
         'ts': timestamp.toIso8601String(),
-        'reactions': reactions.map(
-          (key, value) => MapEntry(key, value.toList()),
-        ),
+        'reactions': reactions.map((key, value) => MapEntry(key, value.toList())),
       };
 }
