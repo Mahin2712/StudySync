@@ -45,9 +45,11 @@ class _RoomSheetState extends State<RoomSheet> {
   Future<void> _loadRooms() async {
     setState(() => _isLoadingRooms = true);
     try {
-      final rooms = await RoomService.fetchRooms();
-      final subjects = await SubjectService.getSubjects();
-      
+      final [rooms, subjects] = await Future.wait([
+        RoomService.fetchRooms(),
+        SubjectService.getSubjects(),
+      ]);
+
       final categorized = <String, List<SubjectModel>>{};
       for (final s in subjects) {
         categorized.putIfAbsent(s.category, () => []).add(s);
@@ -162,8 +164,8 @@ class _RoomSheetState extends State<RoomSheet> {
   }
 
   PageRouteBuilder _fadeRoute(Widget page) => PageRouteBuilder(
-        pageBuilder: (_, _, _) => page,
-        transitionsBuilder: (_, anim, _, child) =>
+        pageBuilder: (_, __, ___) => page,
+        transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 300),
       );
