@@ -45,10 +45,10 @@ class _RoomSheetState extends State<RoomSheet> {
   Future<void> _loadRooms() async {
     setState(() => _isLoadingRooms = true);
     try {
-      final [rooms, subjects] = await Future.wait([
-        RoomService.fetchRooms(),
-        SubjectService.getSubjects(),
-      ]);
+      final roomsFuture = RoomService.fetchRooms();
+      final subjectsFuture = SubjectService.getSubjects();
+      final rooms = await roomsFuture;
+      final subjects = await subjectsFuture;
 
       final categorized = <String, List<SubjectModel>>{};
       for (final s in subjects) {
