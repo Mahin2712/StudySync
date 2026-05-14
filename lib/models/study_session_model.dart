@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 enum CheckinStatus { active, warning }
 
 class StudySessionModel {
@@ -36,13 +38,13 @@ class StudySessionModel {
   });
 
   /// Always computed from DB start_time → never stored incrementally.
-  Duration get elapsed => DateTime.now().toUtc().difference(startTime.toUtc());
+  Duration get elapsed => (clock.now()).toUtc().difference(startTime.toUtc());
 
   /// How long ago the user last confirmed activity.
   /// This is the SINGLE SOURCE OF TRUTH for check-in decisions.
   Duration get timeSinceActivity {
     final ref = lastActivityAt ?? startTime;
-    return DateTime.now().toUtc().difference(ref.toUtc());
+    return (clock.now()).toUtc().difference(ref.toUtc());
   }
 
   /// True if the check-in popup should be shown.
