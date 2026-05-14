@@ -662,3 +662,51 @@ ame and username.
 
 = Status
 - Phase: Pre-Phase 6 (Gamification). Smoke test stabilized.
+
+[2026-05-14 10:24] — Merged All 8 Open Pull Requests (Jules-generated)
+✅ Completed
+- Authenticated GitHub CLI (gh v2.92.0) as Mahin2712.
+- Merged all 8 open PRs into `main` in safe dependency order, resolving 3 rebase conflicts.
+
+🔧 Changes
+- [MERGED] PR #23: 🔒 fix: secure UUID generation in DeviceIdentityService — no conflicts.
+- [MERGED] PR #19: 🧪 test: add tests for ChapterService — no conflicts.
+- [MERGED] PR #20: ⚡ perf: parallelize RoomSheet network requests — no conflicts.
+- [MERGED] PR #22: 🧪 test: StudySessionModel improvements — rebased (widget_test.dart: kept Stream.empty() stub).
+- [MERGED] PR #25: 🧹 refactor: remove unused userId from getUserStats — no conflicts.
+- [MERGED] PR #21: 🧪 test: ChatMessage serialization tests — no conflicts.
+- [MERGED] PR #24: 🧪 test: harden ChatMessage with deterministic clock tests — rebased (chat_message.dart + chat_message_test.dart: kept clock-based hardened version).
+- [MERGED] PR #26: 🔍 feat: Codex Audit hardening + AUDIT_REPORT.md — rebased (pubspec.yaml SDK constraint: kept ^3.11.0).
+- All 8 feature branches deleted post-merge. 0 open PRs remain.
+
+📊 Status
+- Phase: Pre-Phase 6 (Gamification). Main branch clean, all audit/testing PRs landed.
+- Test coverage added: ChapterService, DeviceIdentityService, StudySessionModel, ChatMessage (x2), RoomSheet benchmark.
+
+🚀 Next Steps
+- Run `flutter test` locally to validate all newly merged tests pass.
+- Proceed to Phase 6: Streak tracking, daily goals, gamification.
+
+⚠️ Notes / Issues
+- PR #24 supersedes PR #21 on chat_message_test.dart (clock-based determinism is the canonical version).
+- No CI configured on repo — all merges manually reviewed and rebased.
+
+[2026-05-14 10:29] — Fix Post-Merge Test Compilation Error
+✅ Completed
+- Identified compilation error in lib/screens/room_sheet.dart introduced by PR #20 (parallelize RoomSheet).
+- Root cause: `Future.wait([Future<List<RoomModel>>, Future<List<SubjectModel>>])` collapses to `Future<List<Object>>`, causing Dart's type system to lose concrete types on destructure.
+- Fix: Replaced list destructuring pattern with explicit typed `await` on separate futures (preserves parallelism via pre-launching both futures before awaiting).
+- All 34 tests now pass: 0 failures, 0 errors.
+
+🔧 Changes
+- [MODIFIED] lib/screens/room_sheet.dart: Replaced `Future.wait` list destructure with `roomsFuture`/`subjectsFuture` pattern.
+
+📊 Status
+- Phase: Pre-Phase 6 (Gamification). All 34 tests green. `main` is clean and stable.
+
+🚀 Next Steps
+- Proceed to Phase 6: Streak tracking, daily goals, gamification.
+
+⚠️ Notes / Issues
+- `Future.wait` with mixed-type futures is a known Dart gotcha — always use typed parallel awaits or `(await f1, await f2)` record syntax instead.
+

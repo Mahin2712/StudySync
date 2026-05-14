@@ -1,0 +1,424 @@
+# Phase 6 — Stats Expansion & Gamification Foundation
+
+**Continuing from:** Pre-Phase 6 (All 34 tests green, `main` is clean and stable, all audit PRs merged)
+**Goal:** Add streak tracking, daily goal setting, goal progress visualization, and a daily to-do list — the core gamification loop that makes studying feel rewarding.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Backend-first approach.** Per the Codex audit, we will verify the existing Supabase schema/RPCs first (Sub-phase 0), then proceed incrementally. No frontend changes ship without backend migration being applied and tested.
+
+> [!WARNING]
+> **`get_my_stats` is sacred.** The existing RPC returns `{daily, weekly, monthly, total, subject_breakdown}`. All Phase 6 changes are **additive** — we will create a *new* RPC `get_gamification_stats` rather than altering the existing one. The `LeaderboardService.getUserStats()` contract remains untouched.
+
+> [!IMPORTANT]
+> **Scope boundaries — what's IN and what's OUT of Phase 6:**
+> - ✅ IN: Streak tracking, Daily goal, Goal progress visualization, Daily To-Do list
+> - ❌ OUT (deferred to Phase 6+): Unlockable themes, Exam alerts, Chapter progress tracking
+> - Rationale: The Codex audit recommends starting with the low-risk slice. Unlockable themes depend on streaks being stable first. Exam alerts and chapter progress are high-effort, high-risk items.
+
+---
+
+## Resolved Design Decisions
+
+> [!NOTE]
+> **Q1: Streak timezone — RESOLVED → Asia/Dhaka (UTC+6).**
+> The streak "day boundary" uses `Asia/Dhaka` timezone, matching the user base. The `update_streak` RPC will compute `(now() AT TIME ZONE 'Asia/Dhaka')::date` instead of `CURRENT_DATE`.
+
+> [!NOTE]
+> **Q2: Daily goal default — RESOLVED → 0 (prompt to set).**
+> New users see `daily_goal_minutes = 0`, which triggers a "Set your daily goal" prompt in the UI. No implicit default.
+
+> [!NOTE]
+> **Q3: To-Do persistence — RESOLVED → Both options.**
+> To-do items persist until manually completed/deleted. Additionally, an `auto_reset_daily` boolean flag on each item allows users to mark items as "recurring daily" — these auto-uncheck at day boundary (Dhaka time). Default is `false` (persistent).
+
+---
+
+## Proposed Changes
+
+### Sub-phase 0 — Backend Contract Verification
+
+*Addresses Codex audit caveat: "ready for Phase 6 without a backend-contract check first, no"*
+
+#### Verification Steps (no code changes)
+
+1. **Export and verify** the `get_my_stats` RPC definition — ✅ Already done during research. The RPC returns exactly `{daily, weekly, monthly, total, subject_breakdown}` as expected.
+2. **Verify** the `profiles` table schema — ✅ Confirmed: 9 columns, RLS enabled, insert/update/select policies in place.
+3. **Verify** leaderboard views exist — ✅ Confirmed: `leaderboard_daily`, `leaderboard_weekly`, `leaderboard_monthly`, `leaderboard_all_time`, `leaderboard_subject_all_time`, `room_member_counts`, `public_profiles`.
+4. **Add a targeted test** for the `UserStats` payload shape to catch any future RPC drift.
+
+#### [NEW] [user_stats_shape_test.dart](file:///c:/Users/SER/StudySync/test/models/user_stats_shape_test.dart)
+- Unit test that asserts `UserStats` can be constructed from a mock payload matching the exact `get_my_stats` contract.
+- Verifies all 5 top-level keys: `daily`, `weekly`, `monthly`, `total`, `subjectBreakdown`.
+
+---
+
+### Sub-phase 1 — Streak Tracking
+
+*Lowest risk. Purely additive DB columns + new RPC + new service + dashboard UI integration.*
+
+#### DB Migration: `add_streak_columns`
+
+```sql
+-- Add streak tracking columns to profiles
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS current_streak_days  integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS longest_streak_days  integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_study_date      date;
+
+-- RPC: Recalculate streak on session completion
+-- Called from the client after stopSession() succeeds
+CREATE OR REPLACE FUNCTION public.update_streak()
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_uid         uuid := auth.uid();
+  v_today       date := (now() AT TIME ZONE 'Asia/Dhaka')::date;
+  v_last_date   date;
+  v_streak      integer;
+  v_longest     integer;
+BEGIN
+  SELECT last_study_date, current_streak_days, longest_streak_days
+  INTO v_last_date, v_streak, v_longest
+  FROM public.profiles
+  WHERE id = v_uid;
+
+  IF v_last_date IS NULL OR v_last_date < v_today - 1 THEN
+    -- Streak broken or first ever session
+    v_streak := 1;
+  ELSIF v_last_date = v_today - 1 THEN
+    -- Consecutive day — extend streak
+    v_streak := v_streak + 1;
+  ELSIF v_last_date = v_today THEN
+    -- Already studied today — no change
+    -- (streak stays the same, just update last_study_date for safety)
+    NULL;
+  END IF;
+
+  IF v_streak > v_longest THEN
+    v_longest := v_streak;
+  END IF;
+
+  UPDATE public.profiles
+  SET current_streak_days = v_streak,
+      longest_streak_days = v_longest,
+      last_study_date     = v_today,
+      updated_at          = now()
+  WHERE id = v_uid;
+
+  RETURN json_build_object(
+    'current_streak', v_streak,
+    'longest_streak', v_longest,
+    'last_study_date', v_today
+  );
+END;
+$$;
+```
+
+> [!NOTE]
+> The `update_streak` RPC uses `(now() AT TIME ZONE 'Asia/Dhaka')::date` for day boundaries, matching the user base in Dhaka (UTC+6).
+
+#### [NEW] [streak_service.dart](file:///c:/Users/SER/StudySync/lib/services/streak_service.dart)
+
+```dart
+class StreakData {
+  final int currentStreak;
+  final int longestStreak;
+  final String? lastStudyDate;
+}
+
+class StreakService {
+  /// Fetches current streak info from the profiles table.
+  static Future<StreakData> getStreak();
+  
+  /// Calls the update_streak RPC after a session ends.
+  /// Should be called from SessionService.stopSession() flow.
+  static Future<StreakData> updateStreak();
+}
+```
+
+#### [MODIFY] [profile_model.dart](file:///c:/Users/SER/StudySync/lib/models/profile_model.dart)
+- Add fields: `currentStreakDays`, `longestStreakDays`, `lastStudyDate`
+- Update `fromJson` to parse the new columns (with safe defaults)
+
+#### [MODIFY] [session_service.dart](file:///c:/Users/SER/StudySync/lib/services/session_service.dart)
+- After `stopSession()` succeeds, call `StreakService.updateStreak()` to refresh the streak counter.
+- This is a fire-and-forget call — session stop should not fail if streak update fails.
+
+#### [MODIFY] [main_canvas.dart](file:///c:/Users/SER/StudySync/lib/widgets/dashboard/main_canvas.dart) or [NEW] streak widget
+- Add a small **streak badge** on the dashboard showing 🔥 and the current streak count.
+- Positioned near the table center or in the top-left of the main canvas area.
+
+#### [MODIFY] [stats_dashboard_screen.dart](file:///c:/Users/SER/StudySync/lib/screens/stats_dashboard_screen.dart)
+- Add a new **Streak card** in the overview section (alongside Today/Weekly/Monthly/All Time).
+- Shows `🔥 X days` with the current streak and `Best: Y days` subtitle.
+
+---
+
+### Sub-phase 2 — Daily Goal Setting & Progress
+
+*Builds on streak infrastructure. Adds goal column to profiles, visualization on dashboard.*
+
+#### DB Migration: `add_daily_goal_column`
+
+```sql
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS daily_goal_minutes integer NOT NULL DEFAULT 0;
+
+-- Update the public_profiles view to include goal (non-sensitive)
+CREATE OR REPLACE VIEW public.public_profiles AS
+SELECT
+  id, username, student_name, school_name,
+  avatar_url, profile_complete, created_at,
+  current_streak_days, longest_streak_days,
+  daily_goal_minutes
+FROM public.profiles;
+```
+
+#### [NEW] [goal_service.dart](file:///c:/Users/SER/StudySync/lib/services/goal_service.dart)
+
+```dart
+class GoalService {
+  /// Get the user's daily goal in minutes (0 = no goal set).
+  static Future<int> getDailyGoal();
+  
+  /// Set/update the daily goal (persists to profiles table).
+  static Future<void> setDailyGoal(int minutes);
+  
+  /// Get today's progress toward the daily goal.
+  /// Returns minutes studied today (from get_my_stats daily * 60).
+  static Future<GoalProgress> getTodayProgress();
+}
+
+class GoalProgress {
+  final int goalMinutes;       // 0 if not set
+  final double studiedMinutes; // from daily stats
+  final bool isGoalMet;
+}
+```
+
+#### [MODIFY] [profile_model.dart](file:///c:/Users/SER/StudySync/lib/models/profile_model.dart)
+- Add field: `dailyGoalMinutes`
+
+#### [MODIFY] [profile_setup_screen.dart](file:///c:/Users/SER/StudySync/lib/screens/profile_setup_screen.dart)
+- Add an **optional** daily goal picker in the profile setup flow.
+- Slider or preset buttons: 30m / 1h / 2h / 3h / Custom.
+
+#### [NEW] [goal_progress_card.dart](file:///c:/Users/SER/StudySync/lib/widgets/dashboard/goal_progress_card.dart)
+- Circular progress indicator showing today's study time vs. daily goal.
+- Placed on the dashboard (right panel or main canvas area).
+- States:
+  - **No goal set:** "Set your daily goal" prompt with a button.
+  - **In progress:** Ring filling up with percentage text.
+  - **Goal met:** Celebratory state with checkmark and confetti-like subtle animation.
+
+#### [MODIFY] [stats_dashboard_screen.dart](file:///c:/Users/SER/StudySync/lib/screens/stats_dashboard_screen.dart)
+- Add a **Daily Goal Progress** section after the overview cards.
+- Shows the ring + "X of Y minutes" text.
+
+#### [MODIFY] [dashboard_service.dart](file:///c:/Users/SER/StudySync/lib/services/dashboard_service.dart)
+- Add streak and goal data to `DashboardData` model so the dashboard can display them without extra network calls.
+
+#### [MODIFY] [DashboardData model](file:///c:/Users/SER/StudySync/lib/services/dashboard_service.dart)
+- Add fields: `currentStreak`, `longestStreak`, `dailyGoalMinutes`, `dailyStudiedMinutes`
+
+---
+
+### Sub-phase 3 — Daily To-Do List
+
+*New table. Isolated feature — no interaction with existing stats/leaderboard contracts.*
+
+#### DB Migration: `create_todos_table`
+
+```sql
+CREATE TABLE public.todos (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title             text NOT NULL,
+  is_done           boolean NOT NULL DEFAULT false,
+  due_date          date,                          -- optional, nullable
+  subject           text,                          -- optional link to subject
+  auto_reset_daily  boolean NOT NULL DEFAULT false, -- if true, unchecks at Dhaka midnight
+  sort_order        integer NOT NULL DEFAULT 0,
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  updated_at        timestamptz NOT NULL DEFAULT now()
+);
+
+-- RLS: Users can only see/modify their own todos
+ALTER TABLE public.todos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own todos"
+  ON public.todos FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own todos"
+  ON public.todos FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own todos"
+  ON public.todos FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own todos"
+  ON public.todos FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Index for efficient user-scoped queries
+CREATE INDEX idx_todos_user_id ON public.todos(user_id);
+CREATE INDEX idx_todos_user_due ON public.todos(user_id, due_date);
+```
+
+#### [NEW] [todo_model.dart](file:///c:/Users/SER/StudySync/lib/models/todo_model.dart)
+
+```dart
+class TodoModel {
+  final String id;
+  final String userId;
+  final String title;
+  final bool isDone;
+  final DateTime? dueDate;
+  final String? subject;
+  final bool autoResetDaily; // true = unchecks at Dhaka midnight
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+}
+```
+
+#### [NEW] [todo_service.dart](file:///c:/Users/SER/StudySync/lib/services/todo_service.dart)
+
+```dart
+class TodoService {
+  /// Fetch all todos for the current user, ordered by sort_order.
+  static Future<List<TodoModel>> getTodos();
+  
+  /// Fetch only today's todos (due_date = today or null + not done).
+  static Future<List<TodoModel>> getTodaysTodos();
+  
+  /// Create a new todo item.
+  static Future<TodoModel> createTodo({
+    required String title,
+    DateTime? dueDate,
+    String? subject,
+  });
+  
+  /// Toggle done/undone.
+  static Future<void> toggleTodo(String id, bool isDone);
+  
+  /// Update title, due date, or subject.
+  static Future<void> updateTodo(String id, {String? title, DateTime? dueDate, String? subject});
+  
+  /// Delete a todo permanently.
+  static Future<void> deleteTodo(String id);
+  
+  /// Reorder todos (update sort_order for a batch).
+  static Future<void> reorderTodos(List<String> orderedIds);
+}
+```
+
+#### [NEW] [todo_list_widget.dart](file:///c:/Users/SER/StudySync/lib/widgets/dashboard/todo_list_widget.dart)
+- Compact to-do list matching the existing design system (dark theme tokens).
+- Features:
+  - Add new item (inline text field)
+  - Tap to toggle done (strikethrough animation)
+  - Swipe to delete
+  - Optional subject tag chip
+  - Empty state: "All clear! Add your first task."
+- Positioned in the **right panel** below the chat section, or as a collapsible panel.
+
+#### [MODIFY] [left_sidebar.dart](file:///c:/Users/SER/StudySync/lib/widgets/dashboard/left_sidebar.dart)
+- Add a "To-Do" nav item in the sidebar with a badge showing uncompleted count.
+
+---
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph "Phase 6 — New Components"
+        A[streak_service.dart] --> B[update_streak RPC]
+        C[goal_service.dart] --> D[profiles.daily_goal_minutes]
+        E[todo_service.dart] --> F[todos table]
+    end
+
+    subgraph "Existing — DO NOT MODIFY"
+        G[get_my_stats RPC]
+        H[LeaderboardService.getUserStats]
+        I[UserStats model]
+        G --> H --> I
+    end
+
+    subgraph "UI Layer"
+        J[Streak Badge Widget]
+        K[Goal Progress Card]
+        L[Todo List Widget]
+        M[Stats Dashboard Screen]
+    end
+
+    A --> J
+    A --> M
+    C --> K
+    C --> M
+    E --> L
+
+    style G fill:#2d1f1f,stroke:#ff6b6b,color:#fff
+    style H fill:#2d1f1f,stroke:#ff6b6b,color:#fff
+    style I fill:#2d1f1f,stroke:#ff6b6b,color:#fff
+```
+
+---
+
+## File Change Summary
+
+| File | Action | Sub-phase |
+|------|--------|-----------|
+| `test/models/user_stats_shape_test.dart` | NEW | 0 |
+| `profiles` table (DB migration) | ALTER | 1 |
+| `update_streak` RPC (DB) | NEW | 1 |
+| `lib/services/streak_service.dart` | NEW | 1 |
+| `lib/models/profile_model.dart` | MODIFY | 1, 2 |
+| `lib/services/session_service.dart` | MODIFY | 1 |
+| `lib/widgets/dashboard/streak_badge.dart` | NEW | 1 |
+| `lib/screens/stats_dashboard_screen.dart` | MODIFY | 1, 2 |
+| `profiles.daily_goal_minutes` (DB migration) | ALTER | 2 |
+| `lib/services/goal_service.dart` | NEW | 2 |
+| `lib/widgets/dashboard/goal_progress_card.dart` | NEW | 2 |
+| `lib/screens/profile_setup_screen.dart` | MODIFY | 2 |
+| `lib/services/dashboard_service.dart` | MODIFY | 2 |
+| `todos` table (DB migration) | NEW | 3 |
+| `lib/models/todo_model.dart` | NEW | 3 |
+| `lib/services/todo_service.dart` | NEW | 3 |
+| `lib/widgets/dashboard/todo_list_widget.dart` | NEW | 3 |
+| `lib/widgets/dashboard/left_sidebar.dart` | MODIFY | 3 |
+
+---
+
+## Verification Plan
+
+### Automated Tests
+
+1. **`user_stats_shape_test.dart`** — Validates that the `UserStats` model correctly parses a mock `get_my_stats` payload. Run: `flutter test test/models/user_stats_shape_test.dart`
+2. **`streak_service_test.dart`** — Unit tests for streak calculation edge cases: first session, consecutive days, gap breaks streak, same-day double session.
+3. **`todo_model_test.dart`** — JSON roundtrip test for `TodoModel`.
+4. **`flutter test`** — Full test suite must remain at 0 failures after each sub-phase.
+5. **`dart analyze lib`** — Must remain clean (0 warnings, 0 errors) after each sub-phase.
+
+### Backend Verification
+
+1. After each DB migration: run the migration SQL, then verify with `SELECT column_name FROM information_schema.columns WHERE table_name = 'profiles'` (or `todos`).
+2. After `update_streak` RPC: test directly via `SELECT public.update_streak()` in SQL editor.
+3. After `todos` table: verify RLS by testing CRUD as authenticated user.
+
+### Manual Verification
+
+1. **Streak flow:** Start a session → stop it → verify streak increments on dashboard.
+2. **Goal flow:** Set a daily goal → study → verify ring progress updates.
+3. **To-Do flow:** Create/toggle/delete items → verify persistence across page reloads.
+4. **Regression:** Verify `stats_dashboard_screen` still shows the existing 4 overview cards + subject breakdown correctly.
+5. **Leaderboard:** Verify leaderboard screen is completely unaffected.
