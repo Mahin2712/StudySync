@@ -268,11 +268,14 @@ class ChapterService {
   /// Returns the chapter list for [subjectKey], or [] if unknown.
   ///
   /// [subjectKey] should match the key used in [SubjectService] (lower-case).
-  static List<String> getChapters(String subjectKey) {
+  static List<String> getChapters(String? subjectKey) {
+    if (subjectKey == null) return [];
     return _chapters[subjectKey.toLowerCase().trim()] ?? [];
   }
 
   /// True if this subject has a known chapter list.
-  static bool hasChapters(String subjectKey) =>
-      _chapters.containsKey(subjectKey.toLowerCase().trim());
+  static bool hasChapters(String? subjectKey) {
+    if (subjectKey == null) return false;
+    return _chapters.containsKey(subjectKey.toLowerCase().trim());
+  }
 }
