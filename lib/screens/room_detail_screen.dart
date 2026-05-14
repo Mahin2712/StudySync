@@ -288,6 +288,11 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
 
 
   Future<void> _loadSessionState() async {
+    // Fix: Prevent state overwrite during sensitive transitions.
+    if (_sessionState == LocalSessionState.starting ||
+        _sessionState == LocalSessionState.stopping) {
+      return;
+    }
 
     try {
 
@@ -306,9 +311,9 @@ class _RoomDetailScreenState extends State<RoomDetailScreen>
         final now = DateTime.now();
 
         for (final uid in oldIds.difference(newIds)) {
-
-          if (uid != _myUserId) _recentlyMissedUserIds[uid] = now;
-
+          if (uid != _myUserId) {
+            _recentlyMissedUserIds[uid] = now;
+          }
         }
 
 
