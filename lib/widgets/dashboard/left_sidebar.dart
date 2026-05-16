@@ -118,6 +118,11 @@ class DashboardLeftSidebar extends StatelessWidget {
             label: 'Session Info',
             disabled: true,
           ),
+          _sidebarItem(
+            icon: Icons.checklist_rounded,
+            label: 'To-Do',
+            disabled: false,
+          ),
 
           const Spacer(),
 

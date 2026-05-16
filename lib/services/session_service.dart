@@ -1,11 +1,12 @@
 import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/study_session_model.dart';
 import 'device_identity_service.dart';
+import 'streak_service.dart';
 
 class SessionService {
   static final _client = Supabase.instance.client;
@@ -73,6 +74,13 @@ class SessionService {
         .eq('user_id', _uid)
         .eq('device_id', deviceId)
         .eq('is_active', true);
+
+    // Phase 6: Fire-and-forget streak update after session stop.
+    // Streak update failure must never block the session stop flow.
+    StreakService.updateStreak().catchError((e) {
+      debugPrint('[SessionService] Streak update after stopSession failed: $e');
+      return StreakData.zero;
+    });
   }
 
   // Auto-stop (missed check-in)

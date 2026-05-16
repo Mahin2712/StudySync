@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/leaderboard_entry_model.dart';
 import '../services/leaderboard_service.dart';
 import '../services/subject_service.dart';
+import '../services/streak_service.dart';
+import '../services/goal_service.dart';
 
 /// Self-insight stats dashboard for the current user.
 /// Shows time overview cards (Today / Week / Month / Total) and
@@ -34,6 +36,10 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
   bool _isLoading = true;
   String? _error;
 
+  // Phase 6: Gamification state
+  StreakData _streak = StreakData.zero;
+  GoalProgress _goalProgress = GoalProgress.zero;
+
   @override
   void initState() {
     super.initState();
@@ -47,10 +53,16 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
     });
     try {
       await SubjectService.getSubjects(); // Prefetch dynamic subjects cache
-      final stats = await LeaderboardService.getUserStats();
+      final results = await Future.wait([
+        LeaderboardService.getUserStats(),
+        StreakService.getStreak(),
+        GoalService.getTodayProgress(),
+      ]);
       if (mounted) {
         setState(() {
-          _stats = stats;
+          _stats = results[0] as UserStats;
+          _streak = results[1] as StreakData;
+          _goalProgress = results[2] as GoalProgress;
         });
       }
     } catch (e) {
@@ -198,6 +210,11 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
 
           // ── Overview cards row ────────────────────────────────────────────
           _buildOverviewCards(stats),
+
+          const SizedBox(height: 20),
+
+          // ── Streak + Goal row (Phase 6) ───────────────────────────────────
+          _buildStreakAndGoalRow(),
 
           const SizedBox(height: 28),
 
@@ -508,6 +525,203 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
               fontSize: 12,
               color: _onSurfaceVar,
               height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Phase 6: Streak & Goal Row ─────────────────────────────────────────
+
+  Widget _buildStreakAndGoalRow() {
+    return Wrap(
+      spacing: 14,
+      runSpacing: 14,
+      children: [
+        // Streak Card
+        _buildStreakCard(),
+        // Daily Goal Card
+        _buildGoalCard(),
+      ],
+    );
+  }
+
+  Widget _buildStreakCard() {
+    final isActive = _streak.currentStreak > 0;
+    final fireColor = isActive
+        ? const Color(0xFFFF9800)
+        : _onSurfaceVar;
+
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: fireColor.withValues(alpha: 0.2)),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: fireColor.withValues(alpha: 0.06),
+                  blurRadius: 20,
+                  spreadRadius: 4,
+                ),
+              ]
+            : [],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: fireColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isActive ? '🔥' : '❄️',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              const Spacer(),
+              Tooltip(
+                message: 'Study every day to build your streak',
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: _outline,
+                  size: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${_streak.currentStreak} days',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: fireColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isActive ? 'Current Streak' : 'No Streak',
+            style: const TextStyle(
+              fontSize: 11,
+              color: _onSurfaceVar,
+            ),
+          ),
+          if (_streak.longestStreak > 0) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Best: ${_streak.longestStreak} days',
+              style: TextStyle(
+                fontSize: 10,
+                color: _onSurfaceVar.withValues(alpha: 0.7),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalCard() {
+    final hasGoal = _goalProgress.goalMinutes > 0;
+    final progress = hasGoal
+        ? (_goalProgress.studiedMinutes / _goalProgress.goalMinutes).clamp(0.0, 1.0)
+        : 0.0;
+    final goalColor = _goalProgress.isGoalMet
+        ? _green
+        : hasGoal
+            ? _primary
+            : _onSurfaceVar;
+
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: goalColor.withValues(alpha: 0.2)),
+        boxShadow: _goalProgress.isGoalMet
+            ? [
+                BoxShadow(
+                  color: _green.withValues(alpha: 0.06),
+                  blurRadius: 20,
+                  spreadRadius: 4,
+                ),
+              ]
+            : [],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Mini ring progress
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: hasGoal ? progress : 0,
+                      strokeWidth: 3,
+                      backgroundColor: _surfaceHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        goalColor.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    Icon(
+                      _goalProgress.isGoalMet
+                          ? Icons.check_rounded
+                          : Icons.flag_rounded,
+                      color: goalColor,
+                      size: 12,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Tooltip(
+                message: hasGoal
+                    ? '${_goalProgress.studiedMinutes.round()} of ${_goalProgress.goalMinutes} min'
+                    : 'Set a daily goal in your profile',
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: _outline,
+                  size: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            hasGoal
+                ? '${(progress * 100).round()}%'
+                : 'No goal',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: goalColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasGoal
+                ? _goalProgress.isGoalMet
+                    ? 'Goal Complete! 🎉'
+                    : 'Daily Goal'
+                : 'Set your daily goal',
+            style: const TextStyle(
+              fontSize: 11,
+              color: _onSurfaceVar,
             ),
           ),
         ],

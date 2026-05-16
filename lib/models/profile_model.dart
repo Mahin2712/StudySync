@@ -9,6 +9,12 @@ class ProfileModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
+  // Phase 6: Gamification fields
+  final int currentStreakDays;
+  final int longestStreakDays;
+  final String? lastStudyDate;
+  final int dailyGoalMinutes;
+
   const ProfileModel({
     required this.id,
     required this.username,
@@ -19,6 +25,10 @@ class ProfileModel {
     required this.profileComplete,
     required this.createdAt,
     this.updatedAt,
+    this.currentStreakDays = 0,
+    this.longestStreakDays = 0,
+    this.lastStudyDate,
+    this.dailyGoalMinutes = 0,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +46,14 @@ class ProfileModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String).toLocal()
           : null,
+      // Phase 6: streak + goal fields (safe defaults for old profiles)
+      currentStreakDays:
+          (json['current_streak_days'] as num?)?.toInt() ?? 0,
+      longestStreakDays:
+          (json['longest_streak_days'] as num?)?.toInt() ?? 0,
+      lastStudyDate: json['last_study_date'] as String?,
+      dailyGoalMinutes:
+          (json['daily_goal_minutes'] as num?)?.toInt() ?? 0,
     );
   }
 

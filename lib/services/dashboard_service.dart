@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/leaderboard_entry_model.dart';
 import '../models/room_model.dart';
+import 'streak_service.dart';
+import 'goal_service.dart';
 
 class DashboardData {
   final int globalCount;
@@ -9,11 +12,17 @@ class DashboardData {
   final List<LeaderboardEntry> leaderboard;
   final List<RoomModel> recentRooms;
 
+  // Phase 6: Gamification data
+  final StreakData streak;
+  final GoalProgress goalProgress;
+
   const DashboardData({
     this.globalCount = 0,
     this.trendingRooms = const [],
     this.leaderboard = const [],
     this.recentRooms = const [],
+    this.streak = StreakData.zero,
+    this.goalProgress = GoalProgress.zero,
   });
 }
 
@@ -28,6 +37,8 @@ class DashboardService {
         _getTrendingRooms(),
         _getTopLeaderboard(),
         _getRecentRooms(),
+        _getStreak(),
+        _getGoalProgress(),
       ]);
 
       return DashboardData(
@@ -35,6 +46,8 @@ class DashboardService {
         trendingRooms: results[1] as List<RoomModel>,
         leaderboard: results[2] as List<LeaderboardEntry>,
         recentRooms: results[3] as List<RoomModel>,
+        streak: results[4] as StreakData,
+        goalProgress: results[5] as GoalProgress,
       );
     } catch (e) {
       throw Exception('Failed to load dashboard data: $e');
@@ -98,6 +111,26 @@ class DashboardService {
       }).toList();
     } catch (_) {
       return [];
+    }
+  }
+
+  // Phase 6: Gamification data fetchers
+
+  static Future<StreakData> _getStreak() async {
+    try {
+      return await StreakService.getStreak();
+    } catch (e) {
+      debugPrint('[DashboardService] _getStreak failed: $e');
+      return StreakData.zero;
+    }
+  }
+
+  static Future<GoalProgress> _getGoalProgress() async {
+    try {
+      return await GoalService.getTodayProgress();
+    } catch (e) {
+      debugPrint('[DashboardService] _getGoalProgress failed: $e');
+      return GoalProgress.zero;
     }
   }
 }

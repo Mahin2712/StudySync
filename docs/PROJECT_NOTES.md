@@ -710,3 +710,44 @@ ame and username.
 ⚠️ Notes / Issues
 - `Future.wait` with mixed-type futures is a known Dart gotcha — always use typed parallel awaits or `(await f1, await f2)` record syntax instead.
 
+[2026-05-16 18:34] — Phase 6: Stats Expansion & Gamification Foundation — COMPLETE
+✅ Completed
+- Sub-phase 0: Created UserStats contract shape test (4 new unit tests)
+- Sub-phase 1: Streak tracking — DB migration (current_streak_days, longest_streak_days, last_study_date), update_streak RPC, StreakService, StreakBadge widget
+- Sub-phase 2: Daily goal setting — DB migration (daily_goal_minutes), GoalService, GoalProgressCard widget, public_profiles view updated
+- Sub-phase 3: To-Do list — DB migration (todos table with full RLS), TodoModel, TodoService (CRUD + recurring reset), TodoListWidget
+- All features integrated into stats dashboard screen (streak + goal cards row)
+- SessionService.stopSession() now fire-and-forgets a streak update
+- Left sidebar now includes To-Do nav item
+- DashboardService.getDashboardData() now fetches streak + goal data in parallel
+
+🔧 Changes
+- [NEW] test/models/user_stats_shape_test.dart — 4 contract guard tests
+- [NEW] lib/services/streak_service.dart — StreakData model + StreakService
+- [NEW] lib/services/goal_service.dart — GoalProgress model + GoalService
+- [NEW] lib/services/todo_service.dart — CRUD TodoService
+- [NEW] lib/models/todo_model.dart — TodoModel with fromJson, toInsertJson, copyWith
+- [NEW] lib/widgets/dashboard/streak_badge.dart — Compact streak badge widget
+- [NEW] lib/widgets/dashboard/goal_progress_card.dart — Circular ring progress card
+- [NEW] lib/widgets/dashboard/todo_list_widget.dart — Interactive to-do list widget
+- [NEW] supabase/migrations/20260516000001_add_streak_columns.sql
+- [NEW] supabase/migrations/20260516000002_add_daily_goal_column.sql
+- [NEW] supabase/migrations/20260516000003_create_todos_table.sql
+- [MODIFIED] lib/models/profile_model.dart — Added streak + goal fields
+- [MODIFIED] lib/services/session_service.dart — Fire-and-forget streak update
+- [MODIFIED] lib/services/dashboard_service.dart — Added streak/goal to DashboardData
+- [MODIFIED] lib/screens/stats_dashboard_screen.dart — Streak + Goal cards row
+- [MODIFIED] lib/widgets/dashboard/left_sidebar.dart — To-Do nav item
+
+📊 Status
+- Phase: Phase 6 COMPLETE. 38/38 tests passing. 0 analyzer errors. All 3 DB migrations applied.
+
+🚀 Next Steps
+- Phase 7 planning (TBD): Notifications, advanced analytics, or social features
+- Optional polish: add daily goal picker to profile setup screen
+- Optional: revoke anon EXECUTE on update_streak / reset_recurring_todos RPCs
+
+⚠️ Notes / Issues
+- Security advisor shows pre-existing SECURITY DEFINER + mutable search_path warnings on all RPCs (same as before Phase 6). No new regressions.
+- The `update_streak` RPC uses `Asia/Dhaka` (UTC+6) for day boundary calculations.
+- Daily goal default is 0 (user must explicitly set it).
