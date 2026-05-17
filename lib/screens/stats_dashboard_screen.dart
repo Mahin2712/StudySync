@@ -131,7 +131,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const Text(
             'StudySync',
             style: TextStyle(
-              
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: _primary,
@@ -142,7 +141,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const Text(
             'My Stats',
             style: TextStyle(
-              
               fontSize: 13,
               color: _onSurfaceVar,
               fontWeight: FontWeight.w500,
@@ -175,11 +173,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                
-                color: _onSurfaceVar,
-                fontSize: 13,
-              ),
+              style: const TextStyle(color: _onSurfaceVar, fontSize: 13),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -240,7 +234,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
     return Text(
       text,
       style: const TextStyle(
-        
         fontSize: 10,
         letterSpacing: 1.8,
         color: _onSurfaceVar,
@@ -332,7 +325,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             c.value,
             style: TextStyle(
-              
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: c.color,
@@ -341,11 +333,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             c.label,
-            style: const TextStyle(
-              
-              fontSize: 11,
-              color: _onSurfaceVar,
-            ),
+            style: const TextStyle(fontSize: 11, color: _onSurfaceVar),
           ),
         ],
       ),
@@ -369,12 +357,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
             child: Text(
               'Stats count only confirmed intervals. '
               'Sessions auto-stopped on missed check-ins are not counted.',
-              style: TextStyle(
-                
-                fontSize: 11,
-                color: _onSurfaceVar,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 11, color: _onSurfaceVar, height: 1.5),
             ),
           ),
         ],
@@ -444,7 +427,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                         Text(
                           displayName,
                           style: const TextStyle(
-                            
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: _onSurface,
@@ -454,7 +436,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                           const Text(
                             'Custom / unrecognised subjects',
                             style: TextStyle(
-                              
                               fontSize: 10,
                               color: _onSurfaceVar,
                               fontStyle: FontStyle.italic,
@@ -466,7 +447,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
                   Text(
                     _fmt(e.value),
                     style: TextStyle(
-                      
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isOthers ? _onSurfaceVar : _primary,
@@ -510,7 +490,6 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             'No sessions yet',
             style: TextStyle(
-              
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: _onSurface,
@@ -520,12 +499,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             'Complete your first study session to see\nyour subject breakdown here.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              
-              fontSize: 12,
-              color: _onSurfaceVar,
-              height: 1.6,
-            ),
+            style: TextStyle(fontSize: 12, color: _onSurfaceVar, height: 1.6),
           ),
         ],
       ),
@@ -549,9 +523,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
 
   Widget _buildStreakCard() {
     final isActive = _streak.currentStreak > 0;
-    final fireColor = isActive
-        ? const Color(0xFFFF9800)
-        : _onSurfaceVar;
+    final fireColor = isActive ? const Color(0xFFFF9800) : _onSurfaceVar;
 
     return Container(
       width: 160,
@@ -609,10 +581,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             isActive ? 'Current Streak' : 'No Streak',
-            style: const TextStyle(
-              fontSize: 11,
-              color: _onSurfaceVar,
-            ),
+            style: const TextStyle(fontSize: 11, color: _onSurfaceVar),
           ),
           if (_streak.longestStreak > 0) ...[
             const SizedBox(height: 2),
@@ -633,13 +602,16 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
   Widget _buildGoalCard() {
     final hasGoal = _goalProgress.goalMinutes > 0;
     final progress = hasGoal
-        ? (_goalProgress.studiedMinutes / _goalProgress.goalMinutes).clamp(0.0, 1.0)
+        ? (_goalProgress.studiedMinutes / _goalProgress.goalMinutes).clamp(
+            0.0,
+            1.0,
+          )
         : 0.0;
     final goalColor = _goalProgress.isGoalMet
         ? _green
         : hasGoal
-            ? _primary
-            : _onSurfaceVar;
+        ? _primary
+        : _onSurfaceVar;
 
     return Container(
       width: 160,
@@ -703,9 +675,7 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            hasGoal
-                ? '${(progress * 100).round()}%'
-                : 'No goal',
+            hasGoal ? '${(progress * 100).round()}%' : 'No goal',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -716,13 +686,10 @@ class _StatsDashboardScreenState extends State<StatsDashboardScreen> {
           Text(
             hasGoal
                 ? _goalProgress.isGoalMet
-                    ? 'Goal Complete! 🎉'
-                    : 'Daily Goal'
+                      ? 'Goal Complete! 🎉'
+                      : 'Daily Goal'
                 : 'Set your daily goal',
-            style: const TextStyle(
-              fontSize: 11,
-              color: _onSurfaceVar,
-            ),
+            style: const TextStyle(fontSize: 11, color: _onSurfaceVar),
           ),
         ],
       ),

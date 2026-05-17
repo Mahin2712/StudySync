@@ -48,30 +48,40 @@ class TodoService {
         ? ((existing[0]['position'] as num?)?.toInt() ?? 0) + 1
         : 0;
 
-    final data = await _client.from('todos').insert({
-      'user_id': _uid,
-      'title': title,
-      'is_recurring': isRecurring,
-      'position': nextPos,
-    }).select().single();
+    final data = await _client
+        .from('todos')
+        .insert({
+          'user_id': _uid,
+          'title': title,
+          'is_recurring': isRecurring,
+          'position': nextPos,
+        })
+        .select()
+        .single();
 
     return TodoModel.fromJson(data);
   }
 
   /// Toggle done/undone.
   static Future<void> toggleTodo(String todoId, bool isDone) async {
-    await _client.from('todos').update({
-      'is_done': isDone,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', todoId);
+    await _client
+        .from('todos')
+        .update({
+          'is_done': isDone,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', todoId);
   }
 
   /// Update the title of a to-do.
   static Future<void> updateTitle(String todoId, String newTitle) async {
-    await _client.from('todos').update({
-      'title': newTitle,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', todoId);
+    await _client
+        .from('todos')
+        .update({
+          'title': newTitle,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', todoId);
   }
 
   /// Delete a to-do.

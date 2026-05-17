@@ -31,7 +31,7 @@ class _AppRouterState extends State<AppRouter> {
   // Fix #2: track the live session so build() stays reactive.
   Session? _session;
   StreamSubscription<AuthState>? _authSub;
-  
+
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _appLinksSub;
 

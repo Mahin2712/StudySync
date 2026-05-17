@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Progress toward the user's daily study goal.
 class GoalProgress {
-  final int goalMinutes;       // 0 if not set
+  final int goalMinutes; // 0 if not set
   final double studiedMinutes; // from daily stats
   final bool isGoalMet;
 
@@ -40,10 +40,13 @@ class GoalService {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
 
-    await _client.from('profiles').update({
-      'daily_goal_minutes': minutes,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', uid);
+    await _client
+        .from('profiles')
+        .update({
+          'daily_goal_minutes': minutes,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', uid);
   }
 
   /// Get today's progress toward the daily goal.
@@ -66,7 +69,8 @@ class GoalService {
       final goalData = await goalFuture;
       final statsData = await statsFuture;
 
-      final goalMinutes = (goalData?['daily_goal_minutes'] as num?)?.toInt() ?? 0;
+      final goalMinutes =
+          (goalData?['daily_goal_minutes'] as num?)?.toInt() ?? 0;
 
       // get_my_stats returns daily as hours (double)
       double dailyHours = 0;

@@ -26,9 +26,7 @@ class StreakBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: fireColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: fireColor.withValues(alpha: 0.25)),
         boxShadow: isActive
             ? [
                 BoxShadow(

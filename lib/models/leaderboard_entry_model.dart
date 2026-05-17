@@ -26,7 +26,10 @@ class LeaderboardEntry {
     }
     return username.trim().isEmpty
         ? '?'
-        : username.trim().substring(0, username.trim().length.clamp(1, 2)).toUpperCase();
+        : username
+              .trim()
+              .substring(0, username.trim().length.clamp(1, 2))
+              .toUpperCase();
   }
 
   /// Format hours as "Xh Ym" or "Xm" if less than 1 hour.

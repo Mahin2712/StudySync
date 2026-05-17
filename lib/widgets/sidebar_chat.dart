@@ -22,7 +22,7 @@ class _SidebarChatState extends State<SidebarChat> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
   final _scrollController = ScrollController();
-  
+
   String _spamWarning = '';
   bool _showSpamWarning = false;
 
@@ -82,8 +82,8 @@ class _SidebarChatState extends State<SidebarChat> {
                 onTap: () {
                   Navigator.pop(context);
                   widget.chatService.sendReaction(
-                    msg.messageId, 
-                    emoji, 
+                    msg.messageId,
+                    emoji,
                     isGlobal: widget.isGlobal,
                   );
                 },
@@ -109,19 +109,21 @@ class _SidebarChatState extends State<SidebarChat> {
           final emoji = e.key;
           final count = e.value.length;
           final iReacted = e.value.contains(_currentUserId);
-          
+
           return GestureDetector(
             onTap: () {
               widget.chatService.sendReaction(
-                msg.messageId, 
-                emoji, 
+                msg.messageId,
+                emoji,
                 isGlobal: widget.isGlobal,
               );
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: iReacted ? _primary.withValues(alpha: 0.2) : _surfaceHighest,
+                color: iReacted
+                    ? _primary.withValues(alpha: 0.2)
+                    : _surfaceHighest,
                 border: Border.all(
                   color: iReacted ? _primary : _outline.withValues(alpha: 0.3),
                 ),
@@ -178,7 +180,8 @@ class _SidebarChatState extends State<SidebarChat> {
     }
   }
 
-  String get _currentUserId => Supabase.instance.client.auth.currentUser?.id ?? '';
+  String get _currentUserId =>
+      Supabase.instance.client.auth.currentUser?.id ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +196,9 @@ class _SidebarChatState extends State<SidebarChat> {
           child: Row(
             children: [
               Icon(
-                widget.isGlobal ? Icons.public_rounded : Icons.meeting_room_rounded,
+                widget.isGlobal
+                    ? Icons.public_rounded
+                    : Icons.meeting_room_rounded,
                 color: _primary,
                 size: 20,
               ),
@@ -209,14 +214,14 @@ class _SidebarChatState extends State<SidebarChat> {
             ],
           ),
         ),
-        
+
         // Chat Messages
         Expanded(
           child: ListenableBuilder(
             listenable: widget.chatService,
             builder: (context, _) {
-              final messages = widget.isGlobal 
-                  ? widget.chatService.globalMessages 
+              final messages = widget.isGlobal
+                  ? widget.chatService.globalMessages
                   : widget.chatService.roomMessages;
 
               if (messages.isEmpty) {
@@ -236,11 +241,13 @@ class _SidebarChatState extends State<SidebarChat> {
                 itemBuilder: (context, index) {
                   final msg = messages[index];
                   final isMe = msg.userId == _currentUserId;
-                  
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
-                      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      mainAxisAlignment: isMe
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         if (!isMe) ...[
@@ -249,28 +256,50 @@ class _SidebarChatState extends State<SidebarChat> {
                         ],
                         Flexible(
                           child: Column(
-                            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            crossAxisAlignment: isMe
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
                             children: [
                               GestureDetector(
-                                onLongPress: () => _showReactionPicker(context, msg),
+                                onLongPress: () =>
+                                    _showReactionPicker(context, msg),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isMe ? _primaryContainer : _surfaceHigh,
+                                    color: isMe
+                                        ? _primaryContainer
+                                        : _surfaceHigh,
                                     borderRadius: BorderRadius.only(
                                       topLeft: const Radius.circular(16),
                                       topRight: const Radius.circular(16),
-                                      bottomLeft: Radius.circular(isMe ? 16 : 4),
-                                      bottomRight: Radius.circular(isMe ? 4 : 16),
+                                      bottomLeft: Radius.circular(
+                                        isMe ? 16 : 4,
+                                      ),
+                                      bottomRight: Radius.circular(
+                                        isMe ? 4 : 16,
+                                      ),
                                     ),
-                                    border: isMe ? null : Border.all(color: _outline.withValues(alpha: 0.2)),
+                                    border: isMe
+                                        ? null
+                                        : Border.all(
+                                            color: _outline.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                          ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                    crossAxisAlignment: isMe
+                                        ? CrossAxisAlignment.end
+                                        : CrossAxisAlignment.start,
                                     children: [
                                       if (!isMe)
                                         Padding(
-                                          padding: const EdgeInsets.only(bottom: 4),
+                                          padding: const EdgeInsets.only(
+                                            bottom: 4,
+                                          ),
                                           child: Text(
                                             msg.username,
                                             style: const TextStyle(
@@ -285,8 +314,12 @@ class _SidebarChatState extends State<SidebarChat> {
                                         msg.text,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: isMe ? _onPrimaryContainer : _onSurface,
-                                          fontFamilyFallback: const ['PurnoBCC'],
+                                          color: isMe
+                                              ? _onPrimaryContainer
+                                              : _onSurface,
+                                          fontFamilyFallback: const [
+                                            'PurnoBCC',
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -343,9 +376,14 @@ class _SidebarChatState extends State<SidebarChat> {
                       focusNode: _focusNode,
                       style: const TextStyle(color: _onSurface, fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: _focusNode.hasFocus ? null : 'Type a message...',
+                        hintText: _focusNode.hasFocus
+                            ? null
+                            : 'Type a message...',
                         hintStyle: const TextStyle(color: _onSurfaceVariant),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         filled: true,
                         fillColor: _surfaceHigh,
                         border: OutlineInputBorder(
@@ -363,7 +401,11 @@ class _SidebarChatState extends State<SidebarChat> {
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send_rounded, color: _onPrimaryContainer, size: 18),
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        color: _onPrimaryContainer,
+                        size: 18,
+                      ),
                       onPressed: _handleSend,
                     ),
                   ),

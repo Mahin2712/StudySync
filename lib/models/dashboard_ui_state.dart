@@ -5,11 +5,7 @@ class DashboardUiState {
   final bool isLoading;
   final String? error;
 
-  const DashboardUiState({
-    this.data,
-    this.isLoading = true,
-    this.error,
-  });
+  const DashboardUiState({this.data, this.isLoading = true, this.error});
 
   DashboardUiState copyWith({
     DashboardData? data,

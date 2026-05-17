@@ -71,7 +71,9 @@ class _RoomSheetState extends State<RoomSheet> {
   Future<void> _joinStandardRoom(String subject) async {
     final room = _rooms.firstWhere(
       (r) => r.subject == subject && !r.isCustom,
-      orElse: () => throw Exception('Standard room for $subject not found. Please refresh.'),
+      orElse: () => throw Exception(
+        'Standard room for $subject not found. Please refresh.',
+      ),
     );
     _joinRoom(room);
   }
@@ -84,7 +86,9 @@ class _RoomSheetState extends State<RoomSheet> {
         Navigator.pop(context); // close sheet
         Navigator.push(
           context,
-          _fadeRoute(RoomDetailScreen(roomId: room.id, roomName: room.name, room: room)),
+          _fadeRoute(
+            RoomDetailScreen(roomId: room.id, roomName: room.name, room: room),
+          ),
         );
       }
     } catch (e) {
@@ -100,20 +104,28 @@ class _RoomSheetState extends State<RoomSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: _surface,
-        title: const Text('Custom Study Room', style: TextStyle(color: _onSurface)),
+        title: const Text(
+          'Custom Study Room',
+          style: TextStyle(color: _onSurface),
+        ),
         content: TextField(
           controller: ctrl,
           style: const TextStyle(color: _onSurface),
           decoration: InputDecoration(
             hintText: 'e.g. Personal Project, Thesis...',
             hintStyle: const TextStyle(color: _onSurfaceVariant),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: _outline)),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: _outline),
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: _onSurfaceVariant)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: _onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
@@ -132,10 +144,19 @@ class _RoomSheetState extends State<RoomSheet> {
         if (mounted) {
           Navigator.pop(context); // close sheet
           // Create dummy room object just to pass initial data
-          final dummyRoom = RoomModel(id: roomId, name: name, createdBy: '', createdAt: DateTime.now(), subject: 'Others', isCustom: true);
+          final dummyRoom = RoomModel(
+            id: roomId,
+            name: name,
+            createdBy: '',
+            createdAt: DateTime.now(),
+            subject: 'Others',
+            isCustom: true,
+          );
           Navigator.push(
             context,
-            _fadeRoute(RoomDetailScreen(roomId: roomId, roomName: name, room: dummyRoom)),
+            _fadeRoute(
+              RoomDetailScreen(roomId: roomId, roomName: name, room: dummyRoom),
+            ),
           );
         }
       } catch (e) {
@@ -157,18 +178,22 @@ class _RoomSheetState extends State<RoomSheet> {
 
   void _snack(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? const Color(0xFF871F21) : const Color(0xFF395664),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError
+            ? const Color(0xFF871F21)
+            : const Color(0xFF395664),
+      ),
+    );
   }
 
   PageRouteBuilder _fadeRoute(Widget page) => PageRouteBuilder(
-        pageBuilder: (_, __, ___) => page,
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 300),
-      );
+    pageBuilder: (_, __, ___) => page,
+    transitionsBuilder: (_, anim, __, child) =>
+        FadeTransition(opacity: anim, child: child),
+    transitionDuration: const Duration(milliseconds: 300),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -186,15 +211,21 @@ class _RoomSheetState extends State<RoomSheet> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
-                    const Icon(Icons.meeting_room_outlined, color: Colors.white, size: 28),
+                    const Icon(
+                      Icons.meeting_room_outlined,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                     const SizedBox(width: 12),
                     const Text(
                       'Study Rooms',
                       style: TextStyle(
-                        
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: _onSurface,
@@ -202,11 +233,15 @@ class _RoomSheetState extends State<RoomSheet> {
                     ),
                     const Spacer(),
                     if (_isLoadingRooms)
-                      const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     IconButton(
                       onPressed: _loadRooms,
                       icon: const Icon(Icons.refresh, color: _onSurfaceVariant),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -214,9 +249,14 @@ class _RoomSheetState extends State<RoomSheet> {
               Expanded(
                 child: ListView(
                   controller: scrollCtrl,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   children: [
-                    ..._categorizedSubjects.entries.map((e) => _buildCategorySection(e.key, e.value)),
+                    ..._categorizedSubjects.entries.map(
+                      (e) => _buildCategorySection(e.key, e.value),
+                    ),
                     const SizedBox(height: 16),
                     _buildCustomRoomButton(),
                     const SizedBox(height: 32),
@@ -239,7 +279,6 @@ class _RoomSheetState extends State<RoomSheet> {
           child: Text(
             title.toUpperCase(),
             style: const TextStyle(
-              
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
@@ -262,10 +301,11 @@ class _RoomSheetState extends State<RoomSheet> {
   }
 
   Widget _buildSubjectTile(SubjectModel subject) {
-    final Color color = Colors.blueAccent; // Dynamic coloring if needed in future
+    final Color color =
+        Colors.blueAccent; // Dynamic coloring if needed in future
     final count = _getMemberCountForSubject(subject.displayName);
     final isActive = count > 0;
-    
+
     return InkWell(
       onTap: () => _joinStandardRoom(subject.displayName),
       borderRadius: BorderRadius.circular(12),
@@ -274,7 +314,11 @@ class _RoomSheetState extends State<RoomSheet> {
         decoration: BoxDecoration(
           color: _surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? color.withValues(alpha: 0.5) : _outline.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: isActive
+                ? color.withValues(alpha: 0.5)
+                : _outline.withValues(alpha: 0.3),
+          ),
         ),
         child: Row(
           children: [
@@ -296,7 +340,6 @@ class _RoomSheetState extends State<RoomSheet> {
                     subject.displayName,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: _onSurface,
@@ -310,16 +353,19 @@ class _RoomSheetState extends State<RoomSheet> {
                         height: 6,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isActive ? Colors.greenAccent : _onSurfaceVariant.withValues(alpha: 0.5),
+                          color: isActive
+                              ? Colors.greenAccent
+                              : _onSurfaceVariant.withValues(alpha: 0.5),
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$count active',
                         style: TextStyle(
-                          
                           fontSize: 11,
-                          color: isActive ? Colors.greenAccent : _onSurfaceVariant,
+                          color: isActive
+                              ? Colors.greenAccent
+                              : _onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -353,7 +399,6 @@ class _RoomSheetState extends State<RoomSheet> {
             Text(
               'Custom Study Room',
               style: TextStyle(
-                
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFFC9E8F8),

@@ -48,18 +48,24 @@ class DashboardTopAppBar extends StatelessWidget {
         title: const Text(
           'Sign Out',
           style: TextStyle(
-               color: AppColors.onSurface, fontWeight: FontWeight.w700),
+            color: AppColors.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: Text(
           'Signed in as $_userEmail\n\nAre you sure you want to sign out?',
           style: const TextStyle(
-               color: AppColors.onSurfaceVariant, fontSize: 13),
+            color: AppColors.onSurfaceVariant,
+            fontSize: 13,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.onSurfaceVariant)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -71,10 +77,13 @@ class DashboardTopAppBar extends StatelessWidget {
               foregroundColor: AppColors.onPrimaryContainer,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Sign Out',
-                style: TextStyle( fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Sign Out',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -135,13 +144,15 @@ class DashboardTopAppBar extends StatelessWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: uiState.isLoading ? AppColors.outline : AppColors.greenActive,
+                    color: uiState.isLoading
+                        ? AppColors.outline
+                        : AppColors.greenActive,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  uiState.isLoading 
-                      ? 'StudySync Global • Loading...' 
+                  uiState.isLoading
+                      ? 'StudySync Global • Loading...'
                       : 'StudySync Global • ${uiState.data?.globalCount ?? 0} Active Studiers',
                   style: const TextStyle(
                     fontSize: 12,
@@ -213,7 +224,9 @@ class DashboardTopAppBar extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 child: Icon(
                   Icons.chat_bubble_outline_rounded,
-                  color: isRightSidebarExpanded || isNarrow ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: isRightSidebarExpanded || isNarrow
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                   size: 20,
                 ),
               ),
@@ -232,13 +245,14 @@ class DashboardTopAppBar extends StatelessWidget {
             tooltip: 'Account',
             offset: const Offset(0, 42),
             color: const Color(0xFF1C2025),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             onSelected: (value) {
               if (value == 'edit_profile') {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const ProfileSetupScreen(isEditing: true),
+                    builder: (_) => const ProfileSetupScreen(isEditing: true),
                   ),
                 );
               } else if (value == 'sign_out') {
@@ -250,14 +264,19 @@ class DashboardTopAppBar extends StatelessWidget {
                 value: 'edit_profile',
                 child: Row(
                   children: const [
-                    Icon(Icons.edit_outlined,
-                        color: AppColors.primary, size: 16),
+                    Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
                     SizedBox(width: 10),
-                    Text('Edit Profile',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.onSurface,
-                        )),
+                    Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -265,14 +284,19 @@ class DashboardTopAppBar extends StatelessWidget {
                 value: 'sign_out',
                 child: Row(
                   children: const [
-                    Icon(Icons.logout_rounded,
-                        color: AppColors.logoutRed, size: 16),
+                    Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.logoutRed,
+                      size: 16,
+                    ),
                     SizedBox(width: 10),
-                    Text('Sign Out',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.logoutRed,
-                        )),
+                    Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.logoutRed,
+                      ),
+                    ),
                   ],
                 ),
               ),

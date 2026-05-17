@@ -28,10 +28,7 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
   }
 
@@ -99,10 +96,13 @@ class _LoginScreenState extends State<LoginScreen>
       }
     } on AuthException catch (e) {
       if (e.message.contains('Invalid login credentials')) {
-         // Auto sign-up fallback logic could go here or offer a register button
-         _showSnack('Invalid credentials. If new, please register.', isError: true);
+        // Auto sign-up fallback logic could go here or offer a register button
+        _showSnack(
+          'Invalid credentials. If new, please register.',
+          isError: true,
+        );
       } else {
-         _showSnack(e.message, isError: true);
+        _showSnack(e.message, isError: true);
       }
     } catch (e) {
       _showSnack('Something went wrong. Check your connection.', isError: true);
@@ -149,7 +149,12 @@ class _LoginScreenState extends State<LoginScreen>
     final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(color: isError ? Colors.white : colorScheme.onSurface)),
+        content: Text(
+          message,
+          style: TextStyle(
+            color: isError ? Colors.white : colorScheme.onSurface,
+          ),
+        ),
         backgroundColor: isError
             ? const Color(0xFF871F21)
             : colorScheme.surfaceContainerHighest,
@@ -225,7 +230,10 @@ class _LoginScreenState extends State<LoginScreen>
             child: FadeTransition(
               opacity: _fadeAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 48,
+                ),
                 // keyboard handler
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
@@ -242,18 +250,26 @@ class _LoginScreenState extends State<LoginScreen>
                               height: 64,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
-                                color: isDark ? const Color(0xFF171A1E) : Colors.white,
+                                color: isDark
+                                    ? const Color(0xFF171A1E)
+                                    : Colors.white,
                                 border: Border.all(
-                                  color: colorScheme.outline.withValues(alpha: 0.5),
+                                  color: colorScheme.outline.withValues(
+                                    alpha: 0.5,
+                                  ),
                                   width: 1,
                                 ),
-                                boxShadow: !isDark ? [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ] : [],
+                                boxShadow: !isDark
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ]
+                                    : [],
                               ),
                               child: Icon(
                                 Icons.auto_stories_rounded,
@@ -276,7 +292,9 @@ class _LoginScreenState extends State<LoginScreen>
                               'Your focused study companion',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ],
@@ -295,13 +313,15 @@ class _LoginScreenState extends State<LoginScreen>
                             color: colorScheme.outline.withValues(alpha: 0.5),
                             width: 1,
                           ),
-                          boxShadow: !isDark ? [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            )
-                          ] : [],
+                          boxShadow: !isDark
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : [],
                         ),
                         child: AnimatedSize(
                           duration: const Duration(milliseconds: 300),
@@ -310,7 +330,9 @@ class _LoginScreenState extends State<LoginScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _showPasswordState ? 'Enter password' : 'Welcome back',
+                                _showPasswordState
+                                    ? 'Enter password'
+                                    : 'Welcome back',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -319,12 +341,14 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _showPasswordState 
-                                  ? 'Signing in as ${_emailController.text}' 
-                                  : 'Sign in to continue your session',
+                                _showPasswordState
+                                    ? 'Signing in as ${_emailController.text}'
+                                    : 'Sign in to continue your session',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
 
@@ -338,7 +362,8 @@ class _LoginScreenState extends State<LoginScreen>
                                 hint: 'your@email.com',
                                 keyboardType: TextInputType.emailAddress,
                                 colorScheme: colorScheme,
-                                enabled: !_showPasswordState, // Disable when password is shown to keep it progressive
+                                enabled:
+                                    !_showPasswordState, // Disable when password is shown to keep it progressive
                               ),
 
                               // Password field (conditional)
@@ -356,11 +381,14 @@ class _LoginScreenState extends State<LoginScreen>
                                       _obscurePassword
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
-                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       size: 20,
                                     ),
                                     onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword,
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
                                     ),
                                   ),
                                 ),
@@ -400,7 +428,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   width: double.infinity,
                                   height: 50,
                                   child: OutlinedButton.icon(
-                                    onPressed: _isLoading ? null : _signInWithGoogle,
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _signInWithGoogle,
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: colorScheme.onSurface,
                                       side: BorderSide(
@@ -411,13 +441,18 @@ class _LoginScreenState extends State<LoginScreen>
                                         borderRadius: BorderRadius.circular(14),
                                       ),
                                     ),
-                                    icon: _isLoading 
-                                      ? const SizedBox(
-                                          width: 20, 
-                                          height: 20, 
-                                          child: CircularProgressIndicator(strokeWidth: 2)
-                                        )
-                                      : const Icon(Icons.g_mobiledata_rounded, size: 28), // Placeholder for Google icon
+                                    icon: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.g_mobiledata_rounded,
+                                            size: 28,
+                                          ), // Placeholder for Google icon
                                     label: const Text(
                                       'Continue with Google',
                                       style: TextStyle(
@@ -433,7 +468,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   width: double.infinity,
                                   height: 50,
                                   child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _signInWithEmail,
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _signInWithEmail,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: colorScheme.primary,
                                       foregroundColor: colorScheme.onPrimary,
@@ -465,7 +502,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   width: double.infinity,
                                   height: 50,
                                   child: OutlinedButton(
-                                    onPressed: _isLoading ? null : _signUpWithEmail,
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _signUpWithEmail,
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: colorScheme.primary,
                                       side: BorderSide(
@@ -488,13 +527,19 @@ class _LoginScreenState extends State<LoginScreen>
                                 const SizedBox(height: 16),
                                 Center(
                                   child: TextButton(
-                                    onPressed: () => setState(() => _showPasswordState = false),
+                                    onPressed: () => setState(
+                                      () => _showPasswordState = false,
+                                    ),
                                     child: Text(
                                       'Use a different email',
-                                      style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      style: TextStyle(
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                )
+                                ),
                               ],
                             ],
                           ),
@@ -574,7 +619,7 @@ class _LoginScreenState extends State<LoginScreen>
     bool enabled = true,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -582,7 +627,9 @@ class _LoginScreenState extends State<LoginScreen>
       enabled: enabled,
       style: TextStyle(
         fontSize: 14,
-        color: enabled ? colorScheme.onSurface : colorScheme.onSurface.withValues(alpha: 0.5),
+        color: enabled
+            ? colorScheme.onSurface
+            : colorScheme.onSurface.withValues(alpha: 0.5),
       ),
       decoration: InputDecoration(
         hintText: hint,
@@ -599,7 +646,9 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.6)),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.6),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -607,9 +656,14 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.3),
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }

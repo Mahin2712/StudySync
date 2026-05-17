@@ -99,8 +99,9 @@ class ChatService extends ChangeNotifier {
         _cachedUsername = profile.username;
       } else {
         final email = _supabase.auth.currentUser?.email ?? '';
-        _cachedUsername =
-            email.split('@').first.isNotEmpty ? email.split('@').first : 'Student';
+        _cachedUsername = email.split('@').first.isNotEmpty
+            ? email.split('@').first
+            : 'Student';
       }
       _isUsernameLoaded = true;
     } catch (_) {}
@@ -109,7 +110,9 @@ class ChatService extends ChangeNotifier {
   String get _myUsername => _cachedUsername;
 
   String _generateMessageId() {
-    final prefix = _myUserId.length >= 6 ? _myUserId.substring(0, 6) : _myUserId;
+    final prefix = _myUserId.length >= 6
+        ? _myUserId.substring(0, 6)
+        : _myUserId;
     return '${prefix}_${_uuid.v4()}';
   }
 
@@ -197,7 +200,10 @@ class ChatService extends ChangeNotifier {
   ///
   /// Fix #4: This is now async so we can await the broadcast and detect
   /// transport-level failures, rolling back the optimistic append if needed.
-  Future<ChatSendResult> sendMessage(String rawText, {required bool isGlobal}) async {
+  Future<ChatSendResult> sendMessage(
+    String rawText, {
+    required bool isGlobal,
+  }) async {
     // ── 1. Trim whitespace ──────────────────────────────────────────────
     final text = rawText.trim();
 
@@ -276,7 +282,11 @@ class ChatService extends ChangeNotifier {
   // Reactions
   // ════════════════════════════════════════════════════════════════════════
 
-  Future<void> sendReaction(String messageId, String emoji, {required bool isGlobal}) async {
+  Future<void> sendReaction(
+    String messageId,
+    String emoji, {
+    required bool isGlobal,
+  }) async {
     if (_myUserId.isEmpty) return;
 
     final channel = isGlobal ? _globalChannel : _roomChannel;
@@ -292,17 +302,17 @@ class ChatService extends ChangeNotifier {
     };
 
     try {
-      await channel.sendBroadcastMessage(
-        event: 'reaction',
-        payload: payload,
-      );
+      await channel.sendBroadcastMessage(event: 'reaction', payload: payload);
     } catch (_) {
       // Roll back on failure (toggle again)
       _applyReaction(messageId, emoji, _myUserId, isGlobal: isGlobal);
     }
   }
 
-  void _onIncomingReaction(Map<String, dynamic> payload, {required bool isGlobal}) {
+  void _onIncomingReaction(
+    Map<String, dynamic> payload, {
+    required bool isGlobal,
+  }) {
     final messageId = payload['message_id'] as String?;
     final emoji = payload['emoji'] as String?;
     final userId = payload['user_id'] as String?;
@@ -316,7 +326,12 @@ class ChatService extends ChangeNotifier {
     _applyReaction(messageId, emoji, userId, isGlobal: isGlobal);
   }
 
-  void _applyReaction(String messageId, String emoji, String userId, {required bool isGlobal}) {
+  void _applyReaction(
+    String messageId,
+    String emoji,
+    String userId, {
+    required bool isGlobal,
+  }) {
     final list = isGlobal ? _globalMessages : _roomMessages;
     final index = list.indexWhere((msg) => msg.messageId == messageId);
     if (index == -1) return;
@@ -342,7 +357,10 @@ class ChatService extends ChangeNotifier {
   // Internal helpers
   // ════════════════════════════════════════════════════════════════════════
 
-  void _onIncomingMessage(Map<String, dynamic> payload, {required bool isGlobal}) {
+  void _onIncomingMessage(
+    Map<String, dynamic> payload, {
+    required bool isGlobal,
+  }) {
     final msg = ChatMessage.fromBroadcast(payload);
     // Prevent duplicate if self=true AND Guard against Identity Spoofing.
     if (msg.userId == _myUserId) return;
@@ -401,12 +419,12 @@ enum ChatSendResult {
   sendFailed; // Fix #4: transport-level failure after optimistic rollback
 
   String get userMessage => switch (this) {
-        ChatSendResult.success => '',
-        ChatSendResult.empty => 'Message cannot be empty.',
-        ChatSendResult.tooLong => 'Max 120 characters allowed.',
-        ChatSendResult.onCooldown => 'Please wait before sending again.',
-        ChatSendResult.duplicate => 'You already sent that message.',
-        ChatSendResult.notConnected => 'Chat not connected. Please wait.',
-        ChatSendResult.sendFailed => 'Failed to send. Please try again.',
-      };
+    ChatSendResult.success => '',
+    ChatSendResult.empty => 'Message cannot be empty.',
+    ChatSendResult.tooLong => 'Max 120 characters allowed.',
+    ChatSendResult.onCooldown => 'Please wait before sending again.',
+    ChatSendResult.duplicate => 'You already sent that message.',
+    ChatSendResult.notConnected => 'Chat not connected. Please wait.',
+    ChatSendResult.sendFailed => 'Failed to send. Please try again.',
+  };
 }

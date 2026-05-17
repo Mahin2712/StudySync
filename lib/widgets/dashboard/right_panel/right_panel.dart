@@ -30,14 +30,12 @@ class DashboardRightPanel extends StatelessWidget {
     if (!isExpanded && !isMobile) {
       return NarrowRightRail(onExpand: onExpand);
     }
-    
+
     return Container(
       width: isMobile ? 320 : 288,
       decoration: const BoxDecoration(
         color: Color(0xFF111417),
-        border: Border(
-          left: BorderSide(color: Color(0x26A7ABB3), width: 1),
-        ),
+        border: Border(left: BorderSide(color: Color(0x26A7ABB3), width: 1)),
       ),
       child: RefreshIndicator(
         onRefresh: onRefresh,
@@ -71,7 +69,7 @@ class DashboardRightPanel extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     TrendingRoomsSection(uiState: uiState, onRetry: onRefresh),
 
                     const SizedBox(height: 28),
@@ -79,8 +77,11 @@ class DashboardRightPanel extends StatelessWidget {
                     // Leaderboard section
                     Row(
                       children: const [
-                        Icon(Icons.leaderboard_outlined,
-                            color: AppColors.onSurfaceVariant, size: 14),
+                        Icon(
+                          Icons.leaderboard_outlined,
+                          color: AppColors.onSurfaceVariant,
+                          size: 14,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           'LEADERBOARD (ALL TIME)',
@@ -102,10 +103,7 @@ class DashboardRightPanel extends StatelessWidget {
             ),
             SliverFillRemaining(
               hasScrollBody: true,
-              child: SidebarChat(
-                chatService: chatService,
-                isGlobal: true,
-              ),
+              child: SidebarChat(chatService: chatService, isGlobal: true),
             ),
           ],
         ),
