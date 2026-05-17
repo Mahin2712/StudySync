@@ -61,11 +61,13 @@ class ProfileModel {
   String get displayName =>
       (studentName != null && studentName!.isNotEmpty) ? studentName! : username;
 
+  static final _initialsSplitRegExp = RegExp(r'[\s_]+');
+
   /// Initials for avatar circles.
   String get initials {
     final name = displayName.trim();
     if (name.isEmpty) return '?';
-    final parts = name.split(RegExp(r'[\s_]+'));
+    final parts = name.split(_initialsSplitRegExp);
     if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }

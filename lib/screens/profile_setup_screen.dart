@@ -29,6 +29,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   static const _outline        = Color(0xFF44484F);
   static const _error          = Color(0xFFFF6B6B);
 
+  static final _usernameRegExp = RegExp(r'^[a-zA-Z0-9_]+$');
+
   final _formKey         = GlobalKey<FormState>();
   final _usernameCtrl    = TextEditingController();
   final _nameCtrl        = TextEditingController();
@@ -124,9 +126,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       hint: 'e.g. mahin_27',
                       icon: Icons.alternate_email_rounded,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Username is required';
-                        if (v.trim().length < 3) return 'Must be at least 3 characters';
-                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v.trim())) {
+                        if (v == null) return 'Username is required';
+                        final trimmed = v.trim();
+                        if (trimmed.isEmpty) return 'Username is required';
+                        if (trimmed.length < 3) return 'Must be at least 3 characters';
+                        if (!_usernameRegExp.hasMatch(trimmed)) {
                           return 'Only letters, numbers and underscores';
                         }
                         return null;
