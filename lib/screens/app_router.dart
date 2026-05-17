@@ -31,7 +31,11 @@ class _AppRouterState extends State<AppRouter> {
   // Fix #2: track the live session so build() stays reactive.
   Session? _session;
   StreamSubscription<AuthState>? _authSub;
-  
+
+  // Cache the profile check future to avoid redundant DB hits on every rebuild.
+  Future<bool>? _profileCompleteFuture;
+  String? _lastUserId;
+
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _appLinksSub;
 
@@ -42,6 +46,7 @@ class _AppRouterState extends State<AppRouter> {
 
     // Seed with the current snapshot so the first frame renders correctly.
     _session = _client.auth.currentSession;
+    _refreshProfileCheck(_session?.user.id);
 
     // Fire-and-forget stale session cleanup (fallback for Supabase free-tier).
     if (_session != null) {
@@ -52,12 +57,32 @@ class _AppRouterState extends State<AppRouter> {
     // session is created, refreshed, or destroyed.
     _authSub = _client.auth.onAuthStateChange.listen((data) {
       if (!mounted) return;
+
+      final session = data.session;
+      final event = data.event;
+
+      // Handle sign-out or session loss: clear navigation stack back to AppRouter.
+      // This ensures that deep-pushed screens (like RoomDetailScreen) are closed.
+      if (event == AuthChangeEvent.signedOut || session == null) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      }
+
+      // Optimization: Only re-trigger the profile completeness fetch if the
+      // User ID actually changes (e.g. sign-in, account switch).
+      // Standard token refreshes leave the UID unchanged and use the cached future.
+      final newUserId = session?.user.id;
+      if (newUserId != _lastUserId) {
+        _refreshProfileCheck(newUserId);
+      }
+
       setState(() {
-        _session = data.session;
+        _session = session;
       });
 
       // Re-run stale session cleanup whenever a user signs in.
-      if (data.event == AuthChangeEvent.signedIn && data.session != null) {
+      if (event == AuthChangeEvent.signedIn && session != null) {
         SessionService.cleanUpStaleSessions();
       }
     });
@@ -69,6 +94,16 @@ class _AppRouterState extends State<AppRouter> {
         _client.auth.getSessionFromUrl(uri);
       }
     });
+  }
+
+  /// Updates the cached profile future if the user has changed.
+  void _refreshProfileCheck(String? userId) {
+    _lastUserId = userId;
+    if (userId != null) {
+      _profileCompleteFuture = ProfileService.isProfileComplete();
+    } else {
+      _profileCompleteFuture = null;
+    }
   }
 
   @override
@@ -85,7 +120,7 @@ class _AppRouterState extends State<AppRouter> {
 
     // Logged in → check if profile is complete before allowing home.
     return FutureBuilder<bool>(
-      future: ProfileService.isProfileComplete(),
+      future: _profileCompleteFuture,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
