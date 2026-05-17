@@ -68,9 +68,8 @@ class ProfileService {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;
 
-    final isComplete = username.isNotEmpty &&
-        studentName.isNotEmpty &&
-        schoolName.isNotEmpty;
+    final isComplete =
+        username.isNotEmpty && studentName.isNotEmpty && schoolName.isNotEmpty;
 
     await _client.from('profiles').upsert({
       'id': uid,

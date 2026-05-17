@@ -15,10 +15,12 @@ class StreakData {
 
   factory StreakData.fromJson(Map<String, dynamic> json) {
     return StreakData(
-      currentStreak: (json['current_streak'] as num?)?.toInt() ??
+      currentStreak:
+          (json['current_streak'] as num?)?.toInt() ??
           (json['current_streak_days'] as num?)?.toInt() ??
           0,
-      longestStreak: (json['longest_streak'] as num?)?.toInt() ??
+      longestStreak:
+          (json['longest_streak'] as num?)?.toInt() ??
           (json['longest_streak_days'] as num?)?.toInt() ??
           0,
       lastStudyDate: json['last_study_date'] as String?,

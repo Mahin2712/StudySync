@@ -189,10 +189,7 @@ class _TodoListWidgetState extends State<TodoListWidget> {
             child: TextField(
               controller: _controller,
               maxLength: 200,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.onSurface,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.onSurface),
               decoration: InputDecoration(
                 hintText: 'Add a task…',
                 hintStyle: const TextStyle(
@@ -200,8 +197,10 @@ class _TodoListWidgetState extends State<TodoListWidget> {
                   color: AppColors.onSurfaceVariant,
                 ),
                 counterText: '', // hide max length counter
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 filled: true,
                 fillColor: AppColors.surfaceHighest,
                 border: OutlineInputBorder(
@@ -299,8 +298,7 @@ class _TodoListWidgetState extends State<TodoListWidget> {
                 color: todo.isDone
                     ? AppColors.onSurfaceVariant
                     : AppColors.onSurface,
-                decoration:
-                    todo.isDone ? TextDecoration.lineThrough : null,
+                decoration: todo.isDone ? TextDecoration.lineThrough : null,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

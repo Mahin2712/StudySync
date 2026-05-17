@@ -8,11 +8,7 @@ class GoalProgressCard extends StatelessWidget {
   final GoalProgress progress;
   final VoidCallback? onSetGoal;
 
-  const GoalProgressCard({
-    super.key,
-    required this.progress,
-    this.onSetGoal,
-  });
+  const GoalProgressCard({super.key, required this.progress, this.onSetGoal});
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +28,13 @@ class GoalProgressCard extends StatelessWidget {
   }
 
   Widget _buildProgressState() {
-    final fraction = (progress.studiedMinutes / progress.goalMinutes)
-        .clamp(0.0, 1.0);
+    final fraction = (progress.studiedMinutes / progress.goalMinutes).clamp(
+      0.0,
+      1.0,
+    );
     final percentage = (fraction * 100).round();
     final isComplete = progress.isGoalMet;
-    final ringColor = isComplete
-        ? AppColors.greenActive
-        : AppColors.primary;
+    final ringColor = isComplete ? AppColors.greenActive : AppColors.primary;
 
     return Column(
       children: [
@@ -123,10 +119,7 @@ class GoalProgressCard extends StatelessWidget {
         const Text(
           'Track your daily study progress',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11,
-            color: AppColors.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
         ),
         if (onSetGoal != null) ...[
           const SizedBox(height: 10),

@@ -90,10 +90,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   DashboardUiState get _uiState => DashboardUiState(
-        data: _dashboardData,
-        isLoading: _isLoadingDashboard,
-        error: _dashboardError,
-      );
+    data: _dashboardData,
+    isLoading: _isLoadingDashboard,
+    error: _dashboardError,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -102,18 +102,20 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-      endDrawer: isNarrow ? Drawer(
-        width: 320,
-        backgroundColor: const Color(0xFF111417),
-        child: DashboardRightPanel(
-          isMobile: true,
-          isExpanded: true,
-          uiState: _uiState,
-          chatService: _chatService,
-          onRefresh: _loadDashboardData,
-          onExpand: () {}, // Not used in drawer
-        ),
-      ) : null,
+      endDrawer: isNarrow
+          ? Drawer(
+              width: 320,
+              backgroundColor: const Color(0xFF111417),
+              child: DashboardRightPanel(
+                isMobile: true,
+                isExpanded: true,
+                uiState: _uiState,
+                chatService: _chatService,
+                onRefresh: _loadDashboardData,
+                onExpand: () {}, // Not used in drawer
+              ),
+            )
+          : null,
       backgroundColor: AppColors.bg,
       body: Stack(
         children: [
@@ -140,7 +142,9 @@ class _HomeScreenState extends State<HomeScreen>
                   if (isNarrow) {
                     _scaffoldKey.currentState?.openEndDrawer();
                   } else {
-                    setState(() => _isRightSidebarExpanded = !_isRightSidebarExpanded);
+                    setState(
+                      () => _isRightSidebarExpanded = !_isRightSidebarExpanded,
+                    );
                   }
                 },
               ),
@@ -167,7 +171,8 @@ class _HomeScreenState extends State<HomeScreen>
                         uiState: _uiState,
                         chatService: _chatService,
                         onRefresh: _loadDashboardData,
-                        onExpand: () => setState(() => _isRightSidebarExpanded = true),
+                        onExpand: () =>
+                            setState(() => _isRightSidebarExpanded = true),
                       ),
                   ],
                 ),

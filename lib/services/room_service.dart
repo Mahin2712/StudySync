@@ -56,14 +56,13 @@ class RoomService {
     // 1. Idempotent upsert — succeeds whether the membership row already
     //    exists or not. onConflict targets the unique index on (room_id, user_id).
     //    Throws on any backend error; session is still active at this point.
-    await _client.from('room_members').upsert(
-      {
-        'room_id': roomId,
-        'user_id': userId,
-      },
-      onConflict: 'room_id,user_id',
-      ignoreDuplicates: true,
-    );
+    await _client
+        .from('room_members')
+        .upsert(
+          {'room_id': roomId, 'user_id': userId},
+          onConflict: 'room_id,user_id',
+          ignoreDuplicates: true,
+        );
 
     // 2. Join confirmed — now safe to close the previous session.
     //    Ghost-studier rows from the old room are cleaned up here.

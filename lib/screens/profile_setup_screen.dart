@@ -18,22 +18,24 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   // ─── Colors ───────────────────────────────────────────────────────────────
-  static const _bg             = Color(0xFF0C0E11);
-  static const _surface        = Color(0xFF111417);
-  static const _surfaceHigh    = Color(0xFF1C2025);
-  static const _primary        = Color(0xFFADCBDB);
-  static const _primaryCont    = Color(0xFF395664);
-  static const _onPrimaryCont  = Color(0xFFC9E8F8);
-  static const _onSurface      = Color(0xFFE2E5EE);
-  static const _onSurfaceVar   = Color(0xFFA7ABB3);
-  static const _outline        = Color(0xFF44484F);
-  static const _error          = Color(0xFFFF6B6B);
+  static const _bg = Color(0xFF0C0E11);
+  static const _surface = Color(0xFF111417);
+  static const _surfaceHigh = Color(0xFF1C2025);
+  static const _primary = Color(0xFFADCBDB);
+  static const _primaryCont = Color(0xFF395664);
+  static const _onPrimaryCont = Color(0xFFC9E8F8);
+  static const _onSurface = Color(0xFFE2E5EE);
+  static const _onSurfaceVar = Color(0xFFA7ABB3);
+  static const _outline = Color(0xFF44484F);
+  static const _error = Color(0xFFFF6B6B);
 
-  final _formKey         = GlobalKey<FormState>();
-  final _usernameCtrl    = TextEditingController();
-  final _nameCtrl        = TextEditingController();
-  final _schoolCtrl      = TextEditingController();
-  final _phoneCtrl       = TextEditingController();
+  static final _usernameRegExp = RegExp(r'^[a-zA-Z0-9_]+$');
+
+  final _formKey = GlobalKey<FormState>();
+  final _usernameCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _schoolCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
 
   bool _saving = false;
   String? _errorMessage;
@@ -50,9 +52,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!mounted || profile == null) return;
     setState(() {
       _usernameCtrl.text = profile.username;
-      _nameCtrl.text     = profile.studentName ?? '';
-      _schoolCtrl.text   = profile.schoolName ?? '';
-      _phoneCtrl.text    = profile.phoneNumber ?? '';
+      _nameCtrl.text = profile.studentName ?? '';
+      _schoolCtrl.text = profile.schoolName ?? '';
+      _phoneCtrl.text = profile.phoneNumber ?? '';
     });
   }
 
@@ -67,13 +69,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _saving = true; _errorMessage = null; });
+    setState(() {
+      _saving = true;
+      _errorMessage = null;
+    });
 
     try {
       await ProfileService.saveProfile(
-        username:    _usernameCtrl.text,
+        username: _usernameCtrl.text,
         studentName: _nameCtrl.text,
-        schoolName:  _schoolCtrl.text,
+        schoolName: _schoolCtrl.text,
         phoneNumber: _phoneCtrl.text.isEmpty ? null : _phoneCtrl.text,
       );
       if (!mounted) return;
@@ -83,9 +88,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       } else {
         // M4 fix: route through AppRouter so the profile-completeness gate
         // and auth state are re-evaluated before landing on HomeScreen.
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AppRouter()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppRouter()));
       }
     } catch (e) {
       setState(() {
@@ -124,9 +129,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       hint: 'e.g. mahin_27',
                       icon: Icons.alternate_email_rounded,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Username is required';
-                        if (v.trim().length < 3) return 'Must be at least 3 characters';
-                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v.trim())) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Username is required';
+                        }
+                        if (v.trim().length < 3) {
+                          return 'Must be at least 3 characters';
+                        }
+                        if (!_usernameRegExp.hasMatch(v.trim())) {
                           return 'Only letters, numbers and underscores';
                         }
                         return null;
@@ -138,8 +147,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       label: 'Your Full Name',
                       hint: 'e.g. Mahin Ahmed',
                       icon: Icons.person_outline_rounded,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Name is required'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     _buildField(
@@ -147,8 +157,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       label: 'School / Institution',
                       hint: 'e.g. Rajshahi Collegiate School',
                       icon: Icons.school_outlined,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'School name is required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'School name is required'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     _buildField(
@@ -166,18 +177,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       decoration: BoxDecoration(
                         color: _error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: _error.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: _error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: _error, size: 16),
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: _error,
+                            size: 16,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               _errorMessage!,
                               style: const TextStyle(
-                                
                                 fontSize: 13,
                                 color: _error,
                               ),
@@ -200,11 +215,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       },
                       child: const Text(
                         'Sign out and use a different account',
-                        style: TextStyle(
-                          
-                          fontSize: 12,
-                          color: _onSurfaceVar,
-                        ),
+                        style: TextStyle(fontSize: 12, color: _onSurfaceVar),
                       ),
                     ),
                   ),
@@ -230,13 +241,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             shape: BoxShape.circle,
             border: Border.all(color: _primaryCont.withValues(alpha: 0.4)),
           ),
-          child: const Icon(Icons.person_pin_rounded, color: _primary, size: 26),
+          child: const Icon(
+            Icons.person_pin_rounded,
+            color: _primary,
+            size: 26,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
           widget.isEditing ? 'Edit Your Profile' : 'Set Up Your Profile',
           style: const TextStyle(
-            
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: _onSurface,
@@ -249,7 +263,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ? 'Update your details below.'
               : 'Fill in your details to join study rooms and appear on the leaderboard.',
           style: const TextStyle(
-            
             fontSize: 14,
             color: _onSurfaceVar,
             height: 1.5,
@@ -288,7 +301,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         Text(
           label,
           style: const TextStyle(
-            
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: _onSurfaceVar,
@@ -299,15 +311,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(
-            
-            fontSize: 14,
-            color: _onSurface,
-          ),
+          style: const TextStyle(fontSize: 14, color: _onSurface),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              
               fontSize: 14,
               color: _onSurfaceVar.withValues(alpha: 0.6),
             ),
@@ -330,7 +337,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: _error.withValues(alpha: 0.6)),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
           validator: validator,
         ),
@@ -348,12 +358,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           foregroundColor: _onPrimaryCont,
           disabledBackgroundColor: _primaryCont.withValues(alpha: 0.4),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(
-            
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         child: _saving
             ? const SizedBox(

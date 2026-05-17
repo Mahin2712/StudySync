@@ -33,7 +33,10 @@ void main() {
       expect(model.endTime, DateTime.parse('2023-10-27T12:00:00Z').toUtc());
       expect(model.isActive, isTrue);
       expect(model.createdAt, DateTime.parse('2023-10-27T09:55:00Z').toUtc());
-      expect(model.lastActivityAt, DateTime.parse('2023-10-27T11:30:00Z').toUtc());
+      expect(
+        model.lastActivityAt,
+        DateTime.parse('2023-10-27T11:30:00Z').toUtc(),
+      );
       expect(model.missedCheckins, 2);
     });
 
@@ -143,60 +146,75 @@ void main() {
     });
 
     group('Check-in and Auto-stop logic', () {
-      test('isCheckinDue should be true when timeSinceActivity >= checkinInterval', () {
-        // checkinInterval is 20 minutes
-        final lastActivityAt = fixedTime.subtract(const Duration(minutes: 20));
-        withClock(Clock.fixed(fixedTime), () {
-          final model = StudySessionModel(
-            id: '1',
-            userId: '1',
-            roomId: '1',
-            startTime: startTime,
-            isActive: true,
-            createdAt: createdAt,
-            lastActivityAt: lastActivityAt,
+      test(
+        'isCheckinDue should be true when timeSinceActivity >= checkinInterval',
+        () {
+          // checkinInterval is 20 minutes
+          final lastActivityAt = fixedTime.subtract(
+            const Duration(minutes: 20),
           );
+          withClock(Clock.fixed(fixedTime), () {
+            final model = StudySessionModel(
+              id: '1',
+              userId: '1',
+              roomId: '1',
+              startTime: startTime,
+              isActive: true,
+              createdAt: createdAt,
+              lastActivityAt: lastActivityAt,
+            );
 
-          expect(model.isCheckinDue, isTrue);
-          expect(model.checkinStatus, CheckinStatus.warning);
-        });
-      });
+            expect(model.isCheckinDue, isTrue);
+            expect(model.checkinStatus, CheckinStatus.warning);
+          });
+        },
+      );
 
-      test('isCheckinDue should be false when timeSinceActivity < checkinInterval', () {
-        final lastActivityAt = fixedTime.subtract(const Duration(minutes: 19, seconds: 59));
-        withClock(Clock.fixed(fixedTime), () {
-          final model = StudySessionModel(
-            id: '1',
-            userId: '1',
-            roomId: '1',
-            startTime: startTime,
-            isActive: true,
-            createdAt: createdAt,
-            lastActivityAt: lastActivityAt,
+      test(
+        'isCheckinDue should be false when timeSinceActivity < checkinInterval',
+        () {
+          final lastActivityAt = fixedTime.subtract(
+            const Duration(minutes: 19, seconds: 59),
           );
+          withClock(Clock.fixed(fixedTime), () {
+            final model = StudySessionModel(
+              id: '1',
+              userId: '1',
+              roomId: '1',
+              startTime: startTime,
+              isActive: true,
+              createdAt: createdAt,
+              lastActivityAt: lastActivityAt,
+            );
 
-          expect(model.isCheckinDue, isFalse);
-          expect(model.checkinStatus, CheckinStatus.active);
-        });
-      });
+            expect(model.isCheckinDue, isFalse);
+            expect(model.checkinStatus, CheckinStatus.active);
+          });
+        },
+      );
 
-      test('isAutoStopDue should be true when timeSinceActivity >= checkinInterval + checkinGrace', () {
-        // checkinGrace is 60 seconds
-        final lastActivityAt = fixedTime.subtract(const Duration(minutes: 21));
-        withClock(Clock.fixed(fixedTime), () {
-          final model = StudySessionModel(
-            id: '1',
-            userId: '1',
-            roomId: '1',
-            startTime: startTime,
-            isActive: true,
-            createdAt: createdAt,
-            lastActivityAt: lastActivityAt,
+      test(
+        'isAutoStopDue should be true when timeSinceActivity >= checkinInterval + checkinGrace',
+        () {
+          // checkinGrace is 60 seconds
+          final lastActivityAt = fixedTime.subtract(
+            const Duration(minutes: 21),
           );
+          withClock(Clock.fixed(fixedTime), () {
+            final model = StudySessionModel(
+              id: '1',
+              userId: '1',
+              roomId: '1',
+              startTime: startTime,
+              isActive: true,
+              createdAt: createdAt,
+              lastActivityAt: lastActivityAt,
+            );
 
-          expect(model.isAutoStopDue, isTrue);
-        });
-      });
+            expect(model.isAutoStopDue, isTrue);
+          });
+        },
+      );
 
       test('nextCheckinAt should be lastActivityAt + checkinInterval', () {
         final lastActivityAt = DateTime.parse('2023-10-27T11:00:00Z').toUtc();
@@ -210,15 +228,28 @@ void main() {
           lastActivityAt: lastActivityAt,
         );
 
-        expect(model.nextCheckinAt, DateTime.parse('2023-10-27T11:20:00Z').toUtc());
+        expect(
+          model.nextCheckinAt,
+          DateTime.parse('2023-10-27T11:20:00Z').toUtc(),
+        );
       });
     });
   });
 
   group('StudySessionModel.formatDuration', () {
     test('should format duration as HH:MM:SS', () {
-      expect(StudySessionModel.formatDuration(const Duration(hours: 1, minutes: 2, seconds: 3)), '01:02:03');
-      expect(StudySessionModel.formatDuration(const Duration(hours: 25, minutes: 59, seconds: 59)), '25:59:59');
+      expect(
+        StudySessionModel.formatDuration(
+          const Duration(hours: 1, minutes: 2, seconds: 3),
+        ),
+        '01:02:03',
+      );
+      expect(
+        StudySessionModel.formatDuration(
+          const Duration(hours: 25, minutes: 59, seconds: 59),
+        ),
+        '25:59:59',
+      );
       expect(StudySessionModel.formatDuration(Duration.zero), '00:00:00');
     });
   });

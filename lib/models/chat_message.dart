@@ -29,8 +29,9 @@ class ChatMessage {
     if (rawReactions is Map) {
       rawReactions.forEach((key, value) {
         if (value is List) {
-          parsedReactions[key.toString()] =
-              value.map((e) => e.toString()).toSet();
+          parsedReactions[key.toString()] = value
+              .map((e) => e.toString())
+              .toSet();
         }
       });
     }
@@ -40,21 +41,19 @@ class ChatMessage {
       userId: payload['user_id']?.toString() ?? '',
       username: payload['username']?.toString() ?? 'Unknown User',
       text: payload['text']?.toString() ?? '',
-      timestamp: DateTime.tryParse(
-            payload['ts']?.toString() ?? '',
-          ) ??
-          clock.now(),
+      timestamp:
+          DateTime.tryParse(payload['ts']?.toString() ?? '') ?? clock.now(),
       reactions: parsedReactions,
     );
   }
 
   /// Converts this message into a Broadcast payload map.
   Map<String, dynamic> toBroadcastPayload() => {
-        'message_id': messageId,
-        'user_id': userId,
-        'username': username,
-        'text': text,
-        'ts': timestamp.toIso8601String(),
-        'reactions': reactions.map((key, value) => MapEntry(key, value.toList())),
-      };
+    'message_id': messageId,
+    'user_id': userId,
+    'username': username,
+    'text': text,
+    'ts': timestamp.toIso8601String(),
+    'reactions': reactions.map((key, value) => MapEntry(key, value.toList())),
+  };
 }

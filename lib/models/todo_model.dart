@@ -42,11 +42,7 @@ class TodoModel {
     };
   }
 
-  TodoModel copyWith({
-    bool? isDone,
-    String? title,
-    int? position,
-  }) {
+  TodoModel copyWith({bool? isDone, String? title, int? position}) {
     return TodoModel(
       id: id,
       userId: userId,

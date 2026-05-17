@@ -16,12 +16,12 @@ class DashboardMainCanvas extends StatelessWidget {
 
   List<Widget> _buildSeatPlaceholders() {
     const positions = [
-      Alignment(0, -1.1),   // top
+      Alignment(0, -1.1), // top
       Alignment(1.1, -0.5), // top-right
-      Alignment(1.1, 0.5),  // bottom-right
-      Alignment(0, 1.1),    // bottom
+      Alignment(1.1, 0.5), // bottom-right
+      Alignment(0, 1.1), // bottom
       Alignment(-1.1, 0.5), // bottom-left
-      Alignment(-1.1, -0.5),// top-left
+      Alignment(-1.1, -0.5), // top-left
     ];
 
     return positions.map((align) {
@@ -110,13 +110,12 @@ class DashboardMainCanvas extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF1C2025),
-                              Color(0xFF111417),
-                            ],
+                            colors: [Color(0xFF1C2025), Color(0xFF111417)],
                           ),
                           border: Border.all(
-                            color: AppColors.outlineVariant.withValues(alpha: 0.12),
+                            color: AppColors.outlineVariant.withValues(
+                              alpha: 0.12,
+                            ),
                             width: 1,
                           ),
                         ),
@@ -125,9 +124,7 @@ class DashboardMainCanvas extends StatelessWidget {
                             children: [
                               // Dot grid texture
                               Positioned.fill(
-                                child: CustomPaint(
-                                  painter: _DotGridPainter(),
-                                ),
+                                child: CustomPaint(painter: _DotGridPainter()),
                               ),
                               // Inner ring content
                               Center(
@@ -137,7 +134,9 @@ class DashboardMainCanvas extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: AppColors.primary.withValues(alpha: 0.05),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       width: 1,
                                     ),
                                   ),
@@ -151,7 +150,8 @@ class DashboardMainCanvas extends StatelessWidget {
                                           shape: BoxShape.circle,
                                           color: AppColors.surfaceHighest,
                                           border: Border.all(
-                                            color: AppColors.outlineVariant.withValues(alpha: 0.2),
+                                            color: AppColors.outlineVariant
+                                                .withValues(alpha: 0.2),
                                           ),
                                         ),
                                         child: const Icon(
@@ -172,7 +172,9 @@ class DashboardMainCanvas extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 10),
                                       const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 48),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 48,
+                                        ),
                                         child: Text(
                                           'Ready to start your focused study session? Be the first to take a seat.',
                                           textAlign: TextAlign.center,
@@ -185,12 +187,18 @@ class DashboardMainCanvas extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 28),
                                       ElevatedButton(
-                                        onPressed: () => RoomSheet.show(context),
+                                        onPressed: () =>
+                                            RoomSheet.show(context),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.primaryContainer,
-                                          foregroundColor: AppColors.onPrimaryContainer,
+                                          backgroundColor:
+                                              AppColors.primaryContainer,
+                                          foregroundColor:
+                                              AppColors.onPrimaryContainer,
                                           elevation: 0,
-                                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 32,
+                                            vertical: 14,
+                                          ),
                                           shape: const StadiumBorder(),
                                           textStyle: const TextStyle(
                                             fontWeight: FontWeight.w600,

@@ -35,7 +35,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   List<LeaderboardEntry> _entries = [];
   UserStats _myStats = UserStats.zero;
   String? _statsError;
-  String? _fetchError; // Fix #5: distinct error state for leaderboard fetch failures
+  String?
+  _fetchError; // Fix #5: distinct error state for leaderboard fetch failures
   Timer? _pollTimer;
 
   String get _myUserId => Supabase.instance.client.auth.currentUser?.id ?? '';
@@ -180,7 +181,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 'Leaderboard',
                 style: TextStyle(
-                  
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: _onSurface,
@@ -189,11 +189,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               ),
               Text(
                 'Ranked by completed study hours',
-                style: TextStyle(
-                  
-                  fontSize: 12,
-                  color: _onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 12, color: _onSurfaceVariant),
               ),
             ],
           ),
@@ -231,13 +227,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelStyle: const TextStyle(
-          
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
-          
           fontSize: 13,
           fontWeight: FontWeight.w400,
         ),
@@ -307,7 +298,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               Text(
                 'TOP CHAMPIONS',
                 style: TextStyle(
-                  
                   fontSize: 10,
                   letterSpacing: 2,
                   color: _gold,
@@ -353,7 +343,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                           child: Text(
                             entry.initials,
                             style: TextStyle(
-                              
                               fontSize: i == 1 ? 18 : 14,
                               fontWeight: FontWeight.w800,
                               color: color,
@@ -369,7 +358,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          
                           fontSize: 12,
                           fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                           color: isMe ? _primary : _onSurface,
@@ -379,7 +367,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       Text(
                         entry.formattedHours,
                         style: TextStyle(
-                          
                           fontSize: 11,
                           color: color,
                           fontWeight: FontWeight.w600,
@@ -423,7 +410,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       child: Text(
         label,
         style: TextStyle(
-          
           fontSize: 10,
           fontWeight: FontWeight.w700,
           color: color,
@@ -460,7 +446,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             child: Text(
               '#$rank',
               style: TextStyle(
-                
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: isMe ? _primary : _onSurfaceVariant,
@@ -486,7 +471,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               child: Text(
                 entry.initials,
                 style: TextStyle(
-                  
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: isMe ? _primary : _onSurfaceVariant,
@@ -503,7 +487,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 Text(
                   entry.username,
                   style: TextStyle(
-                    
                     fontSize: 13,
                     fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                     color: isMe ? _primary : _onSurface,
@@ -513,7 +496,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                   const Text(
                     'You',
                     style: TextStyle(
-                      
                       fontSize: 10,
                       color: _primary,
                       letterSpacing: 0.5,
@@ -526,7 +508,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Text(
             entry.formattedHours,
             style: TextStyle(
-              
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: isMe ? _primary : _onSurface,
@@ -558,10 +539,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           Text(
             _fetchError ?? 'An unexpected error occurred.',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: _onSurfaceVariant,
-            ),
+            style: const TextStyle(fontSize: 13, color: _onSurfaceVariant),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -594,7 +572,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           const Text(
             'No data yet.',
             style: TextStyle(
-              
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: _onSurface,
@@ -603,11 +580,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           const SizedBox(height: 8),
           const Text(
             'Complete a study session to appear here.',
-            style: TextStyle(
-              
-              fontSize: 13,
-              color: _onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 13, color: _onSurfaceVariant),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
@@ -617,10 +590,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               foregroundColor: _onPrimaryContainer,
               elevation: 0,
               shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                
-                fontWeight: FontWeight.w600,
-              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
             child: const Text('Refresh'),
           ),
@@ -654,7 +624,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               const Text(
                 'YOUR STATS',
                 style: TextStyle(
-                  
                   fontSize: 10,
                   letterSpacing: 1.5,
                   color: _onSurfaceVariant,
@@ -666,7 +635,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 Text(
                   'Rank #$rank',
                   style: const TextStyle(
-                    
                     fontSize: 12,
                     color: _primary,
                     fontWeight: FontWeight.w700,
@@ -696,7 +664,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     child: Text(
                       _statsError!,
                       style: const TextStyle(
-                        
                         fontSize: 11,
                         color: _onSurfaceVariant,
                       ),
@@ -737,7 +704,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             Text(
               entry.formattedHours,
               style: const TextStyle(
-                
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: _primary,
@@ -746,7 +712,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             Text(
               label,
               style: const TextStyle(
-                
                 fontSize: 9,
                 color: _onSurfaceVariant,
                 letterSpacing: 0.5,

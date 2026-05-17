@@ -15,6 +15,8 @@ class ProfileModel {
   final String? lastStudyDate;
   final int dailyGoalMinutes;
 
+  static final _initialsRegExp = RegExp(r'[\s_]+');
+
   const ProfileModel({
     required this.id,
     required this.username,
@@ -47,25 +49,23 @@ class ProfileModel {
           ? DateTime.parse(json['updated_at'] as String).toLocal()
           : null,
       // Phase 6: streak + goal fields (safe defaults for old profiles)
-      currentStreakDays:
-          (json['current_streak_days'] as num?)?.toInt() ?? 0,
-      longestStreakDays:
-          (json['longest_streak_days'] as num?)?.toInt() ?? 0,
+      currentStreakDays: (json['current_streak_days'] as num?)?.toInt() ?? 0,
+      longestStreakDays: (json['longest_streak_days'] as num?)?.toInt() ?? 0,
       lastStudyDate: json['last_study_date'] as String?,
-      dailyGoalMinutes:
-          (json['daily_goal_minutes'] as num?)?.toInt() ?? 0,
+      dailyGoalMinutes: (json['daily_goal_minutes'] as num?)?.toInt() ?? 0,
     );
   }
 
   /// Display name: student name if set, otherwise username.
-  String get displayName =>
-      (studentName != null && studentName!.isNotEmpty) ? studentName! : username;
+  String get displayName => (studentName != null && studentName!.isNotEmpty)
+      ? studentName!
+      : username;
 
   /// Initials for avatar circles.
   String get initials {
     final name = displayName.trim();
     if (name.isEmpty) return '?';
-    final parts = name.split(RegExp(r'[\s_]+'));
+    final parts = name.split(_initialsRegExp);
     if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }

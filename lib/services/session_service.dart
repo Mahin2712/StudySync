@@ -47,7 +47,7 @@ class SessionService {
   static String _getDeviceType() {
     if (kIsWeb) return 'pc';
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) return 'pc';
-    
+
     // For mobile/tablet, check logical screen width
     try {
       final view = ui.PlatformDispatcher.instance.views.first;

@@ -88,8 +88,10 @@ class DashboardService {
     int limit = 3,
   }) async {
     try {
-      final data =
-          await _client.from('leaderboard_all_time').select().limit(limit);
+      final data = await _client
+          .from('leaderboard_all_time')
+          .select()
+          .limit(limit);
 
       return (data as List)
           .map((j) => LeaderboardEntry.fromJson(j as Map<String, dynamic>))

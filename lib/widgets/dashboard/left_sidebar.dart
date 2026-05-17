@@ -5,10 +5,7 @@ import '../../screens/room_sheet.dart';
 class DashboardLeftSidebar extends StatelessWidget {
   final bool isNarrow;
 
-  const DashboardLeftSidebar({
-    super.key,
-    required this.isNarrow,
-  });
+  const DashboardLeftSidebar({super.key, required this.isNarrow});
 
   Widget _sidebarItem({
     required IconData icon,
@@ -67,8 +64,11 @@ class DashboardLeftSidebar extends StatelessWidget {
                   color: const Color(0xFF171A1E),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.meeting_room_outlined,
-                    color: AppColors.primary, size: 20),
+                child: const Icon(
+                  Icons.meeting_room_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               const Column(
