@@ -18,9 +18,15 @@ class ChatService extends ChangeNotifier {
   // ════════════════════════════════════════════════════════════════════════
   // Singleton
   // ════════════════════════════════════════════════════════════════════════
-  static final ChatService _instance = ChatService._internal();
-  factory ChatService() => _instance;
-  ChatService._internal() {
+  static ChatService? _instance;
+  factory ChatService() => _instance ??= ChatService._internal();
+
+  @visibleForTesting
+  static void setMockInstance(ChatService mock) => _instance = mock;
+
+  @visibleForTesting
+  ChatService.forTesting({required SupabaseClient supabaseClient})
+      : _supabase = supabaseClient {
     // Fix #6: Subscribe to auth changes to reset cached identity on
     // sign-out / sign-in so a different account always gets a fresh username.
     _authSubscription = _supabase.auth.onAuthStateChange.listen((data) {
@@ -33,7 +39,21 @@ class ChatService extends ChangeNotifier {
     });
   }
 
-  final _supabase = Supabase.instance.client;
+  ChatService._internal({SupabaseClient? supabaseClient}) {
+    _supabase = supabaseClient ?? Supabase.instance.client;
+    // Fix #6: Subscribe to auth changes to reset cached identity on
+    // sign-out / sign-in so a different account always gets a fresh username.
+    _authSubscription = _supabase.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedOut ||
+          event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.userUpdated) {
+        _resetUserIdentity();
+      }
+    });
+  }
+
+  late final SupabaseClient _supabase;
   final _uuid = const Uuid();
 
   // Fix #6: Hold the auth subscription so we can cancel it in dispose().
@@ -253,7 +273,7 @@ class ChatService extends ChangeNotifier {
         event: 'message',
         payload: message.toBroadcastPayload(),
       );
-    } catch (_) {
+    } catch (e) {
       // Roll back the optimistic append on transport failure.
       if (isGlobal) {
         _globalMessages.remove(message);
@@ -261,6 +281,11 @@ class ChatService extends ChangeNotifier {
         _roomMessages.remove(message);
       }
       notifyListeners();
+
+      final err = e.toString().toLowerCase();
+      if (err.contains('rate limit') || err.contains('429')) {
+        return ChatSendResult.rateLimited;
+      }
       return ChatSendResult.sendFailed;
     }
 
@@ -276,11 +301,15 @@ class ChatService extends ChangeNotifier {
   // Reactions
   // ════════════════════════════════════════════════════════════════════════
 
-  Future<void> sendReaction(String messageId, String emoji, {required bool isGlobal}) async {
-    if (_myUserId.isEmpty) return;
+  /// Sends a reaction emoji to a specific message.
+  ///
+  /// Returns true if successfully broadcasted, false otherwise.
+  /// Performs an optimistic update and rolls back on failure.
+  Future<bool> sendReaction(String messageId, String emoji, {required bool isGlobal}) async {
+    if (_myUserId.isEmpty) return false;
 
     final channel = isGlobal ? _globalChannel : _roomChannel;
-    if (channel == null) return;
+    if (channel == null) return false;
 
     // Optimistic update
     _applyReaction(messageId, emoji, _myUserId, isGlobal: isGlobal);
@@ -296,9 +325,11 @@ class ChatService extends ChangeNotifier {
         event: 'reaction',
         payload: payload,
       );
+      return true;
     } catch (_) {
       // Roll back on failure (toggle again)
       _applyReaction(messageId, emoji, _myUserId, isGlobal: isGlobal);
+      return false;
     }
   }
 
@@ -398,6 +429,7 @@ enum ChatSendResult {
   onCooldown,
   duplicate,
   notConnected,
+  rateLimited,
   sendFailed; // Fix #4: transport-level failure after optimistic rollback
 
   String get userMessage => switch (this) {
@@ -407,6 +439,7 @@ enum ChatSendResult {
         ChatSendResult.onCooldown => 'Please wait before sending again.',
         ChatSendResult.duplicate => 'You already sent that message.',
         ChatSendResult.notConnected => 'Chat not connected. Please wait.',
+        ChatSendResult.rateLimited => 'Rate limit exceeded. Please wait.',
         ChatSendResult.sendFailed => 'Failed to send. Please try again.',
       };
 }
