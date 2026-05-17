@@ -15,6 +15,8 @@ class ProfileModel {
   final String? lastStudyDate;
   final int dailyGoalMinutes;
 
+  static final _initialsRegExp = RegExp(r'[\s_]+');
+
   const ProfileModel({
     required this.id,
     required this.username,
@@ -65,7 +67,7 @@ class ProfileModel {
   String get initials {
     final name = displayName.trim();
     if (name.isEmpty) return '?';
-    final parts = name.split(RegExp(r'[\s_]+'));
+    final parts = name.split(_initialsRegExp);
     if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
