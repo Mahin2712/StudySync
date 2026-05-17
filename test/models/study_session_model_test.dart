@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:clock/clock.dart';
 import 'package:studysync/models/study_session_model.dart';
 
